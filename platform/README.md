@@ -6,8 +6,9 @@
 
 ## 当前状态
 
-**Phase 0 已落地**：数据契约、JSON Schema、建表 SQL、落地文档、脚手架配置已产出（见下「目录」）。
-业务逻辑（SDK / 转发 / 分析层 / 两个前端）仍为占位，留待 Phase 2+。
+**Phase 1 已打通最小后端闭环**：在 Phase 0 地基上，已生成契约模型，实现统一上报 API、
+`record_id` 幂等、服务端 `ingested_at`、匿名用户兜底、PostgreSQL 落库实现与模拟数据测试。
+SDK / 转发 / 分析层 / 两个前端仍为占位，留待 Phase 2+。
 **SSOT 状态**：按 [PROJECT_PLAN 决策 #26](../PROJECT_PLAN.md) 取 `(a)`，当前为**部分冻结**：
 数据契约 / 接入契约已转移到本目录（`docs/` + `shared/schema/`）；其余规范（架构 / 执行计划 / 代码规范 / 工具注册表 / 工具门户）仍以 `../规划/` 为准。
 
@@ -51,24 +52,24 @@
 
 ## 目录
 
-| 目录 | 职责 | Phase 0 产出 |
+| 目录 | 职责 | 当前产出 |
 |---|---|---|
 | `docs/` | 落地文档（承接 SSOT） | ✅ [schema.md](docs/schema.md)、[contract.md](docs/contract.md) |
 | `shared/schema/` | 机器可校验 JSON Schema（唯一源） | ✅ [event.schema.json](shared/schema/event.schema.json) |
-| `shared/contracts/` | 由 schema 生成的 py/ts 模型（标「自动生成，勿手改」） | 生成命令已备（见根 README/配置） |
+| `shared/contracts/` | 由 schema 生成的 py/ts 模型（标「自动生成，勿手改」） | ✅ `event_model.py`、`event.d.ts` |
 | `shared/registry/` | 工具注册表定义/迁移 | 表见 `backend/storage/migrations/` |
 | `backend/storage/migrations/` | 建表 SQL（事件表 + 注册表 + 账号表） | ✅ [0001_init.sql](backend/storage/migrations/0001_init.sql) |
-| `backend/ingestion/` | 接入 API（收一条流水 → 校验 → 落库） | 占位（Phase 1） |
+| `backend/ingestion/` | 接入 API（收一条流水 → 校验 → 落库） | ✅ `/events`、`/health`、模拟数据测试 |
 | `backend/analytics/` | 分析层（四类结论的纯函数） | 占位（Phase 3） |
-| `backend/auth/` | 账号体系 | 占位（Phase 1） |
+| `backend/auth/` | 账号体系 | ✅ PBKDF2 密码哈希/校验内部函数 |
 | `collection/sdk/` `collection/relay/` | 参考 SDK + 本地转发服务 | 占位（Phase 2） |
 | `integrations/` | 各接入工具的适配/配置（工具本体不在此） | 占位（Phase 5） |
 | `apps/user-portal/` `apps/admin-dashboard/` | 两个前端 | 占位（Phase 4） |
 
-## 本地起库（脚手架）
+## 本地起库
 
 ```
-docker-compose up   # PostgreSQL + 接入 API 占位 + 两前端占位（服务内部逻辑留空）
+docker-compose up   # PostgreSQL + 接入 API + 两前端占位
 ```
 
 配置/密钥（中转站地址、API Key、DB 口令、LLM 地址）**一律走环境变量**，代码与镜像里零硬编码。

@@ -1,5 +1,5 @@
-# docker-compose.yml —— 局域网内一键起（Phase 0 骨架）
-# 仅占位：可启动，但服务内部业务逻辑留空（接入 API / 两前端尚未实现）。
+# docker-compose.yml —— 局域网内一键起
+# Phase 1：PostgreSQL + 接入 API 可运行；两前端仍为占位。
 # 所有密钥/地址走环境变量（见 .env，绝不硬编码、绝不入库）。
 
 services:
@@ -22,13 +22,17 @@ services:
       timeout: 5s
       retries: 5
 
-  # ---- 接入层：统一上报 API（占位，Phase 1 实现）----
+  # ---- 接入层：统一上报 API（Phase 1）----
   ingestion:
     image: python:3.11-slim
     working_dir: /app
-    command: ["python", "-c", "print('ingestion API 占位：Phase 1 实现接收→校验契约→落库'); import time; time.sleep(3600)"]
+    command: ["sh", "-c", "pip install -e . && uvicorn backend.ingestion.app:app --host 0.0.0.0 --port 8000"]
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://platform:@postgres:5432/platform}
+      DATABASE_URL: ${DATABASE_URL:?请在 .env 设置，勿硬编码}
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
     depends_on:
       postgres:
         condition: service_healthy

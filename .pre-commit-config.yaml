@@ -1,6 +1,5 @@
 # .pre-commit-config.yaml —— 本地提交前先跑一遍机器闸门，CI 再兜底跑同一套。
-# 强度档：原型档（宽松能跑）。轻量、零依赖的关卡现在就启用；重关卡（mypy/vulture/
-# import-linter/前端 eslint/tsc/knip/pytest）放在 CI，合入主干前再拧严并接进本文件。
+# 强度档：Phase 1 后端主链路必过；前端仍为占位宽松档。
 # 见 规划/总则/代码规范.md §五。
 
 default_language_version:
@@ -23,11 +22,39 @@ repos:
     hooks:
       - id: ruff
         args: ["--fix"]
-        files: ^platform/
+        files: ^platform/(backend|collection|tools)/
         exclude: ^platform/shared/contracts/
       - id: ruff-format
-        files: ^platform/
+        files: ^platform/(backend|collection|tools)/
         exclude: ^platform/shared/contracts/
+
+  # Phase 1 后端重关卡：依赖 uv，同 CI 一致。
+  - repo: local
+    hooks:
+      - id: platform-mypy
+        name: platform mypy
+        entry: powershell -NoProfile -Command "Set-Location platform; uv run mypy backend collection tools"
+        language: system
+        pass_filenames: false
+        files: ^platform/(backend|collection|shared|tools)/
+      - id: platform-vulture
+        name: platform vulture
+        entry: powershell -NoProfile -Command "Set-Location platform; uv run vulture"
+        language: system
+        pass_filenames: false
+        files: ^platform/(backend|collection)/
+      - id: platform-import-linter
+        name: platform import-linter
+        entry: powershell -NoProfile -Command "Set-Location platform; uv run lint-imports"
+        language: system
+        pass_filenames: false
+        files: ^platform/(backend|collection|shared)/
+      - id: platform-pytest
+        name: platform pytest
+        entry: powershell -NoProfile -Command "Set-Location platform; uv run pytest"
+        language: system
+        pass_filenames: false
+        files: ^platform/(backend|collection|shared)/
 
   # 前端：Prettier 格式化（按 platform/.prettierrc.json）。
   - repo: https://github.com/pre-commit/mirrors-prettier

@@ -20,6 +20,7 @@
 | 数据端 | [接入契约](规划/数据端/接入契约.md) | 接入义务、边角情况、兜底通道 | 工具方（接入方） | 偶尔 |
 | 使用端 | [工具门户](规划/使用端/工具门户.md) | 分类卡片、排序逻辑、AI 工具推荐 | 建使用端的团队 | 跟门户演进 |
 | —— | [开发日志](开发日志.md) | 按时间的过程流水（做了什么、动了哪些文件） | 全员 | 每次改动 |
+| —— | [CHANGELOG](CHANGELOG.md) | 面向阶段 / 发布的能力变更摘要 | 全员 / 交接者 | 阶段完成或发布时 |
 
 > 拆分原则：先按**端**（使用端 / 数据端 / 共享层 / 跨域总则）分组，组内按**读者**和**变更频率**分文件。尤其数据契约要随版本演进，不该和稳定的架构叙事共用一个文件。
 > 代码区结构（`platform/`：两个前端 + 共享后端 + 集成层）见 [执行计划](规划/总则/执行计划.md) 第二节。
@@ -59,11 +60,15 @@
 
 26. **产出 Phase 0 实质内容，并先 git init 建基线；`规划/` 冻结方式待人工确认**：执行交接命令的「严格 Phase 0」，在 `platform/` 落地数据契约 v0.2 的 JSON Schema（[event.schema.json](platform/shared/schema/event.schema.json)，唯一源）、落地文档（[schema.md](platform/docs/schema.md)/[contract.md](platform/docs/contract.md)）、三表建表 SQL（事件表/工具注册表/用户账号表）、`README`/`docker-compose` 骨架、机器闸门配置（ruff/mypy/vulture/import-linter/pytest + 前端 eslint/prettier/tsc/knip + pre-commit/CI + schema→模型代码生成），强度放原型档。不实现任何业务逻辑、不接真实工具、零硬编码密钥、敏感策略留占位。**原非 Git 仓库**，按 CLAUDE.md「规范须纳入版本管理」先 `git init` 提交基线。**关于冻结**：CLAUDE.md 规定建表 SQL 生成即触发 `规划/` 冻结 + SSOT 转移到 `platform/docs/`；但本轮只产出了 schema / 接入契约的 platform 对应物，**架构与原则 / 执行计划 / 代码规范 / 工具注册表 / 工具门户尚无 platform/ 等价文档**，全量转移会产生悬空指针。故冻结方式经确认**取 (a)：仅冻结已转移的数据契约 + 接入契约两份**——两份顶部加 🧊 冻结标记、SSOT 转至 `platform/docs/`，CLAUDE.md §1 SSOT 生命周期改为「部分冻结」、§2/§3 这两份的指向改到 `platform/`；其余 5 份（架构 / 执行计划 / 代码规范 / 工具注册表 / 工具门户）尚无 platform 等价物，仍活在 `规划/`。
 
+27. **Phase 1 代码生成器改为仓库内本地生成器**：原机器闸门骨架预留 `datamodel-code-generator` + `json-schema-to-typescript`，但当前本地环境无全局 `uv`，`npx` 也会受离线缓存 / 网络影响。为保证 schema→模型生成在仓库内可重复执行，改为 `platform/tools/generate_contracts.py` 从 `event.schema.json` 同时生成 Pydantic v2 模型与 TS 类型；生成物仍落 `platform/shared/contracts/`，文件头标「自动生成，勿手改」，仍被 lint/类型检查排除。该决策不改变数据契约，只改变生成工具。
+
+28. **新增 CHANGELOG，并与开发日志分工**：`开发日志.md` 继续作为过程流水，任何改动必写；`CHANGELOG.md` 作为阶段 / 发布摘要，只记录项目能力变化、部署/接入影响、破坏性变更和迁移事项。维护规则写入 CLAUDE.md，避免把两份日志互相复制。
+
 ---
 
 ## 下一步
 
-**Phase 0 实质内容已产出**（schema / 建表 SQL / 落地文档 / 机器闸门骨架，见决策 #26），代码区基线已入 Git；数据契约 + 接入契约已部分冻结、SSOT 转至 `platform/`（取 #26 的 (a)）。下一步：
+**Phase 1 最小后端闭环已打通**：在 Phase 0 地基上，已生成契约模型，实现模拟事件上报 API、Pydantic 校验、`record_id` 幂等、服务端 `ingested_at`、匿名用户兜底、PostgreSQL 落库实现、密码哈希函数与后端机器闸门测试。
 
-- 进 **Phase 1**（存储层 + 接入 API 的可运行实现：接收一条流水 → 校验契约 → 落库）。届时机器闸门由原型档拧向严格档，并把 import-linter/pytest 接进 pre-commit/CI 的必过项。
+- 进 **Phase 2**（采集层）：先写参考 SDK，用模拟/样例工具自报验证异步上报、本地缓冲、重试与 token 归一化；暂不接真实存量工具。
 - 其余 5 份规范若要随实现搬进 `platform/`，按 CLAUDE.md §1「仍活在 规划/」逐份转移并加冻结标记。
