@@ -57,13 +57,13 @@
 
 25. **使用端门户 UI 定稿**：布局取「**居中搜索框 + 向下分区**」（启动器风，桌面优先）；**浅 / 深双主题**，同一套布局只换配色、顶栏（吸顶）放日 / 夜切换、默认浅色。首屏先「**我的收藏** + 最近使用」再分类分区。卡片为**图片式媒体卡**——`thumbnail` 功能缩略图占主体（缺图自动生成「icon+名称+色块」占位图）+ icon + display_name + 一句 description + 收藏星标。搜索框打字即时本地过滤（零 token），AI 推荐由显式「✨ 推荐工具」按钮触发（按需调用、省 token）；收藏 ☆ 入「我的收藏」、区内可拖拽排序。门户必须登录才进。该 UI 已**纳入正式方案**，以可点视觉参考稿 [门户首页-mockup.html](规划/使用端/mockups/门户首页-mockup.html) 为视觉基准（已确认；规范 SSOT 仍是 §三，参考稿不另立 SSOT）。详见 [使用端/工具门户](规划/使用端/工具门户.md) §三。
 
-26. **产出 Phase 0 实质内容，并先 git init 建基线；`规划/` 冻结方式待人工确认**：执行交接命令的「严格 Phase 0」，在 `platform/` 落地数据契约 v0.2 的 JSON Schema（[event.schema.json](platform/shared/schema/event.schema.json)，唯一源）、落地文档（[schema.md](platform/docs/schema.md)/[contract.md](platform/docs/contract.md)）、三表建表 SQL（事件表/工具注册表/用户账号表）、`README`/`docker-compose` 骨架、机器闸门配置（ruff/mypy/vulture/import-linter/pytest + 前端 eslint/prettier/tsc/knip + pre-commit/CI + schema→模型代码生成），强度放原型档。不实现任何业务逻辑、不接真实工具、零硬编码密钥、敏感策略留占位。**原非 Git 仓库**，按 CLAUDE.md「规范须纳入版本管理」先 `git init` 提交基线。**关于冻结**：CLAUDE.md 规定建表 SQL 生成即触发 `规划/` 冻结 + SSOT 转移到 `platform/docs/`；但本轮只产出了 schema / 接入契约的 platform 对应物，**架构与原则 / 执行计划 / 代码规范 / 工具注册表 / 工具门户尚无 platform/ 等价文档**，全量转移会产生悬空指针。故冻结**待人工确认**：选 (a) 仅冻结已转移的数据契约 + 接入契约两份、(b) 先补齐其余落地文档再整体冻结、或 (c) 暂不冻结。
+26. **产出 Phase 0 实质内容，并先 git init 建基线；`规划/` 冻结方式待人工确认**：执行交接命令的「严格 Phase 0」，在 `platform/` 落地数据契约 v0.2 的 JSON Schema（[event.schema.json](platform/shared/schema/event.schema.json)，唯一源）、落地文档（[schema.md](platform/docs/schema.md)/[contract.md](platform/docs/contract.md)）、三表建表 SQL（事件表/工具注册表/用户账号表）、`README`/`docker-compose` 骨架、机器闸门配置（ruff/mypy/vulture/import-linter/pytest + 前端 eslint/prettier/tsc/knip + pre-commit/CI + schema→模型代码生成），强度放原型档。不实现任何业务逻辑、不接真实工具、零硬编码密钥、敏感策略留占位。**原非 Git 仓库**，按 CLAUDE.md「规范须纳入版本管理」先 `git init` 提交基线。**关于冻结**：CLAUDE.md 规定建表 SQL 生成即触发 `规划/` 冻结 + SSOT 转移到 `platform/docs/`；但本轮只产出了 schema / 接入契约的 platform 对应物，**架构与原则 / 执行计划 / 代码规范 / 工具注册表 / 工具门户尚无 platform/ 等价文档**，全量转移会产生悬空指针。故冻结方式经确认**取 (a)：仅冻结已转移的数据契约 + 接入契约两份**——两份顶部加 🧊 冻结标记、SSOT 转至 `platform/docs/`，CLAUDE.md §1 SSOT 生命周期改为「部分冻结」、§2/§3 这两份的指向改到 `platform/`；其余 5 份（架构 / 执行计划 / 代码规范 / 工具注册表 / 工具门户）尚无 platform 等价物，仍活在 `规划/`。
 
 ---
 
 ## 下一步
 
-**Phase 0 实质内容已产出**（schema / 建表 SQL / 落地文档 / 机器闸门骨架，见决策 #26），代码区基线已入 Git。两件事待办：
+**Phase 0 实质内容已产出**（schema / 建表 SQL / 落地文档 / 机器闸门骨架，见决策 #26），代码区基线已入 Git；数据契约 + 接入契约已部分冻结、SSOT 转至 `platform/`（取 #26 的 (a)）。下一步：
 
-1. **确认 `规划/` 冻结方式**（决策 #26 留的 a/b/c 三选一）——这决定 SSOT 是否、以及如何转移到 `platform/docs/`。
-2. 冻结方式定了之后，再进 **Phase 1**（存储层 + 接入 API 的可运行实现）。届时机器闸门由原型档拧向严格档。
+- 进 **Phase 1**（存储层 + 接入 API 的可运行实现：接收一条流水 → 校验契约 → 落库）。届时机器闸门由原型档拧向严格档，并把 import-linter/pytest 接进 pre-commit/CI 的必过项。
+- 其余 5 份规范若要随实现搬进 `platform/`，按 CLAUDE.md §1「仍活在 规划/」逐份转移并加冻结标记。

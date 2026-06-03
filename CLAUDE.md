@@ -42,14 +42,14 @@ platform/                    代码区（脚手架）：仅目录骨架 + README
 
 ### SSOT 的生命周期（部署前后会转移，务必看清当前处于哪一阶段）
 
-本项目分两个阶段，**SSOT 的位置不同**：
+本项目 SSOT 会随 Phase 0 落地**逐份**转移。当前是**部分冻结**状态（见 [决策 #26](PROJECT_PLAN.md)）：
 
-- **【当前：规划阶段】** `规划/`（总则 / 共享层 / 数据端 / 使用端 四组）是唯一 SSOT。代码区 `platform/` **目前只有目录骨架 + README 占位**，README 只链接回 `规划/`、不复制规范内容——故**尚未触发冻结**。
-- **【部署后：建库阶段】** Phase 0 实质产出落进 `platform/`。一旦 `platform/docs/`、`platform/shared/schema/event.schema.json`、`platform/backend/storage/migrations` 建表 SQL 生成：
-  - **`规划/` 立即冻结归档**——在 `规划/` 各文件顶部标注「已冻结，仅作前期存档，SSOT 已转移至 `platform/docs/`」，此后**不再修改 `规划/`**。
-  - **SSOT 转移到 `platform/docs/` 与 `platform/shared/schema/`**，§2、§3 的所有读改规则改为指向 `platform/` 内的对应文件。
-  - 这样避免「`规划/共享层/数据契约` 和 `platform/docs/schema.md` 两份字段表永远并行维护」。
-- 之后若有人来改文档，**先确认当前阶段**：`platform/docs/` 里已有实质文档 → 一律改 `platform/`，别动 `规划/`。
+- **【已冻结，SSOT 在 platform/】** 以下两份已转移、顶部带 🧊 冻结标记，**不再修改 `规划/` 原件**，改动一律改 `platform/`：
+  - 数据契约 → [platform/docs/schema.md](platform/docs/schema.md) + [platform/shared/schema/event.schema.json](platform/shared/schema/event.schema.json)（机器源）+ `platform/backend/storage/migrations` 建表 SQL（三者一致）。
+  - 接入契约 → [platform/docs/contract.md](platform/docs/contract.md)。
+- **【仍活在 规划/】** 架构与原则、执行计划、代码规范、工具注册表、工具门户 这 5 份**尚无 platform/ 等价文档**，仍以 `规划/` 为唯一 SSOT，照常在 `规划/` 修改。
+- **改文档前先认这条线**：上面列为「已冻结」的 → 改 platform/；其余 → 改 规划/。日后这 5 份若也搬进 `platform/`，再逐份加冻结标记、并更新 §2/§3 指向（守则 §4.7）。
+- 这样避免「`规划/共享层/数据契约` 和 `platform/docs/schema.md` 两份字段表并行维护」，又不让尚未转移的文档产生悬空指针。
 
 ---
 
@@ -57,9 +57,9 @@ platform/                    代码区（脚手架）：仅目录骨架 + README
 
 | 你要做的事 | 先读 | 可能要改 |
 |---|---|---|
-| 改字段 / schema | 共享层/数据契约 | 数据契约 +（连带见 §3） |
+| 改字段 / schema | 🧊 **platform/docs/schema.md** + platform/shared/schema/event.schema.json（已转移，原 共享层/数据契约 已冻结） | platform/docs/schema.md + event.schema.json + 建表 SQL +（连带见 §3） |
 | 改工具注册表（接入字段 / 展示字段） | 共享层/工具注册表 | 工具注册表 +（连带见 §3） |
-| 改接入规则 / 边角情况 / 兜底 | 数据端/接入契约 | 接入契约 |
+| 改接入规则 / 边角情况 / 兜底 | 🧊 **platform/docs/contract.md**（已转移，原 数据端/接入契约 已冻结） | platform/docs/contract.md |
 | 改使用端门户（卡片 / 排序 / AI 推荐） | 使用端/工具门户 | 工具门户 |
 | 改架构 / 原则 / 工具分类 / 两端关系 | 总则/架构与原则 | 架构与原则 |
 | 改阶段计划 / 技术栈 / 目录结构 / 交接命令 | 总则/执行计划 | 执行计划 |
@@ -79,7 +79,7 @@ platform/                    代码区（脚手架）：仅目录骨架 + README
 
 | 改了什么 | 必须同步更新 |
 |---|---|
-| **数据契约（共享层/数据契约）的任何字段**（增删改字段、改类型/枚举/必填） | ① 升 `数据契约` 顶部的**契约版本号**；② 在 `PROJECT_PLAN` 决策记录追加一条「为什么改」；③ 若 Phase 0 已落地，连带改 `platform/shared/schema/event.schema.json` 与 `platform/backend/storage/migrations` 建表 SQL（保持三者一致） |
+| **数据契约（🧊 已冻结，改 platform/docs/schema.md）的任何字段**（增删改字段、改类型/枚举/必填） | ① 升 `platform/docs/schema.md` 顶部的**契约版本号**；② 在 `PROJECT_PLAN` 决策记录追加一条「为什么改」；③ 连带改 `platform/shared/schema/event.schema.json` 与 `platform/backend/storage/migrations` 建表 SQL（**三者一致**）；④ 重跑 `platform/scripts/gen-models` 重生成模型 |
 | **工具注册表字段（共享层/工具注册表）**（接入字段或门户展示字段） | 检查 `数据契约` 里 `tool_id` 引用、`使用端/工具门户` 对展示字段的引用、`执行计划` 建表 SQL 说明；**不升事件契约版本**（注册表不属事件 schema） |
 | **新增/改名一份规划文档** | 更新 `PROJECT_PLAN` 的「文档地图」表 + `CLAUDE.md` §1 结构 |
 | **改架构层次/原则/两端关系** | 检查 数据契约 / 工具注册表 / 接入契约 / 工具门户 / 执行计划 / 代码规范 里引用该架构的地方是否还成立 |
