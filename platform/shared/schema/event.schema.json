@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://internal.platform/schema/event.schema.json",
   "title": "UsageEvent",
-  "description": "统一事件记录 —— 每一次工具使用 = 一条记录。本文件是数据契约的唯一机器可校验源（SSOT），后端 Pydantic 模型与前端 TS 类型均由它生成，禁止手写字段。字段语义与分圈见 ../../docs/schema.md（部署后 SSOT）/ 规划/共享层/数据契约.md（当前 SSOT）。契约版本见 schema_version 常量。",
+  "description": "统一事件记录 —— 每一次工具使用 = 一条记录。本文件是数据契约的唯一机器可校验源（SSOT），后端 Pydantic 模型与前端 TS 类型均由它生成，禁止手写字段。字段语义与分圈见 ../../docs/schema.md；规划/共享层/数据契约.md 已冻结归档。契约版本见 schema_version 常量。",
   "type": "object",
   "additionalProperties": false,
   "required": [

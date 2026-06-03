@@ -3,8 +3,9 @@
 > **契约版本：v0.2**
 > 本文档是 Phase 0 产出，承接规划阶段 `规划/共享层/数据契约.md` 的字段定义。机器可校验源是
 > [`../shared/schema/event.schema.json`](../shared/schema/event.schema.json)（唯一源，后端/前端模型均由它生成）。
-> **冻结说明**：Phase 0 落地后，本目录 `platform/docs/` 与 `platform/shared/schema/` 成为 SSOT；
-> `规划/` 整体冻结归档，此后字段改动只改这里 + JSON Schema + 建表 SQL（三者一致）。
+> **冻结说明**：Phase 0 落地后，数据契约已从 `规划/共享层/数据契约.md` 转移到本目录
+> `platform/docs/` 与 `platform/shared/schema/`；`规划/` 仅对已转移的两份契约部分冻结。
+> 此后字段改动只改这里 + JSON Schema + 建表 SQL（三者一致）。
 
 每一次工具使用 = 一条记录。字段分三圈：圈一硬性必填（入场券），圈二 LLM 专属，圈三弹性选填。
 
