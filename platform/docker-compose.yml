@@ -1,0 +1,50 @@
+# docker-compose.yml —— 局域网内一键起（Phase 0 骨架）
+# 仅占位：可启动，但服务内部业务逻辑留空（接入 API / 两前端尚未实现）。
+# 所有密钥/地址走环境变量（见 .env，绝不硬编码、绝不入库）。
+
+services:
+  # ---- 存储层：PostgreSQL（metadata 用 JSONB）----
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-platform}
+      POSTGRES_USER: ${POSTGRES_USER:-platform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 .env 设置，勿硬编码}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      # 首次启动自动执行建表 SQL（事件表 + 注册表 + 账号表）
+      - ./backend/storage/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---- 接入层：统一上报 API（占位，Phase 1 实现）----
+  ingestion:
+    image: python:3.11-slim
+    working_dir: /app
+    command: ["python", "-c", "print('ingestion API 占位：Phase 1 实现接收→校验契约→落库'); import time; time.sleep(3600)"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://platform:@postgres:5432/platform}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ---- 展示层：使用端 · 使用者门户（占位，Phase 4 实现）----
+  user-portal:
+    image: node:20-alpine
+    working_dir: /app
+    command: ["sh", "-c", "echo 'user-portal 占位：Phase 4 实现门户前端'; sleep 3600"]
+    ports:
+      - "5173:5173"
+
+  # ---- 展示层：数据端 · 后台分析台（占位，Phase 4 实现）----
+  admin-dashboard:
+    image: node:20-alpine
+    working_dir: /app
+    command: ["sh", "-c", "echo 'admin-dashboard 占位：Phase 4 实现看板前端'; sleep 3600"]
+    ports:
+      - "5174:5174"

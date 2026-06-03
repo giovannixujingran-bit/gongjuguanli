@@ -1,0 +1,65 @@
+# CI —— 机器闸门兜底（最简骨架，原型档）。
+# 现在：轻量关卡必过；重关卡 continue-on-error（先有架子、规则后续收紧）。
+# 合入主干前：把 continue-on-error 去掉、mypy 开 --strict、补测试覆盖率门槛。
+# 见 规划/总则/代码规范.md §五「闸门强度按阶段校准」。
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --group dev
+      - name: ruff format --check
+        run: uv run ruff format --check .
+      - name: ruff check
+        run: uv run ruff check .
+      - name: mypy
+        run: uv run mypy backend collection
+        continue-on-error: true   # 原型档：合主干前转必过并开 --strict
+      - name: vulture（死代码）
+        run: uv run vulture
+        continue-on-error: true
+      - name: import-linter（分层依赖）
+        run: uv run lint-imports
+        continue-on-error: true   # 待 backend/collection 下出现真实包后转必过
+      - name: pytest
+        run: uv run pytest
+        continue-on-error: true   # 原型档：暂无测试
+
+  frontend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [user-portal, admin-dashboard]
+    defaults:
+      run:
+        working-directory: platform/apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+        continue-on-error: true   # 占位 app 暂无 lockfile/源码
+      - name: prettier
+        run: npx prettier --check .
+        continue-on-error: true
+      - name: eslint
+        run: npm run lint
+        continue-on-error: true
+      - name: tsc
+        run: npm run typecheck
+        continue-on-error: true
+      - name: knip（死代码）
+        run: npm run deadcode
+        continue-on-error: true

@@ -1,0 +1,85 @@
+# pyproject.toml —— 后端（接入 / 存储 / 分析 / 账号 / 采集）工程配置 + 机器闸门
+# 闸门强度档：原型档（宽松能跑）。合入主干前才拧到全严格——见 ../规划/总则/代码规范.md §五。
+# 包管理：uv。
+
+[project]
+name = "platform-backend"
+version = "0.0.0"
+description = "内部工具汇总与分析平台 —— 共享后端（接入/存储/分析/账号）+ 采集层"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "pydantic>=2.6",
+]
+
+[dependency-groups]
+# 开发期工具（机器闸门）。装：uv sync --group dev
+dev = [
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "vulture>=2.11",
+    "import-linter>=2.0",
+    "pytest>=8.0",
+    "coverage>=7.5",
+    "datamodel-code-generator>=0.25",  # schema → Pydantic 模型代码生成
+]
+
+# =====================================================================
+# 格式化 + Lint：ruff
+# =====================================================================
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+# 自动生成物禁止手改，也不参与 lint（文件头标「自动生成，勿手改」）
+extend-exclude = ["shared/contracts/**"]
+
+[tool.ruff.lint]
+# 原型档：先开基础规则（含未用 import F401）。合主干前再加 B/UP/ANN 等收紧。
+select = ["E", "F", "I", "W"]
+
+# =====================================================================
+# 类型检查：mypy（原型档不开 --strict；合主干前在 CI 拧严）
+# =====================================================================
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = true
+exclude = ["shared/contracts/"]
+# strict = true   # ← 合入主干前启用
+
+# =====================================================================
+# 死代码扫描：vulture（残留 / AI 不敢删）
+# =====================================================================
+[tool.vulture]
+min_confidence = 80
+paths = ["backend", "collection"]
+exclude = ["shared/contracts/"]
+
+# =====================================================================
+# 分层依赖：import-linter（单向依赖，禁止反向/跨层）
+# 采集 → 接入 → 存储 → 分析 → 展示；两个前端互不 import。
+# 注：待 backend/collection 下出现真实 Python 包后启用（接进 pre-commit/CI）。
+# =====================================================================
+[tool.importlinter]
+root_packages = ["backend", "collection"]
+
+[[tool.importlinter.contracts]]
+name = "单向分层：采集 → 接入 → 存储 → 分析"
+type = "layers"
+layers = [
+    "backend.analytics",
+    "backend.storage",
+    "backend.ingestion",
+    "collection",
+]
+
+# =====================================================================
+# 测试 + 覆盖率：pytest / coverage（分析层纯函数必须有单测）
+# =====================================================================
+[tool.pytest.ini_options]
+testpaths = ["backend", "collection"]
+python_files = ["test_*.py"]
+
+[tool.coverage.run]
+source = ["backend", "collection"]
+omit = ["shared/contracts/*"]

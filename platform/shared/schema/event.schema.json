@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.platform/schema/event.schema.json",
+  "title": "UsageEvent",
+  "description": "统一事件记录 —— 每一次工具使用 = 一条记录。本文件是数据契约的唯一机器可校验源（SSOT），后端 Pydantic 模型与前端 TS 类型均由它生成，禁止手写字段。字段语义与分圈见 ../../docs/schema.md（部署后 SSOT）/ 规划/共享层/数据契约.md（当前 SSOT）。契约版本见 schema_version 常量。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "schema_version",
+    "tool_id",
+    "conversation_id",
+    "start_time",
+    "end_time",
+    "duration_ms",
+    "status"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "圈一·硬性必填。记录唯一 ID，客户端生成，用于异步上报的幂等去重。"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+$",
+      "description": "圈一·硬性必填。本条记录遵循的数据契约版本（如 v0.2），与代码/Git 版本无关；库里混存多版数据据此解析。",
+      "examples": ["v0.2"]
+    },
+    "tool_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "圈一·硬性必填。哪个工具，由平台统一分配的固定 ID（见工具注册表）。"
+    },
+    "conversation_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "圈一·硬性必填。会话/任务 ID：把同属「用户眼里一次使用」的多次调用串起来。何为「一次使用」由工具按触发点自定义。单次调用即一次使用时可与 record_id 一致。"
+    },
+    "start_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "圈一·硬性必填。调用开始时间（统一 UTC，ISO 8601）。"
+    },
+    "end_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "圈一·硬性必填。调用结束时间（统一 UTC，ISO 8601）。"
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "圈一·硬性必填。耗时（毫秒），建议采集端测量以避免跨机时钟偏差。"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["success", "failed", "timeout"],
+      "description": "圈一·硬性必填。调用结局。失败/超时也必须上报（接入契约硬性义务）。"
+    },
+    "ingested_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "圈一·服务端写入。入库时间，区别于事件时间，便于处理晚到/异步数据。客户端上报时可不带，由接入层落库时盖章。"
+    },
+
+    "model": {
+      "type": ["string", "null"],
+      "description": "圈二·LLM 专属（非 LLM 工具留 null）。模型名。"
+    },
+    "prompt_tokens": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "圈二。输入 token。归一化字段——采集端把各家原始字段（如 Claude input_tokens）映射进来。"
+    },
+    "completion_tokens": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "圈二。输出 token。归一化字段（如 Claude output_tokens）。"
+    },
+    "total_tokens": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "圈二。总 token。源头无返回时由采集端 = 输入 + 输出 自行补齐。"
+    },
+    "cost": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "圈二。本次成本，可空。token→金额换算后置（需带生效时间的价格表），本阶段以 token 计数准确为主。"
+    },
+    "cost_source": {
+      "type": ["string", "null"],
+      "enum": ["source", "computed", null],
+      "description": "圈二。成本来源：source=源头直接返回（如异步任务的 cost）；computed=分析层按价表算。区分「事实」与「算出来的值」。"
+    },
+
+    "user_id": {
+      "type": ["string", "null"],
+      "description": "圈三·弹性选填。使用者，门户注入；无法归属到人时记为匿名（anonymous）。绝不因拿不到人而拒收。"
+    },
+    "team_id": {
+      "type": ["string", "null"],
+      "description": "圈三·弹性选填。所属团队，随 user_id 解析；无法归属时匿名/空。"
+    },
+    "result_quality": {
+      "type": ["number", "string", "null"],
+      "description": "圈三·弹性选填。结果质量信号（如用户点赞/采纳评分），ROI 分子的占位输入之一。"
+    },
+    "adopted": {
+      "type": ["boolean", "null"],
+      "description": "圈三·弹性选填。结果是否被采纳，ROI 的关键输入。"
+    },
+    "input_content": {
+      "type": ["string", "null"],
+      "description": "圈三·通用选填（任何工具皆可记，不限大模型）。输入原文，受敏感策略约束（见 schema.md，待人工确认）。"
+    },
+    "output_content": {
+      "type": ["string", "null"],
+      "description": "圈三·通用选填。输出原文，受敏感策略约束。"
+    },
+    "metadata": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "description": "圈三·自由口袋（JSONB）。工具特异数据任意塞键值对，加字段不改主表；缓存/推理 token 等明细也塞这里。"
+    }
+  }
+}

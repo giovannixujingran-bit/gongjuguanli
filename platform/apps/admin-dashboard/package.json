@@ -1,0 +1,22 @@
+{
+  "name": "admin-dashboard",
+  "private": true,
+  "version": "0.0.0",
+  "description": "数据端 · 后台分析台（占位，Phase 4 实现）。栈：React + Vite + TypeScript。",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "deadcode": "knip"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "knip": "^5.0.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^7.0.0"
+  }
+}
