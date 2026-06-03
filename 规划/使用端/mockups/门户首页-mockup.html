@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<!--
+  内部工具门户 · 使用端首页 —— 已确认的 UI 视觉参考稿（正式方案）
+  规范 SSOT 见 ../工具门户.md §三 界面设计；本文件按其呈现，作为前端实现的视觉基准（不是另一份 SSOT）。
+  单套设计 + 顶栏「日/夜」主题切换（默认浅色）。纯静态单文件，双击用浏览器打开。示例数据为占位。
+-->
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>内部工具门户 · 首页（UI 视觉参考稿）</title>
+<style>
+  /* ---------- 主题变量：三套方案 ---------- */
+  :root{
+    --bg:#f4f6fb; --surface:#ffffff; --text:#1f2433; --muted:#7a8197;
+    --accent:#3b6cff; --accent-soft:#e8efff; --border:#e6e9f2;
+    --shadow:0 1px 2px rgba(20,30,60,.04),0 8px 24px rgba(20,30,60,.06);
+    --shadow-hover:0 6px 14px rgba(20,30,60,.10),0 18px 40px rgba(20,30,60,.14);
+    --radius:16px; --card-min:240px; --gap:18px; --thumb-ratio:16/9;
+  }
+  /* 夜间主题：同一套布局，仅换配色 */
+  html[data-theme="dark"]{
+    --bg:#0f1320; --surface:#1a2031; --text:#e8ecf6; --muted:#8b93ab;
+    --accent:#8b5cf6; --accent-soft:#2a2347; --border:#2a3145;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    --shadow-hover:0 8px 18px rgba(0,0,0,.4),0 22px 48px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    transition:background .25s,color .25s}
+
+  /* ---------- 顶栏（吸顶） ---------- */
+  .topwrap{position:sticky;top:0;z-index:50;background:var(--bg);
+    border-bottom:1px solid var(--border);transition:background .25s,border-color .25s}
+  .topbar{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 32px;max-width:1180px;margin:0 auto}
+  .theme-toggle{border:1px solid var(--border);background:var(--surface);color:var(--text);
+    padding:6px 13px;border-radius:20px;cursor:pointer;font-size:13px;margin-right:14px}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
+  .logo .mark{width:30px;height:30px;border-radius:9px;
+    background:linear-gradient(135deg,var(--accent),#9db4ff);
+    display:grid;place-items:center;color:#fff;font-size:15px}
+  .user{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+  .avatar{width:30px;height:30px;border-radius:50%;
+    background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600}
+
+  /* ---------- 搜索区 ---------- */
+  .hero{max-width:760px;margin:18px auto 8px;padding:0 24px;display:flex;gap:12px;align-items:center}
+  .search{flex:1;display:flex;align-items:center;gap:10px;background:var(--surface);
+    border:1px solid var(--border);border-radius:30px;padding:13px 20px;box-shadow:var(--shadow)}
+  .search input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font-size:15px}
+  .search input::placeholder{color:var(--muted)}
+  .ai-btn{white-space:nowrap;border:0;cursor:pointer;border-radius:30px;padding:13px 20px;
+    font-size:14px;font-weight:600;color:#fff;
+    background:linear-gradient(135deg,var(--accent),#9b6cff);box-shadow:var(--shadow)}
+
+  /* ---------- AI 推荐结果面板（点 ✨ 展开） ---------- */
+  .ai-panel{max-width:1180px;margin:6px auto 0;padding:0 32px;display:none}
+  .ai-panel.open{display:block;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
+  .ai-card{background:var(--accent-soft);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 18px;margin-top:8px}
+  .ai-card .reason{font-size:14px;color:var(--text);margin:0 0 12px}
+  .ai-card .reason b{color:var(--accent)}
+
+  /* ---------- 分区 ---------- */
+  main{max-width:1180px;margin:0 auto;padding:8px 32px 60px}
+  .section{margin-top:30px}
+  .sec-head{display:flex;align-items:center;gap:10px;margin:0 0 14px}
+  .sec-head h2{font-size:16px;margin:0;font-weight:700}
+  .sec-head .ico{font-size:17px}
+  .sec-head .hint{margin-left:auto;font-size:12px;color:var(--muted)}
+  .divider{height:1px;background:var(--border);margin:34px 0 0}
+
+  .grid{display:grid;gap:var(--gap);
+    grid-template-columns:repeat(auto-fill,minmax(var(--card-min),1fr))}
+
+  /* ---------- 卡片（图片式媒体卡） ---------- */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    overflow:hidden;cursor:pointer;box-shadow:var(--shadow);
+    transition:transform .16s,box-shadow .16s}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover)}
+  .thumb{position:relative;aspect-ratio:var(--thumb-ratio);overflow:hidden}
+  .thumb .shot{position:absolute;inset:0;display:grid;place-items:center;
+    font-size:13px;color:rgba(255,255,255,.92);font-weight:600;letter-spacing:.5px}
+  .card:hover .thumb .shot{transform:scale(1.05);transition:transform .3s}
+  /* 缺图占位：色块 + 大图标 + 名称 */
+  .thumb.placeholder{display:grid;place-items:center;gap:6px;
+    background:var(--accent-soft)}
+  .thumb.placeholder .pico{font-size:30px}
+  .thumb.placeholder .pname{font-size:13px;font-weight:600;color:var(--accent)}
+  .star{position:absolute;top:9px;right:9px;width:28px;height:28px;border-radius:50%;
+    background:rgba(0,0,0,.32);color:#fff;border:0;cursor:pointer;font-size:15px;
+    display:grid;place-items:center;backdrop-filter:blur(4px)}
+  .star.fav{color:#ffd34d}
+  .card-body{padding:11px 13px 13px}
+  .card-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+  .card-title .ti{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;
+    font-size:12px;background:var(--accent-soft);color:var(--accent);flex:none}
+  .card-desc{margin:6px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  .empty{color:var(--muted);font-size:13px;border:1px dashed var(--border);
+    border-radius:var(--radius);padding:18px;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- 顶栏（吸顶，含日/夜切换） -->
+<div class="topwrap">
+  <div class="topbar">
+    <div class="logo"><span class="mark">⬢</span> 内部工具门户</div>
+    <div class="user">
+      <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 夜间</button>
+      欢迎回来 <span class="avatar">张</span> 张三 ▾
+    </div>
+  </div>
+</div>
+
+<!-- 搜索区 -->
+<div class="hero">
+  <div class="search">
+    <span>🔍</span>
+    <input id="q" placeholder="搜工具，或描述你想做什么…" oninput="filter()">
+  </div>
+  <button class="ai-btn" onclick="toggleAI()">✨ 推荐工具</button>
+</div>
+
+<!-- AI 推荐结果（点 ✨ 展开的样子） -->
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-card">
+    <p class="reason">根据「<b id="aiQuery">把一批图片压缩并去掉背景</b>」，为你推荐：</p>
+    <div class="grid" id="aiGrid"></div>
+  </div>
+</div>
+
+<main>
+  <!-- 我的收藏 -->
+  <section class="section">
+    <div class="sec-head"><span class="ico">★</span><h2>我的收藏</h2>
+      <span class="hint">〔可拖拽调整顺序〕</span></div>
+    <div class="grid" id="favGrid"></div>
+  </section>
+
+  <!-- 最近使用 -->
+  <section class="section">
+    <div class="sec-head"><span class="ico">🕘</span><h2>最近使用</h2>
+      <span class="hint">自动：按使用频次 / 时间</span></div>
+    <div class="grid" id="recentGrid"></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 分类分区 -->
+  <section class="section">
+    <div class="sec-head"><span class="ico">📁</span><h2>文本 / 写作</h2></div>
+    <div class="grid" data-cat="text"></div>
+  </section>
+  <section class="section">
+    <div class="sec-head"><span class="ico">🖼️</span><h2>图像</h2></div>
+    <div class="grid" data-cat="image"></div>
+  </section>
+  <section class="section">
+    <div class="sec-head"><span class="ico">📊</span><h2>数据 / 分析</h2></div>
+    <div class="grid" data-cat="data"></div>
+  </section>
+</main>
+
+<script>
+  // ---------- 占位数据 ----------
+  // thumb: 渐变色用来模拟「功能截图」；noThumb=true 演示缺图占位卡
+  const TOOLS = [
+    {name:"文案助手", ico:"✍️", cat:"text", desc:"输入要点，生成营销文案、邮件、周报。",
+      thumb:"linear-gradient(135deg,#6a8bff,#9db4ff)", shot:"文案助手 · 界面预览"},
+    {name:"智能翻译", ico:"🌐", cat:"text", desc:"中英日多语互译，保留排版与术语表。",
+      thumb:"linear-gradient(135deg,#22b07d,#7bd5ad)", shot:"翻译 · 界面预览"},
+    {name:"会议纪要", ico:"🎙️", cat:"text", desc:"上传录音，自动转写并生成结构化纪要。",
+      thumb:"linear-gradient(135deg,#f0883e,#f7b27a)", shot:"会议纪要"},
+    {name:"代码助手", ico:"💻", cat:"text", noThumb:true,
+      desc:"解释、补全、重构代码，支持多语言。"},
+    {name:"图片去背景", ico:"🪄", cat:"image", desc:"一键抠图，批量去除图片背景。",
+      thumb:"linear-gradient(135deg,#8b5cf6,#c4a7ff)", shot:"去背景 · 界面预览"},
+    {name:"批量改图", ico:"🖼️", cat:"image", desc:"批量压缩 / 改尺寸 / 转格式 / 加水印。",
+      thumb:"linear-gradient(135deg,#2d9cdb,#7ec8f0)", shot:"批量改图"},
+    {name:"PPT 生成器", ico:"📑", cat:"image", desc:"给主题和要点，自动排出整套幻灯片。",
+      thumb:"linear-gradient(135deg,#eb5757,#f29a9a)", shot:"PPT 生成器"},
+    {name:"数据看板生成", ico:"📈", cat:"data", desc:"上传表格，自动出图表与分析看板。",
+      thumb:"linear-gradient(135deg,#11998e,#56ccb0)", shot:"看板生成 · 界面预览"},
+    {name:"SQL 问答", ico:"🗄️", cat:"data", noThumb:true,
+      desc:"用自然语言查库，自动生成并执行 SQL。"},
+    {name:"报表导出", ico:"📤", cat:"data", desc:"按模板批量导出月度报表为 Excel / PDF。",
+      thumb:"linear-gradient(135deg,#3b6cff,#8fa9ff)", shot:"报表导出"},
+  ];
+
+  function card(t, fav){
+    const inner = t.noThumb
+      ? `<div class="thumb placeholder"><button class="star ${fav?'fav':''}" onclick="event.stopPropagation();tog(this)">${fav?'★':'☆'}</button><div class="pico">${t.ico}</div><div class="pname">${t.name}</div></div>`
+      : `<div class="thumb"><div class="shot" style="background:${t.thumb}">${t.shot||t.name}</div><button class="star ${fav?'fav':''}" onclick="event.stopPropagation();tog(this)">${fav?'★':'☆'}</button></div>`;
+    return `<article class="card" data-name="${t.name}">${inner}
+      <div class="card-body">
+        <div class="card-title"><span class="ti">${t.ico}</span>${t.name}</div>
+        <p class="card-desc">${t.desc}</p>
+      </div></article>`;
+  }
+  function tog(b){ b.classList.toggle('fav'); b.textContent = b.classList.contains('fav')?'★':'☆'; }
+
+  // 渲染
+  const byName = n => TOOLS.find(t=>t.name===n);
+  document.getElementById('favGrid').innerHTML =
+    ["批量改图","文案助手","数据看板生成","智能翻译"].map(n=>card(byName(n),true)).join('');
+  document.getElementById('recentGrid').innerHTML =
+    ["图片去背景","PPT 生成器","会议纪要","报表导出","代码助手"].map(n=>card(byName(n),false)).join('');
+  document.querySelectorAll('.grid[data-cat]').forEach(g=>{
+    g.innerHTML = TOOLS.filter(t=>t.cat===g.dataset.cat).map(t=>card(t,false)).join('');
+  });
+  document.getElementById('aiGrid').innerHTML =
+    ["批量改图","图片去背景"].map(n=>card(byName(n),false)).join('');
+
+  // ---------- mockup 交互 ----------
+  function toggleTheme(){
+    const h=document.documentElement, dark=h.dataset.theme==='dark';
+    h.dataset.theme = dark?'light':'dark';
+    document.getElementById('themeBtn').textContent = dark?'🌙 夜间':'☀️ 日间';
+  }
+  function toggleAI(){ document.getElementById('aiPanel').classList.toggle('open'); }
+  function filter(){
+    const q=document.getElementById('q').value.trim().toLowerCase();
+    document.querySelectorAll('main .card').forEach(c=>{
+      c.style.display = c.dataset.name.toLowerCase().includes(q)?'':'none';
+    });
+  }
+</script>
+</body>
+</html>

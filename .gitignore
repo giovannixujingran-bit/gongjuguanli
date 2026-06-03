@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Node / 前端
+node_modules/
+.pnpm-store/
+*.tsbuildinfo
+.vite/
+
+# 环境与密钥（绝不入库：中转站地址 / API Key / DB 口令 / LLM 地址）
+.env
+.env.*
+!.env.example
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 数据库数据卷（docker-compose 本地数据）
+pgdata/
