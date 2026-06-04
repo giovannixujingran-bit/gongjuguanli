@@ -52,7 +52,7 @@
 | 异步任务类（生成图/视频） | 两段式采集：耗时与结果分两次拿，token 留 NULL，成本走源头 `cost` |
 | 「一次使用」界定 | 由工具按触发点自定义（触发式埋点，非平台自动观测）；一次使用内多次调用用同一 `conversation_id` 串联 |
 | 不调大模型的工具 | 圈二留 NULL，只记圈一（次数/耗时/status）+（可选）输入输出 / metadata |
-| 敏感内容边界 | 见 [schema.md](schema.md) 敏感内容策略一节（待人工确认） |
+| 敏感内容边界 | 原文 `input_content`/`output_content` 可记录；仅读取侧可见范围待定，见 [schema.md](schema.md) 敏感内容策略一节 |
 
 ---
 

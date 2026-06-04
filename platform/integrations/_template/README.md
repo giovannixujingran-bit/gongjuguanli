@@ -4,9 +4,9 @@
 [pilot_checklist.md](pilot_checklist.md) 执行试点。工具本体不放这里，本目录只放接入说明、
 配置样例、验证记录和回滚方案。
 
-Phase 2C 只选择**低风险、可改代码、调用路径清楚**的真实工具。首个试点不记录
-`input_content` / `output_content`，只记录圈一事实、token、status、duration，以及
-`metadata.entry_source` / `metadata.auth_method`。
+Phase 2C 只选择**低风险、可改代码、调用路径清楚**的真实工具。记录圈一事实、token、
+status、duration，以及 `metadata.entry_source` / `metadata.auth_method`；`input_content` /
+`output_content` 原文可按需记录（已放开，读取侧权限待定，见 [pilot_checklist.md](pilot_checklist.md)）。
 
 ## 文件
 

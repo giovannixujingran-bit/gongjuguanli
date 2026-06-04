@@ -21,7 +21,7 @@
 - **Phase 2 — 采集层 + 统一身份**
   a) **Phase 2A：参考 SDK + demo 工具**。SDK 是工具自报的便捷封装：自动生成 `record_id` / `conversation_id`，填 `schema_version`，支持异步上报、本地缓冲、重试队列、失败 / 超时也上报、token 归一化。demo 工具先验证 `demo_tool → SDK → /events → DB`，不接真实工具。
   b) **Phase 2B：统一 Auth API 最小版**。提供创建用户、登录、校验 token、`/auth/me`。入口来源分 `portal` / `direct` / `unknown`：从门户进入用短期 `launch_token`；直接打开工具时，工具可通过 SDK / Auth API 让用户使用同一账号登录；识别不了就 `anonymous`。本阶段先把 `entry_source` / `auth_method` 放进 `metadata`，暂不升 schema。
-  c) **Phase 2C：真实工具低风险试点**。只选一个可改代码、低使用量、不影响生产的工具；先不记录 `input_content` / `output_content`，只记圈一 + token + status + duration + metadata 入口来源，跑一段时间看数据质量。
+  c) **Phase 2C：真实工具低风险试点**。只选一个可改代码、低使用量、不影响生产的工具；记圈一 + token + status + duration + metadata 入口来源，`input_content` / `output_content` 原文可按需记录（已放开，决策 #34），跑一段时间看数据质量。
   d) **Phase 2D：本地转发服务**。转发请求给中转站 + 旁路记一条流水，供 OpenClaw / 黑盒工具改指向；它是兜底，不是所有流量必经总闸。形态取「透明代理为主 + 旁路记录兜底」两者都要。**设计稿见 [collection/relay/README.md](../collection/relay/README.md)（待确认后实现）**。
 
 - **Phase 2.5 — 接入工程化（配合多方协作）**
@@ -79,7 +79,7 @@ platform/
 └── docker-compose.yml
 ```
 
-> **当前进度（Phase 2A/2B 最小实现已完成，Phase 2C 已有试点模板）**：`platform/` 已产出 Phase 0 地基，打通 Phase 1 最小后端闭环，并新增真实数据库冒烟脚本、参考 SDK、demo 工具、统一 Auth API 最小版与真实工具试点模板。真实 PostgreSQL 冒烟需在具备 Docker / PostgreSQL 的机器上执行；尚未接入真实工具。
+> **当前进度（Phase 2A/2B 最小实现已完成，Phase 2C 已有试点模板）**：`platform/` 已产出 Phase 0 地基，打通 Phase 1 最小后端闭环，并新增真实数据库冒烟脚本、参考 SDK、demo 工具、统一 Auth API 最小版与真实工具试点模板。**Phase 1.5 真实 PostgreSQL 冒烟已在本机通过**（免安装 PG16 + uvicorn 起的真实服务，`模拟JSON → /events → usage_event`）；已登记首个真实工具 `aird-report`，工具侧 SDK 接入进行中（Phase 2C）。
 > **SSOT 已全部转移到 `platform/docs/`**：原 `规划/` 目录（数据契约 / 接入契约 / 架构与原则 / 执行计划 / 代码规范 / 工具注册表 / 工具门户）已**全部搬入本目录并退役**。此后所有规范只改 `platform/docs/`，不再有「部分冻结」的双轨状态（见 [CLAUDE.md](../../CLAUDE.md) §1）。
 > **下一步 = 执行真实数据库冒烟 + Phase 2C 真实工具试点验证**，交接命令见 §三。
 
@@ -122,7 +122,7 @@ platform/
    - 选择一个低风险、可改代码、调用路径清楚的真实工具；
    - 复制 platform/integrations/_template 为该工具目录，填写配置与试点记录；
    - 使用 collection.sdk.PlatformTracker 或等价封装上报；
-   - 首轮不记录 input_content / output_content，只记圈一 + token + status + duration + metadata 入口来源；
+   - 记圈一 + token + status + duration + metadata 入口来源；input_content / output_content 原文按需记录（已放开，见 schema.md 敏感内容策略）；
    - 工具侧必须保留环境变量开关，支持关闭上报回滚。
 3. 验证：
    - 验证 portal / direct / unknown 至少覆盖实际存在的入口；
@@ -136,7 +136,7 @@ platform/
 - 不实现分析层四类算式（Phase 3）、两个前端（Phase 4）、批量接真实工具（Phase 5）。
 - 不接真实中转站；不硬编码任何 Key/口令/中转站地址/LLM 地址（全走 .env）。
 - 不把 entry_source 立刻加成事件主字段；先放 metadata，等验证稳定后再考虑 schema v0.3。
-- 不替用户决定敏感内容策略、读取侧权限、ROI 价值信号、价格表——这些仍「待定，需人工确认」，保持占位。
+- 原文记录策略已放开（决策 #34，可记 input_content / output_content）；读取侧权限、ROI 价值信号、价格表仍「待定，需人工确认」，保持占位。
 - 改数据契约要按 CLAUDE.md §3 四连动（升 schema_version + 决策记录 + event.schema.json + 建表 SQL + 重跑代码生成）。
 
 【完成后】

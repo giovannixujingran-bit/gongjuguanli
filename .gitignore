@@ -38,3 +38,6 @@ Thumbs.db
 
 # 数据库数据卷（docker-compose 本地数据）
 pgdata/
+
+# 运行态：启停脚本的 PID / 日志
+.run/

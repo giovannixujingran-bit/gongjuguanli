@@ -17,6 +17,7 @@
 | 总则 | [代码规范](platform/docs/code-standards.md) | 工程纪律：单向依赖、schema 代码生成、删不注释、CI 机器闸门 | 写代码的人/AI | 偶尔 |
 | 共享层 | [数据契约](platform/docs/schema.md) | 统一事件 Schema（三圈字段），**带契约版本号** | 开发 + 接入方 | 跟 schema_version 演进 |
 | 共享层 | [工具注册表](platform/docs/registry.md) | `tool_id` 来源 + 门户展示字段，两端共读 | 开发 / 接入方 / 门户 | 偶尔 |
+| 共享层 | [metadata 约定与字段治理](platform/docs/metadata-conventions.md) | metadata 怎么记（统一形状）+ 字段三层模型 + 晋升流程 | 开发 + 接入方 | 跟约定演进 |
 | 数据端 | [接入指南](platform/docs/integration-guide.md) | 接入方总入口：五步流程 + 最小示例 + 边界，可直接发给接入方 | 工具方（接入方） | 偶尔 |
 | 数据端 | [接入契约](platform/docs/contract.md) | 接入义务、边角情况、兜底通道 | 工具方（接入方） | 偶尔 |
 | 使用端 | [工具门户](platform/docs/portal.md) | 分类卡片、排序逻辑、AI 工具推荐 | 建使用端的团队 | 跟门户演进 |
@@ -73,13 +74,17 @@
 
 32. **`tool_id` 发放通道＝管理员 API，命名规则定稿 `<team>-<tool>`**：原 `tool_id` 只能由平台方手工 `INSERT`（注册表无任何发放入口），是多方协作「第一公里」的断点；命名规则也一直「待团队端确认」。本轮拍板：① **形态取管理员 API**（`POST /registry/tools`）而非离线 CLkI——平台已有 FastAPI + admin 门禁（#31），注册走同一套 REST + 鉴权才是工程规范，且不必把 DB 凭据散给各团队（离线 seed 脚本只用于引导首个 admin）；② **命名规则定稿** `<team>-<tool>`（全小写 kebab、≥2 段、正则 `^[a-z0-9]+(?:-[a-z0-9]+)+$`），格式由平台固定、段值由团队选取，不再各团队各立规则；机器源 `platform/backend/storage/registry.py` 的 `TOOL_ID_REGEX`，发放通道用它自动校验（非法 422、重复 409）。本通道 MVP 只发**接入字段**，门户展示字段后续再设。注册表不属事件 `schema_version`，本决策不升事件契约版本。
 
+33. **字段治理＝三层模型，metadata 带约定、按信号晋升为主表列**：解决「接入方要记没预置的字段时怎么办、metadata 会不会乱、长期能不能管」。定三层：① **主表统一字段**（圈一/二/三）平台定、横向可比、改它＝升 schema 版本（重）；② **metadata 语义约定** 平台定形状、接入方申请、放 metadata，加约定只改约定文档、**不升事件契约版本**（轻）；③ 纯一次性 metadata 工具自填。关键厘清：「**要不要记**」取决于有没有用（与频率无关，有用就全记）、「**记在哪**」才看频率（高频进列、低频留 metadata），**「不晋升」≠「不记录」**——留 metadata 照样完整持久可查。晋升（metadata→列）按**信号触发**（同类第 3 个工具又申请 / JSONB 分析费劲），非定期开会；晋升对接入方透明（平台从 metadata 映射进列，老工具不改），难点在历史脏数据，故立**打字规则**（snake_case、时间用 number 毫秒、二进制只存引用不入库、原文走主字段受敏感策略）保证将来好搬家。SSOT 落 `platform/docs/metadata-conventions.md`。其中「metadata 不合约定是否记告警」仍**待人工确认**；敏感内容策略见决策 #34。
+
+34. **放开原文记录，读取侧权限留占位**：原「首轮不记原文」把两层顾虑搅在一起——写入侧（谁发、会不会乱塞）与读取侧（多用户上看板谁能看原文）。本平台唯一接入方就是平台方本人、内部局域网、写入侧本就不做鉴权（#7），故拍板：**`input_content` / `output_content` 现阶段允许记录原文，写入侧不设门禁**，始终不阻断入库。仅保留两处占位仍待人工确认：① **读取侧可见范围**——多用户上看板后按用户账号表角色分级（挂靠 #17），现阶段单人不设限；② **留存策略**（原文存多久 / 转摘要 / 删除）随服务器部署再定（#8）。本决策只放开 prose 策略、不改字段（`input_content`/`output_content` 早在 #20 已是通用选填），**不升事件契约版本**；连带改 schema.md / integration-guide.md / metadata-conventions.md / contract.md / execution-plan.md / 试点模板，并重跑 `export_integration_kit.py` 重生成分发包。
+
 ---
 
 ## 下一步
 
 **Phase 1.5 真实数据库冒烟已通过、`tool_id` 发放通道已实现**：在 Phase 2A/2B 闭环上，已在本机用免安装 PostgreSQL 16 真实跑通 `模拟 JSON → /events → usage_event` 落库 + 幂等（详见开发日志），并新增管理员发放通道 `POST /registry/tools`（决策 #32）。全套机器闸门在本机真实跑绿（决策 #32 实现 + 此前修复的 mypy 生成器红灯）。
 
-- 进入 **Phase 2C 真实工具试点**：挑一个低风险、可改代码的真实工具，先经发放通道领 `tool_id`，复制 `platform/integrations/_template`，首轮不记录原文，只记圈一 + token + status + duration + 入口来源。
+- 进入 **Phase 2C 真实工具试点**：挑一个低风险、可改代码的真实工具，先经发放通道领 `tool_id`，复制 `platform/integrations/_template`，记圈一 + token + status + duration + 入口来源；原文 `input_content`/`output_content` 可按需记录（已放开，决策 #34，读取侧权限待定）。
 - **Phase 2.5 接入工程化**剩余两项：自助契约校验 CLI（`tools/validate_payload.py`）、接入层连接池（`psycopg_pool`，放量前、需联网装依赖）。
 - 试点稳定后再评估 **Phase 2D relay**（设计稿待确认）与 schema v0.3：`entry_source` / `auth_method` 暂继续放在 `metadata`。
 - 真实 TCP 服务（uvicorn）那一跳本机跑不了（无 uvicorn + PyPI 被墙），到能联网 / 有 uvicorn 的机器按 `smoke.md` 原样补跑一次。

@@ -6,6 +6,8 @@
   "events_endpoint": "http://127.0.0.1:8000/events",
   "entry_source": "direct",
   "auth_method": "session_token",
+  "pilot_tool": true,
+  "integration_version": "1.0.0",
   "buffer_path": ".platform-buffer/<tool_id>.jsonl",
   "record_raw_content": false,
   "tracking_enabled_env": "PLATFORM_TRACKING_ENABLED"

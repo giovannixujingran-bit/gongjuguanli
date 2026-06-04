@@ -12,6 +12,7 @@
 - **契约版本单一来源**：`schema_version` 由 `platform/shared/schema_version.py` 统一提供（`CURRENT_SCHEMA_VERSION` / `SUPPORTED_SCHEMA_VERSIONS`），SDK 与冒烟脚本不再各自硬编码字面量；升版本只改一处。
 - **接入层对未知契约版本告警**：收到平台尚未支持解析的 `schema_version` 时**仍照收**（守「不阻断入库」），但记一条告警日志，避免静默沉淀无法解析的数据。
 - 接入模板 buffer 路径改为按工具隔离（含 `tool_id`），避免同机多工具共用同一 buffer 文件互相覆盖。
+- **放开原文记录（影响接入做法）**：原「首轮不记原文」取消，`input_content` / `output_content` 现可按需上报，写入侧不设门禁（内网、唯一接入方为平台方本人，决策 #34）。仅**读取侧可见范围**（多用户上看板谁能看原文）与**留存策略**仍待定、留占位。接入方不再被要求屏蔽原文；试点模板、接入指南、字段文档、metadata 约定同步更新。
 
 ### Added
 
@@ -21,6 +22,7 @@
 - 新增 Phase 2B 统一 Auth API 最小版：创建用户、登录、校验 token、`/auth/me`，并在 `/events` 中用合法 token 覆盖 payload 身份。
 - 新增 Phase 2C 真实工具试点模板：试点准入、采集范围、验收、回滚和配置样例。
 - **新增《接入指南》** `platform/docs/integration-guide.md`：给接入方的总入口（五步流程 + 最小示例 payload + 上报方式 + 边界），可直接发给外部团队照着改。字段/义务细则仍链 schema.md / contract.md（守 SSOT）。
+- **新增《metadata 语义约定与字段治理》** `platform/docs/metadata-conventions.md`：定字段三层模型（主表统一字段 / metadata 约定 / 一次性）、metadata 打字规则与约定库（文本/图片/分段耗时等统一记法）、没预置字段的申请扩展流程、metadata→主表列的晋升步骤。明确「有用就全记、频率只决定记在哪、不晋升≠不记录」。决策 #33。
 - **新增接入资料分发包生成器** `platform/tools/export_integration_kit.py`：从接入文档生成可直接发给无仓库访问权接入方的 `platform/integrations/handoff-kit/`（指南 + 契约 + 字段文档 + event.schema.json + 说明）。改接入文档后重跑即同步，分发包非 SSOT、勿手改（规范见 CLAUDE.md §3）。
 - **新增 `tool_id` 发放通道**：管理员 API `POST /registry/tools`（需 admin token，与 `/auth/users` 同门禁）。同事接入第一步——领 `tool_id`——从此有正式入口：带命名校验（`<team>-<tool>`，非法 422）、重复登记 409、落 `tool_registry`。命名规则定稿（决策 #32），机器源 `backend/storage/registry.py` 的 `TOOL_ID_REGEX`。已在本机 PostgreSQL 16 真库验证（注册 / 重复 / 非法 / 鉴权四态）。
 

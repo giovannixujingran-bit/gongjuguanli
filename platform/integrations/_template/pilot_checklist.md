@@ -14,8 +14,12 @@
 
 - 必填：`record_id`、`schema_version`、`tool_id`、`conversation_id`、`start_time`、`end_time`、`duration_ms`、`status`。
 - 尽量填：`model`、`prompt_tokens`、`completion_tokens`、`total_tokens`、`user_id`、`team_id`。
-- 必须放入 `metadata`：`entry_source`、`auth_method`、`pilot_tool`、`integration_version`。
-- 首轮不记录：`input_content`、`output_content`、业务敏感原文。
+- 必须放入 `metadata`（形状如下）：
+  - `entry_source`：`portal` / `direct` / `unknown`（见 [metadata-conventions.md](../../docs/metadata-conventions.md) / 决策 #29）。
+  - `auth_method`：身份获取方式，string，如 `session_token` / `bearer` / `none`。
+  - `pilot_tool`：boolean，试点期填 `true`，标记本条为试点数据，便于分析层把试点 / 正式数据分开。
+  - `integration_version`：string，埋点接入代码版本（semver，如 `1.0.0`），换埋点实现时递增，便于回溯哪一版产生的数据。
+- 可按需记录：`input_content`、`output_content` 原文（已放开，读取侧可见范围待定，见 [schema.md](../../docs/schema.md) 敏感内容策略）。
 
 ## 接入方式
 
