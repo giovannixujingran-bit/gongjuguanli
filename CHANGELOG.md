@@ -20,6 +20,8 @@
 - 新增 demo 工具，可模拟 `portal` / `direct` / `unknown` 三种入口。
 - 新增 Phase 2B 统一 Auth API 最小版：创建用户、登录、校验 token、`/auth/me`，并在 `/events` 中用合法 token 覆盖 payload 身份。
 - 新增 Phase 2C 真实工具试点模板：试点准入、采集范围、验收、回滚和配置样例。
+- **新增《接入指南》** `platform/docs/integration-guide.md`：给接入方的总入口（五步流程 + 最小示例 payload + 上报方式 + 边界），可直接发给外部团队照着改。字段/义务细则仍链 schema.md / contract.md（守 SSOT）。
+- **新增接入资料分发包生成器** `platform/tools/export_integration_kit.py`：从接入文档生成可直接发给无仓库访问权接入方的 `platform/integrations/handoff-kit/`（指南 + 契约 + 字段文档 + event.schema.json + 说明）。改接入文档后重跑即同步，分发包非 SSOT、勿手改（规范见 CLAUDE.md §3）。
 - **新增 `tool_id` 发放通道**：管理员 API `POST /registry/tools`（需 admin token，与 `/auth/users` 同门禁）。同事接入第一步——领 `tool_id`——从此有正式入口：带命名校验（`<team>-<tool>`，非法 422）、重复登记 409、落 `tool_registry`。命名规则定稿（决策 #32），机器源 `backend/storage/registry.py` 的 `TOOL_ID_REGEX`。已在本机 PostgreSQL 16 真库验证（注册 / 重复 / 非法 / 鉴权四态）。
 
 ### Planned

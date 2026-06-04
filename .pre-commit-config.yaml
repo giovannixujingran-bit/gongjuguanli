@@ -62,4 +62,5 @@ repos:
     hooks:
       - id: prettier
         files: ^platform/.*\.(ts|tsx|js|jsx|json|css|md)$
-        exclude: ^platform/shared/contracts/
+        # 生成物不参与格式化：shared/contracts（schema 生成）、integrations/handoff-kit（接入包生成）
+        exclude: ^platform/(shared/contracts/|integrations/handoff-kit/)

@@ -26,9 +26,11 @@ platform/                    代码区 + 全部规范文档（唯一 SSOT，原 
 ├ docs/code-standards.md      工程纪律：单向依赖、schema 代码生成、删不注释、CI 机器闸门。【写代码前必读】
 ├ docs/schema.md              统一事件 Schema（三圈字段），带契约版本号；机器源 shared/schema/event.schema.json。【随 schema_version 演进】
 ├ docs/registry.md            tool_id 来源 + 门户展示字段，两端共读。【偶尔】
-├ docs/contract.md            接入义务、边角情况、兜底。【给工具方看】
+├ docs/integration-guide.md   接入方总入口：五步流程+最小示例+边界，可直接发给接入方。【给工具方看·先读】
+├ docs/contract.md            接入义务、边角情况、兜底。【给工具方看·细则】
 ├ docs/portal.md              分类卡片、排序逻辑、AI 工具推荐。【使用端前端规划】
 └ backend / collection / shared / integrations / apps  代码：接入 API、生成模型、存储层、参考 SDK、demo、Auth API、试点模板；relay/分析层/前端仍占位。
+   （integrations/handoff-kit/＝接入资料分发包，由 tools/export_integration_kit.py 从接入文档生成，非 SSOT，勿手改。）
 ```
 
 **单一信息源（SSOT）铁律**：每个事实只在一个文件里定义，别处只**链接**、不复制。
@@ -84,6 +86,7 @@ platform/                    代码区 + 全部规范文档（唯一 SSOT，原 
 |---|---|
 | **数据契约（🧊 已冻结，改 platform/docs/schema.md）的任何字段**（增删改字段、改类型/枚举/必填） | ① 升 `platform/docs/schema.md` 顶部的**契约版本号**；② 在 `PROJECT_PLAN` 决策记录追加一条「为什么改」；③ 连带改 `platform/shared/schema/event.schema.json` 与 `platform/backend/storage/migrations` 建表 SQL（**三者一致**）；④ 重跑 `platform/scripts/gen-models` 重生成模型 |
 | **工具注册表字段（platform/docs/registry.md）**（接入字段或门户展示字段） | 检查 `docs/schema.md` 里 `tool_id` 引用、`docs/portal.md` 对展示字段的引用、`docs/execution-plan.md` 建表 SQL 说明；**不升事件契约版本**（注册表不属事件 schema） |
+| **改了接入方要看的文档**（`docs/integration-guide.md` / `docs/contract.md` / `docs/schema.md` / `shared/schema/event.schema.json`） | 若要重新分发给外部接入方，重跑 `python platform/tools/export_integration_kit.py` 重新生成 `platform/integrations/handoff-kit/`（接入资料分发包）。**勿手改 handoff-kit/ 内文件**——它是上述文档的生成副本、非 SSOT（同 `shared/contracts/` 的生成物对待） |
 | **新增/改名一份规范文档** | 更新 `PROJECT_PLAN` 的「文档地图」表 + `CLAUDE.md` §1 结构 |
 | **完成一个 Phase / 发布一个可用能力 / 改变部署或接入方式** | 更新 `CHANGELOG.md`；若形成新取舍，同步 `PROJECT_PLAN` 决策记录；再按铁律追加 `开发日志.md` |
 | **改架构层次/原则/两端关系** | 检查 数据契约 / 工具注册表 / 接入契约 / 工具门户 / 执行计划 / 代码规范 里引用该架构的地方是否还成立 |
