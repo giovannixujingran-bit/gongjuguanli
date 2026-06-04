@@ -14,14 +14,14 @@ class UsageEvent(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    record_id: UUID = ...
+    record_id: UUID = Field(...)
     schema_version: str = Field(..., pattern='^v[0-9]+\\.[0-9]+$')
     tool_id: str = Field(..., min_length=1)
     conversation_id: str = Field(..., min_length=1)
-    start_time: datetime = ...
-    end_time: datetime = ...
+    start_time: datetime = Field(...)
+    end_time: datetime = Field(...)
     duration_ms: int = Field(..., ge=0)
-    status: Literal['success', 'failed', 'timeout'] = ...
+    status: Literal['success', 'failed', 'timeout'] = Field(...)
     ingested_at: datetime | None = None
     model: str | None = None
     prompt_tokens: int | None = Field(None, ge=0)

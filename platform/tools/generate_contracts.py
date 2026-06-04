@@ -57,6 +57,10 @@ def render_pydantic_model(properties: dict[str, dict[str, Any]], required: set[s
         constraints = field_constraints(definition)
         if constraints:
             lines.append(f"    {name}: {annotation} = Field({default}, {constraints})")
+        elif name in required:
+            # 必填且无额外约束：用 Field(...) 而非裸 ...，否则 mypy strict 把
+            # Ellipsis 当作与字段类型不兼容的赋值而报错（运行时两者等价）。
+            lines.append(f"    {name}: {annotation} = Field(...)")
         else:
             lines.append(f"    {name}: {annotation} = {default}")
 

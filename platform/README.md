@@ -2,15 +2,16 @@
 
 > 公司局域网内的统一中枢平台：把各类工具（自写 / 开源自部署 / 黑盒）的**每一次使用**汇总记录，
 > 在统一数据契约之上做**成本 / ROI / 使用率 / 质量**四类分析。
-> 本目录是代码区，与规划文档 `../规划/` 平级。
+> 本目录是代码区，所有规范文档都在 `docs/`。
 
 ## 当前状态
 
-**Phase 1 已打通最小后端闭环**：在 Phase 0 地基上，已生成契约模型，实现统一上报 API、
-`record_id` 幂等、服务端 `ingested_at`、匿名用户兜底、PostgreSQL 落库实现与模拟数据测试。
-SDK / 转发 / 分析层 / 两个前端仍为占位，留待 Phase 2+。
-**SSOT 状态**：按 [PROJECT_PLAN 决策 #26](../PROJECT_PLAN.md) 取 `(a)`，当前为**部分冻结**：
-数据契约 / 接入契约已转移到本目录（`docs/` + `shared/schema/`）；其余规范（架构 / 执行计划 / 代码规范 / 工具注册表 / 工具门户）仍以 `../规划/` 为准。
+**Phase 1 已打通最小后端闭环，Phase 2A/2B 已进入最小实现**：在 Phase 0 地基上，
+已生成契约模型，实现统一上报 API、`record_id` 幂等、服务端 `ingested_at`、匿名用户兜底、
+PostgreSQL 落库实现与模拟数据测试；并新增真实数据库冒烟脚本、参考 SDK、demo 工具、
+统一 Auth API 最小版和真实工具试点模板。
+转发 / 分析层 / 两个前端仍为占位，留待 Phase 2D+。
+**SSOT 状态**：全部规范文档已统一在 `docs/`（schema / contract / architecture / execution-plan / code-standards / registry / portal），原 `规划/` 目录已退役（决策 #26 → #30）。
 
 ---
 
@@ -59,11 +60,12 @@ SDK / 转发 / 分析层 / 两个前端仍为占位，留待 Phase 2+。
 | `shared/contracts/` | 由 schema 生成的 py/ts 模型（标「自动生成，勿手改」） | ✅ `event_model.py`、`event.d.ts` |
 | `shared/registry/` | 工具注册表定义/迁移 | 表见 `backend/storage/migrations/` |
 | `backend/storage/migrations/` | 建表 SQL（事件表 + 注册表 + 账号表） | ✅ [0001_init.sql](backend/storage/migrations/0001_init.sql) |
-| `backend/ingestion/` | 接入 API（收一条流水 → 校验 → 落库） | ✅ `/events`、`/health`、模拟数据测试 |
+| `backend/ingestion/` | 接入 API（收一条流水 → 校验 → 落库） | ✅ `/events`、`/health`、Auth token 身份覆盖、模拟数据测试 |
 | `backend/analytics/` | 分析层（四类结论的纯函数） | 占位（Phase 3） |
-| `backend/auth/` | 账号体系 | ✅ PBKDF2 密码哈希/校验内部函数 |
-| `collection/sdk/` `collection/relay/` | 参考 SDK + 本地转发服务 | 占位（Phase 2） |
-| `integrations/` | 各接入工具的适配/配置（工具本体不在此） | 占位（Phase 5） |
+| `backend/auth/` | 账号体系 | ✅ PBKDF2 密码哈希、创建用户、登录、校验 token、`/auth/me` |
+| `collection/sdk/` | 参考 SDK | ✅ 事件构造、异步上报、本地缓冲、重试、token 归一化、demo |
+| `collection/relay/` | 本地转发服务 | 占位（Phase 2D） |
+| `integrations/` | 各接入工具的适配/配置（工具本体不在此） | ✅ 真实工具试点模板；未接真实工具 |
 | `apps/user-portal/` `apps/admin-dashboard/` | 两个前端 | 占位（Phase 4） |
 
 ## 本地起库
@@ -72,4 +74,5 @@ SDK / 转发 / 分析层 / 两个前端仍为占位，留待 Phase 2+。
 docker-compose up   # PostgreSQL + 接入 API + 两前端占位
 ```
 
-配置/密钥（中转站地址、API Key、DB 口令、LLM 地址）**一律走环境变量**，代码与镜像里零硬编码。
+配置/密钥（`DATABASE_URL`、`AUTH_TOKEN_SECRET`、中转站地址、API Key、DB 口令、LLM 地址）
+**一律走环境变量**，代码与镜像里零硬编码。

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS usage_event (
     -- 圈一：公共字段（硬性必填）
     record_id        UUID         PRIMARY KEY,                     -- 客户端生成，幂等去重靠它
     schema_version   TEXT         NOT NULL,                        -- 本条遵循的契约版本（如 v0.2）
-    tool_id          TEXT         NOT NULL,                        -- 平台分配的固定 ID（FK → tool_registry）
+    tool_id          TEXT         NOT NULL,                        -- 平台分配的固定 ID；逻辑引用 tool_registry，不建强制外键（建了会拒收未登记工具，违背「不阻断入库」#7/#18）
     conversation_id  TEXT         NOT NULL,                        -- 「一次使用」聚合键
     start_time       TIMESTAMPTZ  NOT NULL,                        -- 调用开始（UTC）
     end_time         TIMESTAMPTZ  NOT NULL,                        -- 调用结束（UTC）

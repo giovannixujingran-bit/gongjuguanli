@@ -4,7 +4,31 @@
 
 ## Unreleased
 
-- 暂无未归档发布摘要。
+### Changed
+
+- **文档结构统一（破坏性：路径变更）**：原 `规划/` 目录全量搬入 `platform/docs/` 并退役——架构与原则 → `architecture.md`、执行计划 → `execution-plan.md`、代码规范 → `code-standards.md`、工具注册表 → `registry.md`、工具门户 → `portal.md`（与已有 `schema.md` / `contract.md` 同处）。所有跨文档链接已重定向。此后规范只有一个 SSOT 位置 `platform/docs/`，不再有「部分冻结」双轨（决策 #30）。**外部若有指向旧 `规划/...` 路径的书签需更新。**
+- **账号创建收紧**：`POST /auth/users` 现需 admin token（非 admin 403 / 无 token 401），堵住「局域网内任何人给自己开 admin」；首个 admin 由运维离线跑 `tools/seed_admin.py` 引导。这是读取侧权限（谁能看原文）的前置防线。
+- **采集端重试改为自愈**：SDK 上报成功时会顺带自动重发积压在本地 buffer 里的记录（靠 `record_id` 幂等去重），不再需要接入方手动 `flush()` 才能补发；buffer 读写加锁防并发损坏。
+- **契约版本单一来源**：`schema_version` 由 `platform/shared/schema_version.py` 统一提供（`CURRENT_SCHEMA_VERSION` / `SUPPORTED_SCHEMA_VERSIONS`），SDK 与冒烟脚本不再各自硬编码字面量；升版本只改一处。
+- **接入层对未知契约版本告警**：收到平台尚未支持解析的 `schema_version` 时**仍照收**（守「不阻断入库」），但记一条告警日志，避免静默沉淀无法解析的数据。
+- 接入模板 buffer 路径改为按工具隔离（含 `tool_id`），避免同机多工具共用同一 buffer 文件互相覆盖。
+
+### Added
+
+- 新增 Phase 1.5 真实数据库冒烟脚本与说明：`platform/tools/smoke_db.py`、`platform/docs/smoke.md`。
+- 新增 Phase 2A 参考 SDK：事件构造、异步上报、本地缓冲、重试、token 归一化与 `entry_source` / `auth_method` metadata。
+- 新增 demo 工具，可模拟 `portal` / `direct` / `unknown` 三种入口。
+- 新增 Phase 2B 统一 Auth API 最小版：创建用户、登录、校验 token、`/auth/me`，并在 `/events` 中用合法 token 覆盖 payload 身份。
+- 新增 Phase 2C 真实工具试点模板：试点准入、采集范围、验收、回滚和配置样例。
+- **新增 `tool_id` 发放通道**：管理员 API `POST /registry/tools`（需 admin token，与 `/auth/users` 同门禁）。同事接入第一步——领 `tool_id`——从此有正式入口：带命名校验（`<team>-<tool>`，非法 422）、重复登记 409、落 `tool_registry`。命名规则定稿（决策 #32），机器源 `backend/storage/registry.py` 的 `TOOL_ID_REGEX`。已在本机 PostgreSQL 16 真库验证（注册 / 重复 / 非法 / 鉴权四态）。
+
+### Planned
+
+- **Phase 2.5 接入工程化**剩余项：自助契约校验 CLI（`tools/validate_payload.py`）、接入层连接池（`psycopg_pool`）。（`tool_id` 发放通道已完成，见上方 Added。）
+- 本地转发服务（relay）兜底通道：设计待与负责人确认后实现（Phase 2D）。
+- 真实 DB 冒烟的 **TCP 服务（uvicorn）那一跳**：本机无 uvicorn + PyPI 受限暂跑不了，到能联网 / 有 uvicorn 的机器按 `smoke.md` 补跑（落库链路本身已在本机用进程内 ASGI + 真库验证通过）。
+- 选择一个低风险、可改代码的真实工具做 Phase 2C 试点。
+- `entry_source` / `auth_method` 暂不升 schema；等 demo 和真实试点稳定后再评估 schema v0.3。
 
 ## 2026-06-03 — Phase 1 最小后端闭环
 

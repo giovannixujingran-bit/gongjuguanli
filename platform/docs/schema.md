@@ -1,11 +1,9 @@
 # 数据契约 —— 统一事件 Schema（落地文档）
 
 > **契约版本：v0.2**
-> 本文档是 Phase 0 产出，承接规划阶段 `规划/共享层/数据契约.md` 的字段定义。机器可校验源是
-> [`../shared/schema/event.schema.json`](../shared/schema/event.schema.json)（唯一源，后端/前端模型均由它生成）。
-> **冻结说明**：Phase 0 落地后，数据契约已从 `规划/共享层/数据契约.md` 转移到本目录
-> `platform/docs/` 与 `platform/shared/schema/`；`规划/` 仅对已转移的两份契约部分冻结。
-> 此后字段改动只改这里 + JSON Schema + 建表 SQL（三者一致）。
+> 本文档是数据契约的 **SSOT（唯一真源）**；原 `规划/共享层/数据契约.md` 已随规划目录退役。机器可校验源是
+> [`../shared/schema/event.schema.json`](../shared/schema/event.schema.json)（后端/前端模型均由它生成）。
+> 字段改动只改这里 + JSON Schema + 建表 SQL（三者一致），并升 `schema_version`、在 PROJECT_PLAN 决策记录追加一条。
 
 每一次工具使用 = 一条记录。字段分三圈：圈一硬性必填（入场券），圈二 LLM 专属，圈三弹性选填。
 
@@ -52,7 +50,7 @@
 |---|---|---|
 | `user_id` | string | 使用者。**门户注入**：从平台入口打开工具时由平台注入真实使用者；无法归属到人时（绕过入口 / 黑盒工具）记为**匿名**（`anonymous`） |
 | `team_id` | string | 所属团队（随 `user_id` 解析；无法归属时匿名/空） |
-| `result_quality` | float/enum | 结果质量信号（如用户点赞/采纳），ROI 分子占位之一 |
+| `result_quality` | float | 结果质量信号（如用户点赞/采纳的归一化分值），ROI 分子占位之一。落库列是 `REAL`，**只有数值会入库**：契约校验虽放行字符串（圈三不拒收），但非数值（如 `good`/`bad` 这类 enum 形态）会在落库时被静默丢成 NULL。**enum 形态的质量请放 `metadata`**，别塞这里 |
 | `adopted` | boolean | 结果是否被采纳，ROI 的关键输入 |
 | `input_content` | text | 输入原文（**通用选填**：任何工具皆可记，不限大模型；受敏感策略约束，见下） |
 | `output_content` | text | 输出原文（通用选填；受敏感策略约束） |

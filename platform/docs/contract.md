@@ -1,8 +1,8 @@
 # 接入契约 —— 给工具方看的（落地文档）
 
-> 本文档是 Phase 0 产出，承接规划阶段 `规划/数据端/接入契约.md`。
+> 本文档是接入契约的 **SSOT（唯一真源）**；原 `规划/数据端/接入契约.md` 已随规划目录退役。
 > 字段定义见 [schema.md](schema.md)；机器可校验源是 [`../shared/schema/event.schema.json`](../shared/schema/event.schema.json)；
-> `tool_id` 来源见 [工具注册表](../shared/registry/)。
+> `tool_id` 来源见 [工具注册表](registry.md)。
 >
 > **一句话**：要接入本平台，你只需保证最终落库的那条记录**格式一样**（统一 schema）。怎么采、用什么语言不限。
 
@@ -16,6 +16,8 @@
 2. **机器可校验定义** —— [event.schema.json](../shared/schema/event.schema.json)：数据进入接入层时**自动校验，不合规当场打回**（契约的「牙齿」）。
 3. **参考 SDK / 示例** —— Phase 2 产出（`../collection/sdk/`），让能配合的工具直接抄。
 
+> **自助校验（规划中）**：不想用 SDK、自行实现上报的工具，将可用 `tools/validate_payload.py` 在本地离线校验自己构造的事件合不合契约（按 event.schema.json）。属 Phase 2.5 接入工程化，见 [执行计划](execution-plan.md)；当前未实现，先以 event.schema.json 为准自校。
+
 ---
 
 ## 二、字段分级：硬性必填 vs 弹性选填
@@ -26,7 +28,7 @@
 | **LLM 专属（圈二）** | `model` / `prompt_tokens` / `completion_tokens` / `total_tokens` / `cost` / `cost_source` | 非 LLM 工具留 NULL，不影响入库 |
 | **弹性选填（圈三）** | `user_id` / `team_id` / `result_quality` / `adopted` / `input_content` / `output_content` / `metadata` | 有就多算几个维度；**没有也照收**，绝不因此拒收 |
 
-> `tool_id` **由平台统一分配**：接入前先在[工具注册表](../shared/registry/)登记，平台发固定 ID，你用它对接、每条记录回填。
+> `tool_id` **由平台统一分配**：接入前先登记拿 ID，你用它对接、每条记录回填。登记由平台管理员经 `POST /registry/tools` 发放（命名规则 `<team>-<tool>`、发放流程见 [工具注册表 §三](registry.md)）。
 
 ---
 
@@ -56,6 +58,8 @@
 
 ## 五、兜底通道
 
-对既给不全数据、又改不了的工具，让其走**本地转发服务**（Phase 2 产出，`../collection/relay/`），由平台「代它」采集到能采的部分（至少 token + 耗时），按统一格式入库。
+对既给不全数据、又改不了的工具，让其走**本地转发服务**（`../collection/relay/`），由平台「代它」采集到能采的部分（至少 token + 耗时），按统一格式入库。
+
+> ⚠️ **现状（截至 Phase 2A/2B）：relay 尚未实现，属 Phase 2D**（见决策 #29）。当前试点只接「能改代码、走工具自报」的工具（圈一最小集），黑盒工具的兜底通道暂未提供。需要 relay 的工具请先排到 Phase 2D 之后。
 
 > 契约负责「能配合的自己送上门」，兜底负责「不能配合的平台代采、一个不漏」。满足不了完整契约也能进来，只是数据最粗（`data_level = minimal`）。

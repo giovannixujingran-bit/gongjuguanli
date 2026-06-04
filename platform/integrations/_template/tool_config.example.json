@@ -1,0 +1,12 @@
+{
+  "tool_id": "replace-with-registered-tool-id",
+  "display_name": "Replace With Tool Name",
+  "integration_phase": "phase-2c-pilot",
+  "collector": "sdk",
+  "events_endpoint": "http://127.0.0.1:8000/events",
+  "entry_source": "direct",
+  "auth_method": "session_token",
+  "buffer_path": ".platform-buffer/<tool_id>.jsonl",
+  "record_raw_content": false,
+  "tracking_enabled_env": "PLATFORM_TRACKING_ENABLED"
+}

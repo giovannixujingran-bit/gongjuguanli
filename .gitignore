@@ -10,6 +10,7 @@ tmp-tool-cache/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+.pytest-tmp/
 .import_linter_cache/
 pytest-cache-files-*/
 .coverage

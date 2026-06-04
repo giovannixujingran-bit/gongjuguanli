@@ -10,7 +10,7 @@
 
 ## 0. 项目一句话
 
-公司局域网内的统一平台，汇总各类工具的每一次使用，做成本 / ROI / 使用率 / 质量四类分析。由**两个前端（使用端·使用者门户 / 数据端·后台分析台）+ 共享后端**组成。当前阶段：**只做规划与脚手架，不实现完整业务逻辑。**
+公司局域网内的统一平台，汇总各类工具的每一次使用，做成本 / ROI / 使用率 / 质量四类分析。由**两个前端（使用端·使用者门户 / 数据端·后台分析台）+ 共享后端**组成。当前阶段：**Phase 2A/2B 最小实现已完成；下一步执行真实数据库冒烟与 Phase 2C 真实工具试点验证。**
 
 ---
 
@@ -20,38 +20,37 @@
 PROJECT_PLAN.md              总纲/索引：定位 + 文档地图 + 决策记录。不放具体规范内容。
 开发日志.md                  按时间的过程流水（倒序）。每次改动追加一条。
 CHANGELOG.md                 面向阶段/发布的变更摘要。只记能力变化，不记过程流水。
-规划/                        规范文档，按「端」分四组（当前 SSOT）：
-├ 总则/架构与原则.md          项目是什么、三原则、五层架构、两个前端+共享后端、三类工具、入口门户与账号体系。【稳定】
-├ 总则/执行计划.md            分阶段计划、技术栈、platform/ 目录结构、交接命令。【每阶段更新】
-├ 总则/代码规范.md            工程纪律：单向依赖、schema 代码生成、删不注释、CI 机器闸门。【写代码前必读】
-├ 共享层/数据契约.md          统一事件 Schema（三圈字段），带契约版本号。【随 schema_version 演进】
-├ 共享层/工具注册表.md        tool_id 来源 + 门户展示字段，两端共读。【偶尔】
-├ 数据端/接入契约.md          接入义务、边角情况、兜底。【给工具方看】
-└ 使用端/工具门户.md          分类卡片、排序逻辑、AI 工具推荐。【使用端前端规划】
-platform/                    代码区（脚手架）：仅目录骨架 + README 占位，无业务逻辑。
+platform/                    代码区 + 全部规范文档（唯一 SSOT，原 规划/ 已退役并入此处）：
+├ docs/architecture.md        项目是什么、三原则、五层架构、两个前端+共享后端、三类工具、入口门户与账号体系。【稳定】
+├ docs/execution-plan.md      分阶段计划、技术栈、platform/ 目录结构、交接命令。【每阶段更新】
+├ docs/code-standards.md      工程纪律：单向依赖、schema 代码生成、删不注释、CI 机器闸门。【写代码前必读】
+├ docs/schema.md              统一事件 Schema（三圈字段），带契约版本号；机器源 shared/schema/event.schema.json。【随 schema_version 演进】
+├ docs/registry.md            tool_id 来源 + 门户展示字段，两端共读。【偶尔】
+├ docs/contract.md            接入义务、边角情况、兜底。【给工具方看】
+├ docs/portal.md              分类卡片、排序逻辑、AI 工具推荐。【使用端前端规划】
+└ backend / collection / shared / integrations / apps  代码：接入 API、生成模型、存储层、参考 SDK、demo、Auth API、试点模板；relay/分析层/前端仍占位。
 ```
 
 **单一信息源（SSOT）铁律**：每个事实只在一个文件里定义，别处只**链接**、不复制。
-- 字段定义只在 `共享层/数据契约`。
-- 工具注册表（含展示字段）只在 `共享层/工具注册表`。
-- 架构图只在 `总则/架构与原则`。
-- 阶段/部署命令、目录结构只在 `总则/执行计划`。
-- 使用端门户规划只在 `使用端/工具门户`。
+- 字段定义只在 `platform/docs/schema.md`（机器源 `platform/shared/schema/event.schema.json`）。
+- 工具注册表（含展示字段）只在 `platform/docs/registry.md`。
+- 架构图只在 `platform/docs/architecture.md`。
+- 阶段/部署命令、目录结构只在 `platform/docs/execution-plan.md`。
+- 使用端门户规划只在 `platform/docs/portal.md`。
 - 决策结论只在 `PROJECT_PLAN.md` 的「决策记录」。
 - 过程流水只在 `开发日志.md`；阶段 / 发布摘要只在 `CHANGELOG.md`。
 
 发现同一内容在两处都写了 → 是 bug，删一处、改成链接。
 
-### SSOT 的生命周期（部署前后会转移，务必看清当前处于哪一阶段）
+### SSOT 位置（已统一，不再有双轨）
 
-本项目 SSOT 会随 Phase 0 落地**逐份**转移。当前是**部分冻结**状态（见 [决策 #26](PROJECT_PLAN.md)）：
+历史上规范曾住在 `规划/`，并随 Phase 0 起逐份向 `platform/` 转移。**截至 [决策 #30](PROJECT_PLAN.md)，迁移已全部完成**：`规划/` 目录已退役删除，**所有规范文档现在只有一个 SSOT 位置 `platform/docs/`**：
 
-- **【已冻结，SSOT 在 platform/】** 以下两份已转移、顶部带 🧊 冻结标记，**不再修改 `规划/` 原件**，改动一律改 `platform/`：
-  - 数据契约 → [platform/docs/schema.md](platform/docs/schema.md) + [platform/shared/schema/event.schema.json](platform/shared/schema/event.schema.json)（机器源）+ `platform/backend/storage/migrations` 建表 SQL（三者一致）。
-  - 接入契约 → [platform/docs/contract.md](platform/docs/contract.md)。
-- **【仍活在 规划/】** 架构与原则、执行计划、代码规范、工具注册表、工具门户 这 5 份**尚无 platform/ 等价文档**，仍以 `规划/` 为唯一 SSOT，照常在 `规划/` 修改。
-- **改文档前先认这条线**：上面列为「已冻结」的 → 改 platform/；其余 → 改 规划/。日后这 5 份若也搬进 `platform/`，再逐份加冻结标记、并更新 §2/§3 指向（守则 §4.7）。
-- 这样避免「`规划/共享层/数据契约` 和 `platform/docs/schema.md` 两份字段表并行维护」，又不让尚未转移的文档产生悬空指针。
+- 数据契约 → [platform/docs/schema.md](platform/docs/schema.md) + [event.schema.json](platform/shared/schema/event.schema.json)（机器源）+ `platform/backend/storage/migrations` 建表 SQL（三者一致）。
+- 接入契约 → [platform/docs/contract.md](platform/docs/contract.md)。
+- 架构 / 执行计划 / 代码规范 / 工具注册表 / 工具门户 → `platform/docs/` 下的 `architecture.md` / `execution-plan.md` / `code-standards.md` / `registry.md` / `portal.md`。
+
+改任何规范，直接改 `platform/docs/` 对应文件（数据契约还要连带机器源 + 建表 SQL，见 §3）。不再有「改 platform 还是改规划」的判断。
 
 ---
 
@@ -59,15 +58,15 @@ platform/                    代码区（脚手架）：仅目录骨架 + README
 
 | 你要做的事 | 先读 | 可能要改 |
 |---|---|---|
-| 改字段 / schema | 🧊 **platform/docs/schema.md** + platform/shared/schema/event.schema.json（已转移，原 共享层/数据契约 已冻结） | platform/docs/schema.md + event.schema.json + 建表 SQL +（连带见 §3） |
-| 改工具注册表（接入字段 / 展示字段） | 共享层/工具注册表 | 工具注册表 +（连带见 §3） |
-| 改接入规则 / 边角情况 / 兜底 | 🧊 **platform/docs/contract.md**（已转移，原 数据端/接入契约 已冻结） | platform/docs/contract.md |
-| 改使用端门户（卡片 / 排序 / AI 推荐） | 使用端/工具门户 | 工具门户 |
-| 改架构 / 原则 / 工具分类 / 两端关系 | 总则/架构与原则 | 架构与原则 |
-| 改阶段计划 / 技术栈 / 目录结构 / 交接命令 | 总则/执行计划 | 执行计划 |
+| 改字段 / schema | **platform/docs/schema.md** + platform/shared/schema/event.schema.json | platform/docs/schema.md + event.schema.json + 建表 SQL +（连带见 §3） |
+| 改工具注册表（接入字段 / 展示字段） | platform/docs/registry.md | registry.md +（连带见 §3） |
+| 改接入规则 / 边角情况 / 兜底 | **platform/docs/contract.md** | platform/docs/contract.md |
+| 改使用端门户（卡片 / 排序 / AI 推荐） | platform/docs/portal.md | portal.md |
+| 改架构 / 原则 / 工具分类 / 两端关系 | platform/docs/architecture.md | architecture.md |
+| 改阶段计划 / 技术栈 / 目录结构 / 交接命令 | platform/docs/execution-plan.md | execution-plan.md |
 | 记录一个新的决策/取舍 | PROJECT_PLAN.md | PROJECT_PLAN「决策记录」 |
 | 记录阶段/发布摘要 | CHANGELOG.md | CHANGELOG |
-| **写/改任何代码** | 总则/代码规范 | 代码 +（机器闸门必须全绿） |
+| **写/改任何代码** | platform/docs/code-standards.md | 代码 +（机器闸门必须全绿） |
 | 不确定改哪 | PROJECT_PLAN.md 文档地图 | —— |
 
 任何编辑前**先 Read 目标文件全文**，理解上下文再改，禁止盲改。
@@ -84,13 +83,13 @@ platform/                    代码区（脚手架）：仅目录骨架 + README
 | 改了什么 | 必须同步更新 |
 |---|---|
 | **数据契约（🧊 已冻结，改 platform/docs/schema.md）的任何字段**（增删改字段、改类型/枚举/必填） | ① 升 `platform/docs/schema.md` 顶部的**契约版本号**；② 在 `PROJECT_PLAN` 决策记录追加一条「为什么改」；③ 连带改 `platform/shared/schema/event.schema.json` 与 `platform/backend/storage/migrations` 建表 SQL（**三者一致**）；④ 重跑 `platform/scripts/gen-models` 重生成模型 |
-| **工具注册表字段（共享层/工具注册表）**（接入字段或门户展示字段） | 检查 `数据契约` 里 `tool_id` 引用、`使用端/工具门户` 对展示字段的引用、`执行计划` 建表 SQL 说明；**不升事件契约版本**（注册表不属事件 schema） |
-| **新增/改名一份规划文档** | 更新 `PROJECT_PLAN` 的「文档地图」表 + `CLAUDE.md` §1 结构 |
+| **工具注册表字段（platform/docs/registry.md）**（接入字段或门户展示字段） | 检查 `docs/schema.md` 里 `tool_id` 引用、`docs/portal.md` 对展示字段的引用、`docs/execution-plan.md` 建表 SQL 说明；**不升事件契约版本**（注册表不属事件 schema） |
+| **新增/改名一份规范文档** | 更新 `PROJECT_PLAN` 的「文档地图」表 + `CLAUDE.md` §1 结构 |
 | **完成一个 Phase / 发布一个可用能力 / 改变部署或接入方式** | 更新 `CHANGELOG.md`；若形成新取舍，同步 `PROJECT_PLAN` 决策记录；再按铁律追加 `开发日志.md` |
 | **改架构层次/原则/两端关系** | 检查 数据契约 / 工具注册表 / 接入契约 / 工具门户 / 执行计划 / 代码规范 里引用该架构的地方是否还成立 |
-| **改使用端门户（使用端/工具门户）** | 若涉及注册表展示字段或排序取数，检查 `共享层/工具注册表`、`数据契约` 是否需同步 |
+| **改使用端门户（platform/docs/portal.md）** | 若涉及注册表展示字段或排序取数，检查 `docs/registry.md`、`docs/schema.md` 是否需同步 |
 | **定了一个之前「待定」的事项**（如敏感策略、ROI 信号、价格表、门户排序窗口、AI 推荐模型） | 改对应正文 + 把 `PROJECT_PLAN` 决策记录里那条从「待定」改为结论 |
-| **任何跨文档链接涉及的标题改名/移动文件** | 修正所有指向它的相对链接（注意子目录间是 `../<组>/<文件>`；中文锚点不可靠，宁可链接到文件不带 `#` 片段） |
+| **任何跨文档链接涉及的标题改名/移动文件** | 修正所有指向它的相对链接（`platform/docs/` 内同级互链直接用文件名；中文锚点不可靠，宁可链接到文件不带 `#` 片段） |
 
 ---
 
@@ -98,7 +97,7 @@ platform/                    代码区（脚手架）：仅目录骨架 + README
 
 1. **重构，不打补丁。** 需求变了就把相关段落改对、改顺，不要在末尾贴「补充说明 / 更正 / 注意其实是……」。文档要永远读起来像一次写成的。发现旧结论错了，直接改正文 + 在决策记录里留一句「原 X 改为 Y，因为 Z」。
 2. **决策入账，不是入正文。** 「为什么这么定」的取舍记到 `PROJECT_PLAN` 决策记录（追加，按序）；正文只写「现在是怎样」，不堆历史争论。决策记录追加久了会变长，可定期把已被推翻的条目标「已废弃」或合并，别无限堆叠成另一种补丁。
-3. **契约带版本，向后可追。** `共享层/数据契约` 每次实质改动升版本号；记录里的 `schema_version` 就是据此盖章。
+3. **契约带版本，向后可追。** `platform/docs/schema.md` 每次实质改动升版本号；记录里的 `schema_version` 就是据此盖章。
 4. **稳定与易变分离。** 别把易变内容（字段、价格、阶段）塞进稳定文档（架构/原则），反之亦然。这是当初拆分的初衷，维护时别又混回去。
 5. **占位明确。** 未定的事项统一写「**待定，需人工确认**」并说清待定的是什么，不要含糊带过、也不要擅自替用户拍板（尤其敏感内容策略、ROI 价值信号）。
 6. **最小改动。** 一次只解决一件事；不顺手做无关重排，方便 review 和回溯。
@@ -111,7 +110,7 @@ platform/                    代码区（脚手架）：仅目录骨架 + README
 
 声称「改好了 / 都同步了」之前，逐项核对：
 
-- [ ] **SSOT**：改的内容没在别处复制；别处只是链接。当前阶段的 SSOT 位置对（规划阶段→`规划/`；部署后→子目录 `docs/`）。
+- [ ] **SSOT**：改的内容没在别处复制；别处只是链接。规范的 SSOT 一律在 `platform/docs/`（`规划/` 已退役）。
 - [ ] **连带项（§3）**：该表里涉及的同步项全做了（尤其改字段的「升版本号 + 决策记录 + event.schema.json + 建表 SQL」四连动）。
 - [ ] **链接有效**：新增/改动的跨文档链接**实际点开验证过**能跳到目标；改过标题就检查所有指向它的链接。不靠中文 `#` 锚点。
 - [ ] **开发日志**：已在 [开发日志](开发日志.md) 追加一条（任何改动都要，这是必做项）。
@@ -119,7 +118,7 @@ platform/                    代码区（脚手架）：仅目录骨架 + README
 - [ ] **决策记录**：有新取舍/更正的，已在 `PROJECT_PLAN` 追加一条。
 - [ ] **占位**：未定事项写了「待定，需人工确认」，没有擅自替用户拍板。
 - [ ] **索引同步**：动了文档结构的，`PROJECT_PLAN` 文档地图 + 本文件 §1 已更新。
-- [ ] **改了代码**：[总则/代码规范](规划/总则/代码规范.md) 的机器闸门全绿（格式化/lint/类型/死代码/分层/测试）；废弃代码已删除而非注释保留；无 `_old`/`_v2` 残留文件。
+- [ ] **改了代码**：[代码规范](platform/docs/code-standards.md) 的机器闸门全绿（格式化/lint/类型/死代码/分层/测试）；废弃代码已删除而非注释保留；无 `_old`/`_v2` 残留文件。
 
 没逐项过完，不算改完，不要声称完成。
 

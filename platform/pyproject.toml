@@ -1,5 +1,5 @@
 # pyproject.toml —— 后端（接入 / 存储 / 分析 / 账号 / 采集）工程配置 + 机器闸门
-# 闸门强度档：Phase 1 严格档（后端主链路必过）——见 ../规划/总则/代码规范.md §五。
+# 闸门强度档：Phase 1 严格档（后端主链路必过）——见 docs/code-standards.md §五。
 # 包管理：uv。
 
 [project]
@@ -9,6 +9,7 @@ description = "内部工具汇总与分析平台 —— 共享后端（接入/�
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.110",
+    "httpx>=0.27",
     "pydantic>=2.6",
     "psycopg[binary]>=3.2",
     "uvicorn>=0.29",
@@ -30,7 +31,6 @@ dev = [
     "vulture>=2.11",
     "import-linter>=2.0",
     "pytest>=8.0",
-    "httpx>=0.27",
     "coverage>=7.5",
 ]
 
