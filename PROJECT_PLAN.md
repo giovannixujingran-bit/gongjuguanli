@@ -19,6 +19,7 @@
 | 共享层 | [工具注册表](platform/docs/registry.md) | `tool_id` 来源 + 门户展示字段，两端共读 | 开发 / 接入方 / 门户 | 偶尔 |
 | 共享层 | [metadata 约定与字段治理](platform/docs/metadata-conventions.md) | metadata 怎么记（统一形状）+ 字段三层模型 + 晋升流程 | 开发 + 接入方 | 跟约定演进 |
 | 数据端 | [接入指南](platform/docs/integration-guide.md) | 接入方总入口：五步流程 + 最小示例 + 边界，可直接发给接入方 | 工具方（接入方） | 偶尔 |
+| 数据端 | [AI 接入向导](platform/docs/ai-intake-guide.md) | 给接入方 AI 看的接入剧本：自助判定字段 + 反问工具方规则 + 产出接入配置/方案 | 工具方的 AI | 偶尔 |
 | 数据端 | [接入契约](platform/docs/contract.md) | 接入义务、边角情况、兜底通道 | 工具方（接入方） | 偶尔 |
 | 使用端 | [工具门户](platform/docs/portal.md) | 分类卡片、排序逻辑、AI 工具推荐 | 建使用端的团队 | 跟门户演进 |
 | —— | [开发日志](开发日志.md) | 按时间的过程流水（做了什么、动了哪些文件） | 全员 | 每次改动 |

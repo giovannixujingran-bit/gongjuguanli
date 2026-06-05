@@ -39,6 +39,7 @@ platform/                    代码区 + 全部规范文档（唯一 SSOT，原 
 ├ docs/metadata-conventions.md metadata 怎么记（统一形状）+ 字段三层模型 + 晋升流程。【接入方记新字段前看】
 
 ├ docs/integration-guide.md   接入方总入口：五步流程+最小示例+边界，可直接发给接入方。【给工具方看·先读】
+├ docs/ai-intake-guide.md     给接入方 AI 看的接入剧本：决策树自助判定字段+反问工具方规则+产出配置/方案；最高原则只接数据不影响原工具。【给接入方 AI 看】
 ├ docs/contract.md            接入义务、边角情况、兜底。【给工具方看·细则】
 ├ docs/portal.md              分类卡片、排序逻辑、AI 工具推荐。【使用端前端规划】
 └ backend / collection / shared / integrations / apps  代码：接入 API、生成模型、存储层、参考 SDK、demo、Auth API、试点模板；relay/分析层/前端仍占位。
