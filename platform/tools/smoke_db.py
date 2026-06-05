@@ -8,8 +8,8 @@ from pathlib import Path
 from uuid import uuid4
 
 import httpx
-import psycopg
 
+from backend.storage.db import connect as db_connect
 from shared.schema_version import CURRENT_SCHEMA_VERSION
 
 DEFAULT_API_URL = "http://127.0.0.1:8000/events"
@@ -70,7 +70,7 @@ def sample_payload(record_id: str) -> dict[str, object]:
 
 
 def fetch_event(database_url: str, record_id: str) -> dict[str, object] | None:
-    with psycopg.connect(database_url) as connection:
+    with db_connect(database_url) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT tool_id, user_id, metadata FROM usage_event WHERE record_id = %s",

@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
-import psycopg
 from psycopg.rows import dict_row
+
+from backend.storage.db import connect as db_connect
 
 DataLevel = Literal["full", "partial", "minimal"]
 CollectMethod = Literal["report", "relay", "key"]
@@ -72,7 +73,7 @@ class PostgresToolRegistryRepository:
             "collect_method": collect_method,
             "model_default": model_default,
         }
-        with psycopg.connect(self._database_url) as connection:
+        with db_connect(self._database_url) as connection:
             with connection.cursor(row_factory=dict_row) as cursor:
                 cursor.execute(INSERT_TOOL_SQL, params)
                 row = cursor.fetchone()
@@ -82,7 +83,7 @@ class PostgresToolRegistryRepository:
         return row_to_registration(row)
 
     def get_tool(self, tool_id: str) -> ToolRegistration | None:
-        with psycopg.connect(self._database_url) as connection:
+        with db_connect(self._database_url) as connection:
             with connection.cursor(row_factory=dict_row) as cursor:
                 cursor.execute(SELECT_TOOL_SQL, {"tool_id": tool_id})
                 row = cursor.fetchone()

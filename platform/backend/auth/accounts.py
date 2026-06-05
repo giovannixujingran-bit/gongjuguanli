@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from typing import Literal, Protocol
 from uuid import uuid4
 
-import psycopg
 from psycopg.rows import dict_row
 
 from backend.auth.passwords import hash_password, verify_password
+from backend.storage.db import connect as db_connect
 
 Role = Literal["admin", "user"]
 
@@ -60,7 +60,7 @@ class PostgresUserAccountRepository:
             team_id=team_id,
             role=role,
         )
-        with psycopg.connect(self._database_url) as connection:
+        with db_connect(self._database_url) as connection:
             with connection.cursor(row_factory=dict_row) as cursor:
                 cursor.execute(
                     """
@@ -81,7 +81,7 @@ class PostgresUserAccountRepository:
         return self._fetch_one("user_id", user_id)
 
     def _fetch_one(self, column: str, value: str) -> UserAccount | None:
-        with psycopg.connect(self._database_url) as connection:
+        with db_connect(self._database_url) as connection:
             with connection.cursor(row_factory=dict_row) as cursor:
                 cursor.execute(
                     f"""

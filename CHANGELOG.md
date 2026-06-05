@@ -13,9 +13,11 @@
 - **接入层对未知契约版本告警**：收到平台尚未支持解析的 `schema_version` 时**仍照收**（守「不阻断入库」），但记一条告警日志，避免静默沉淀无法解析的数据。
 - 接入模板 buffer 路径改为按工具隔离（含 `tool_id`），避免同机多工具共用同一 buffer 文件互相覆盖。
 - **放开原文记录（影响接入做法）**：原「首轮不记原文」取消，`input_content` / `output_content` 现可按需上报，写入侧不设门禁（内网、唯一接入方为平台方本人，决策 #34）。仅**读取侧可见范围**（多用户上看板谁能看原文）与**留存策略**仍待定、留占位。接入方不再被要求屏蔽原文；试点模板、接入指南、字段文档、metadata 约定同步更新。
+- **DB 连接加超时（健壮性）**：所有仓库经统一入口 `backend/storage/db.connect` 连接，带 `connect_timeout`（默认 5s，`DB_CONNECT_TIMEOUT` 可覆盖）。PostgreSQL 不可达时**快速失败返回 500**，不再无限挂起——此前 PG 未启动会导致 `POST /events` 卡死、并可能拖垮请求线程池连带 `/health` 假死。
 
 ### Added
 
+- **本机运行脚本**：`scripts/pg.ps1`（启停免安装 PostgreSQL）、升级 `scripts/serve.ps1`（`start` 时自动拉起 PG + **真实探活 DB**，连不上当场报错而非假装起好）、`scripts/autostart.ps1`（注册「登录自启」计划任务，一键 install/remove）。本机运行说明与「已知非标准项 / 待收敛」清单写入 `docs/execution-plan.md` §四 / §五。
 - 新增 Phase 1.5 真实数据库冒烟脚本与说明：`platform/tools/smoke_db.py`、`platform/docs/smoke.md`。
 - 新增 Phase 2A 参考 SDK：事件构造、异步上报、本地缓冲、重试、token 归一化与 `entry_source` / `auth_method` metadata。
 - 新增 demo 工具，可模拟 `portal` / `direct` / `unknown` 三种入口。

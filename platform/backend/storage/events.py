@@ -5,10 +5,10 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
-import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
+from backend.storage.db import connect as db_connect
 from shared.contracts.event_model import UsageEvent
 
 
@@ -30,7 +30,7 @@ class PostgresUsageEventRepository:
 
     def insert_event(self, event: UsageEvent, *, ingested_at: datetime) -> StoredEvent:
         params = event_to_db_params(event, ingested_at=ingested_at)
-        with psycopg.connect(self._database_url) as connection:
+        with db_connect(self._database_url) as connection:
             with connection.cursor(row_factory=dict_row) as cursor:
                 cursor.execute(INSERT_EVENT_SQL, params)
                 row = cursor.fetchone()

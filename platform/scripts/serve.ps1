@@ -60,11 +60,32 @@ function Test-ApiRunning {
   if ($p) { return [bool](Get-Process -Id $p -ErrorAction SilentlyContinue) }
   return $false
 }
+function Test-DbReady {
+  # 真探活：能否在 2s 内 TCP 连上 PostgreSQL。不通就别假装 API 起好了。
+  try {
+    $client = New-Object System.Net.Sockets.TcpClient
+    $async = $client.BeginConnect($BindHost, 5432, $null, $null)
+    $ok = $async.AsyncWaitHandle.WaitOne(2000)
+    if ($ok) { $client.EndConnect($async) }
+    $client.Close()
+    return $ok
+  }
+  catch { return $false }
+}
 
 function Start-Api {
   if (Test-ApiRunning) { Write-Host "已在运行 (PID $(Get-ApiPid)) -> http://${BindHost}:${Port}"; return }
   if (-not $env:DATABASE_URL) { throw "DATABASE_URL 未设置（检查 platform/.env）" }
   if (-not $env:AUTH_TOKEN_SECRET) { throw "AUTH_TOKEN_SECRET 未设置（检查 platform/.env）" }
+
+  # 本机 dev：尽量自动拉起免安装 PG（失败不致命，下面以真实探活为准）。
+  # 注意：不要把 pg.ps1 接进管道——pg.ps1 内部已用 Start-Process 起 pg_ctl，避免管道句柄继承挂死。
+  try { & (Join-Path $PSScriptRoot 'pg.ps1') start }
+  catch { Write-Warning "自动启动 PG 失败：$_" }
+  if (-not (Test-DbReady)) {
+    throw "PostgreSQL 不可达（${BindHost}:5432）。请先起 DB 再起 API：.\scripts\pg.ps1 start"
+  }
+
   New-Item -ItemType Directory -Force $RunDir | Out-Null
 
   $args = @('-m', 'uvicorn', 'backend.ingestion.app:app', '--host', $BindHost, '--port', $Port)

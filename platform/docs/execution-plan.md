@@ -144,3 +144,41 @@ platform/
 - 跑一遍机器闸门并贴结果（ruff/mypy/vulture/import-linter/pytest 全绿才算完成；红了修，不许加忽略糊弄）。
 - 按 CLAUDE.md 在 开发日志.md 追加一条；有新取舍写进 PROJECT_PLAN 决策记录。
 ```
+
+---
+
+## 四、本机运行（dev）
+
+> 正式部署目标是 docker-compose（§二），但当前开发机用「免安装 PostgreSQL + dev-run 脚本」。本节是**本机怎么跑的唯一真相**，别再散在聊天/记忆里。
+
+**前置**：`platform/.env` 已存在（从 `.env.example` 复制填值，**不入库**），其中含 `DATABASE_URL` / `AUTH_TOKEN_SECRET`；离线机器另填 `PLATFORM_PYTHON`（匹配 `.pydeps` 的解释器）与 `PG_BIN` / `PG_DATA`（免安装 PG 路径）。
+
+```powershell
+cd platform
+.\scripts\serve.ps1 start     # 一条命令：自动起 PG（若没起）+ 探活 DB + 起接入 API
+.\scripts\serve.ps1 status    # 看 API 状态
+.\scripts\pg.ps1   status     # 单看 PostgreSQL 状态
+.\scripts\serve.ps1 stop      # 停 API（不停 PG）
+.\scripts\pg.ps1   stop       # 停 PG
+```
+
+- `serve.ps1 start` 会先调 `pg.ps1` 把 PG 带起来，再**真实探活 DB**（连不上当场报错、不假装起好），最后起 API 并探活 `/health`。
+- **开机不会自动恢复**：免安装 PG 不是常驻服务。要开机自启，跑一次 `.\scripts\autostart.ps1 install`（登录时自动 `serve start`）；撤销用 `.\scripts\autostart.ps1 remove`。
+- 验证整条链：`GET http://127.0.0.1:8000/health` 返回 `{"status":"ok"}`；`POST /events` 一条事件应 `202 inserted:true`。
+
+---
+
+## 五、已知非标准项 / 待收敛
+
+当前为「能跑、可试点」的开发态，下列偏离**标准/可复现**目标，放量或交接前需收敛（撞到就办，不必一次清完）：
+
+| 项 | 现状（非标准） | 目标 | 优先级 |
+|---|---|---|---|
+| 数据库部署 | 手动/脚本起的免安装 `D:\pg-portable` | docker-compose（§二）统一起，或把 PG 注册为 Windows 服务 | 中 |
+| Python 依赖 | 无 `requirements`/锁文件；靠 `.pydeps` 离线塞包 + `.env` 指定解释器 | 出 `requirements.txt`/锁文件，标准 venv 可复现；`.pydeps` 仅作无网临时手段 | 中 |
+| 真实 TCP 服务跑法 | 依赖 codex-runtime Py3.12 + `.pydeps`（本机特殊） | 标准解释器 + 依赖安装即可起 | 中 |
+| 凭据/脚本散落 | `admin-cred.txt`、smoke 脚本在 `D:\pg-portable` | 凭据走密钥管理；脚本归仓库 | 低 |
+| 迁移执行 | 手工跑建表 SQL | 迁移 runner（如 alembic 或脚本化） | 低 |
+| 连接池 | 每请求新开连接（已加连接超时兜底） | 放量前接 `psycopg_pool` | 放量前 |
+
+> 这些原先只记在 AI 记忆里，现搬入仓库成为可追踪事实（呼应 CLAUDE.md「占位明确」）。
