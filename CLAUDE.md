@@ -14,6 +14,16 @@
 
 ---
 
+## 远程仓库与版本发布
+
+- **远程仓库（GitHub）**：<https://github.com/giovannixujingran-bit/gongjuguanli> —— 本仓库的唯一远程。源码 + 全部规范文档都在这里，新人/AI 可从此处克隆并读 `CLAUDE.md` 入门。
+- **版本号规范（SemVer）**：`主.次.补丁`，tag 形如 `v0.0.1`。早期（主版本 0）接口仍可不兼容变动；`次` 升＝新增能力，`补丁` 升＝修复/小改。**事件数据契约另有独立的 `schema_version`**（见 [schema.md](platform/docs/schema.md)），与本仓库版本号**不是一回事**，别混。
+- **每个 tag 对应 [CHANGELOG.md](CHANGELOG.md) 的一个发布块**：发布时把 `## Unreleased` 改名为 `## vX.Y.Z — 日期`，顶部再留一个空的 `## Unreleased` 供后续累积。
+- **发版步骤**：① 整理 `CHANGELOG.md`（Unreleased → 版本号 + 日期）；② 提交；③ 打带注释 tag：`git tag -a vX.Y.Z -m "..."`；④ `git push && git push --tags`。机器闸门须全绿才发（见 §5 / [code-standards.md](platform/docs/code-standards.md)）。
+- **当前最新发布**：`v0.0.1`（首个发布，含 Phase 0–2B 闭环 + 迁移执行器）。
+
+---
+
 ## 1. 文档结构（单一信息源）
 
 ```

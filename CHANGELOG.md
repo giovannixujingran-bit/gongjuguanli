@@ -1,8 +1,15 @@
 # CHANGELOG
 
 > 面向阶段 / 发布的变更摘要，记录“项目能力变成了什么”。过程流水仍看 [开发日志](开发日志.md)，决策原因仍看 [PROJECT_PLAN.md](PROJECT_PLAN.md)。
+> 版本号与发版规范见 [CLAUDE.md「远程仓库与版本发布」](CLAUDE.md)。
 
 ## Unreleased
+
+（暂无；下次累积变更写这里。）
+
+## v0.0.1 — 2026-06-05
+
+> 首个发布。涵盖 Phase 0 地基 → Phase 1 存储/接入 → Phase 1.5 真实 DB 冒烟 → Phase 2A/2B 采集 SDK + 统一 Auth 最小版，并补齐数据库迁移执行器。下列条目为本版累计能力。
 
 ### Changed
 
@@ -17,6 +24,7 @@
 
 ### Added
 
+- **新增数据库迁移执行器**（影响部署/升级方式）：`tools/migrate.py` 幂等地按编号顺序应用 `backend/storage/migrations/*.sql`，靠 `schema_migrations` 跟踪表记「哪些办过了」、只跑没办过的，每张迁移连同登记同事务。补上了原先「`0001` 只在 docker 首次空库时执行、`0002+` 永不自动生效」的缺口——这是平台「schema 可演进」设计能真正落到库上的前提（决策 #35）。旧库需先基线、全新库直接跑，用法见 `backend/storage/migrations/README.md`。已在本机 PostgreSQL 真库验证（应用 / 幂等重跑 / 多语句 / ALTER）。`scripts/serve.ps1 start` 已接入：起 API 前自动应用迁移（幂等、失败即抛），本机起服务即自动跟上库结构。
 - **本机运行脚本**：`scripts/pg.ps1`（启停免安装 PostgreSQL）、升级 `scripts/serve.ps1`（`start` 时自动拉起 PG + **真实探活 DB**，连不上当场报错而非假装起好）、`scripts/autostart.ps1`（注册「登录自启」计划任务，一键 install/remove）。本机运行说明与「已知非标准项 / 待收敛」清单写入 `docs/execution-plan.md` §四 / §五。
 - 新增 Phase 1.5 真实数据库冒烟脚本与说明：`platform/tools/smoke_db.py`、`platform/docs/smoke.md`。
 - 新增 Phase 2A 参考 SDK：事件构造、异步上报、本地缓冲、重试、token 归一化与 `entry_source` / `auth_method` metadata。

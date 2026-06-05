@@ -17,6 +17,8 @@
 
   注意：这是开发用前台 dev-run（后台进程），不是常驻系统服务；机器重启后需重新 start。
   PostgreSQL 不由本脚本管理（独立部署/常驻）；start 前会探活 DB，连不上会提示。
+  start 在探活 DB 后、起 API 前会自动应用数据库迁移（tools/migrate.py，幂等）；
+  旧库首次需先「基线」一次，见 backend/storage/migrations/README.md。
 #>
 param(
   [Parameter(Position = 0)]
@@ -73,6 +75,18 @@ function Test-DbReady {
   catch { return $false }
 }
 
+function Invoke-Migrations {
+  # 起 API 前先把待办的建表/改表 SQL 应用上（幂等，已办的跳过）。
+  # 失败即抛：宁可起不来也别让 API 跑在过期的库结构上。
+  # 注意：旧库（表是早先 initdb/手工建的）首次需先「基线」，见 backend/storage/migrations/README.md。
+  $migrate = Join-Path $PlatformDir 'tools\migrate.py'
+  Write-Host "应用数据库迁移..."
+  & $Py $migrate
+  if ($LASTEXITCODE -ne 0) {
+    throw "数据库迁移失败（退出码 $LASTEXITCODE）。旧库首次需先基线，见 backend/storage/migrations/README.md"
+  }
+}
+
 function Start-Api {
   if (Test-ApiRunning) { Write-Host "已在运行 (PID $(Get-ApiPid)) -> http://${BindHost}:${Port}"; return }
   if (-not $env:DATABASE_URL) { throw "DATABASE_URL 未设置（检查 platform/.env）" }
@@ -85,6 +99,8 @@ function Start-Api {
   if (-not (Test-DbReady)) {
     throw "PostgreSQL 不可达（${BindHost}:5432）。请先起 DB 再起 API：.\scripts\pg.ps1 start"
   }
+
+  Invoke-Migrations
 
   New-Item -ItemType Directory -Force $RunDir | Out-Null
 

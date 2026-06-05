@@ -178,7 +178,7 @@ cd platform
 | Python 依赖 | 无 `requirements`/锁文件；靠 `.pydeps` 离线塞包 + `.env` 指定解释器 | 出 `requirements.txt`/锁文件，标准 venv 可复现；`.pydeps` 仅作无网临时手段 | 中 |
 | 真实 TCP 服务跑法 | 依赖 codex-runtime Py3.12 + `.pydeps`（本机特殊） | 标准解释器 + 依赖安装即可起 | 中 |
 | 凭据/脚本散落 | `admin-cred.txt`、smoke 脚本在 `D:\pg-portable` | 凭据走密钥管理；脚本归仓库 | 低 |
-| 迁移执行 | 手工跑建表 SQL | 迁移 runner（如 alembic 或脚本化） | 低 |
+| ~~迁移执行~~ | ✅ **已落地**：`tools/migrate.py` 幂等执行器 + `schema_migrations` 跟踪表（决策 #35）。逻辑在 `backend/storage/migrate.py`，用法见 [migrations/README](../backend/storage/migrations/README.md) | —— | 完成 |
 | 连接池 | 每请求新开连接（已加连接超时兜底） | 放量前接 `psycopg_pool` | 放量前 |
 
 > 这些原先只记在 AI 记忆里，现搬入仓库成为可追踪事实（呼应 CLAUDE.md「占位明确」）。
