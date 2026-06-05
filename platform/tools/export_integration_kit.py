@@ -24,6 +24,7 @@ SOURCES: list[tuple[Path, str]] = [
     (ROOT / "docs" / "contract.md", "接入契约.md"),
     (ROOT / "docs" / "schema.md", "字段文档.md"),
     (ROOT / "docs" / "metadata-conventions.md", "metadata约定.md"),
+    (ROOT / "docs" / "ai-intake-guide.md", "AI接入向导.md"),
     (ROOT / "shared" / "schema" / "event.schema.json", "event.schema.json"),
 ]
 
@@ -69,6 +70,7 @@ def render_readme() -> str:
 3. 接入契约.md       —— 义务细则（失败/流式/异步怎么处理、必填选填）。
 4. 字段文档.md       —— 每个字段的含义、类型、必填/选填全表。
 5. metadata约定.md   —— 要记主表没预置的东西（报告类型/分段耗时/图片产出…）时看这份的统一记法。
+6. AI接入向导.md     —— 用 AI 帮你接入时，把它喂给 AI；它会自助判定字段、只在必要时反问你，并产出接入配置+方案。
 
 两件最容易忽略的事
 ------------------
