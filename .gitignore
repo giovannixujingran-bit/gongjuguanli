@@ -36,6 +36,10 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Claude Code 本机配置 / 工具草稿（机器专属，不入库）
+.claude/
+.superpowers/
+
 # 数据库数据卷（docker-compose 本地数据）
 pgdata/
 

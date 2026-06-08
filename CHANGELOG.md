@@ -7,6 +7,24 @@
 
 （暂无；下次累积变更写这里。）
 
+## v0.1.0 — 2026-06-08
+
+> 自 v0.0.1 起的累积：新增「AI 接入向导」接入能力、`platform/docs/` 规范文档统一改名（破坏性路径变更）、采集手段表述订正，并新增内部架构说明文档。
+
+### Added
+
+- **AI 接入问诊向导**：新增 `platform/docs/ai-intake-guide-AI接入向导.md`——给接入方的 AI 看的接入剧本（决策树自助判定字段、只在业务判断处反问工具方、产出接入配置 + 方案；最高原则「只接数据、不影响原工具」）。已纳入 `tools/export_integration_kit.py` 分发包（handoff-kit 多一份「AI接入向导.md」）、文档地图与 CLAUDE.md §1。
+- **内部架构说明文档** `presentation/index.html`：可滚动的「可视化 README」，含架构数据流图、运行/部署流程图、以三原则贯穿的叙事主线；供自留档 / 汇报多用（设计稿 `presentation/DESIGN.md`）。
+
+### Changed
+
+- **`platform/docs/` 规范文档统一改名为「英文-中文.md」（破坏性：路径变更）**：`architecture.md` → `architecture-架构与原则.md`、`schema.md` → `schema-数据契约.md`、`smoke.md` → `smoke-数据库冒烟.md` 等 11 份；文件名一眼可读、`git mv` 保留历史。全仓库引用（PROJECT_PLAN / CLAUDE / 各 README / docs 互链 / CI / pre-commit / pyproject / 多个 `.py` 注释 / `event.schema.json` 注释）已同步重定向，handoff-kit 已重生成（决策 #36）。**外部若有指向旧路径（如 `platform/docs/architecture.md`）的书签需更新。**
+- **采集手段表述订正：由「按工具来源」改为「按控制权」（决策 #37）**：原架构第四节把「开源自部署（例 OpenClaw）」绑定到「改不动代码、只能转发」，属事实错误（OpenClaw 完全开源、代码可改）。订正为按「能否 / 愿否改代码」三道能力闸门判定（改代码 → 自报 / 改 base URL → 转发 / 配 key → 独立 key），并写明「开 / 闭源不是判定依据」——闭源能配 endpoint 照样转发、开源不愿 fork 也走转发。连带改 `architecture-架构与原则.md` / `collection/relay/README.md` / `contract-接入契约.md` / `platform/README.md`。
+
+### Removed
+
+- 删除 `docs/superpowers/`（AI 接入向导的过时设计稿 / 实现计划——功能已落地、且不在本项目 SSOT 体系内）。
+
 ## v0.0.1 — 2026-06-05
 
 > 首个发布。涵盖 Phase 0 地基 → Phase 1 存储/接入 → Phase 1.5 真实 DB 冒烟 → Phase 2A/2B 采集 SDK + 统一 Auth 最小版，并补齐数据库迁移执行器。下列条目为本版累计能力。
