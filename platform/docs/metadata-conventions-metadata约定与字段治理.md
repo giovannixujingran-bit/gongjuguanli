@@ -1,8 +1,8 @@
 # metadata 语义约定与字段治理
 
 > 本文件是 **metadata 怎么记** 与 **字段三层治理 / 晋升流程** 的 SSOT。
-> 主表字段（圈一/二/三）的定义见 [schema.md](schema.md)（机器源 [event.schema.json](../shared/schema/event.schema.json)）；
-> `tool_id` / 注册表见 [registry.md](registry.md)。本文件不重复字段定义，只管「没预置的东西怎么记、怎么演进」。
+> 主表字段（圈一/二/三）的定义见 [schema-数据契约.md](schema-数据契约.md)（机器源 [event.schema.json](../shared/schema/event.schema.json)）；
+> `tool_id` / 注册表见 [registry-工具注册表.md](registry-工具注册表.md)。本文件不重复字段定义，只管「没预置的东西怎么记、怎么演进」。
 
 ---
 
@@ -12,7 +12,7 @@
 
 | 层 | 是什么 | 谁定 | 改动 |
 |---|---|---|---|
-| **1. 主表统一字段**（圈一/二/三） | 所有工具通用、要横向比较的（耗时 / token / 成本 / 状态…） | 平台定 | **重**：改它＝改数据契约，升 `schema_version`（见 [schema.md](schema.md)） |
+| **1. 主表统一字段**（圈一/二/三） | 所有工具通用、要横向比较的（耗时 / token / 成本 / 状态…） | 平台定 | **重**：改它＝改数据契约，升 `schema_version`（见 [schema-数据契约.md](schema-数据契约.md)） |
 | **2. metadata 语义约定** | 反复出现的「种类」的**统一记法**（文本 / 图片 / 分段耗时…） | 平台定形状，接入方申请、平台给 | **轻**：只改本文档，**不升事件契约版本** |
 | **3. 纯一次性 metadata** | 真·只此一家、没必要立约定的 | 工具自填（仍守下方打字规则） | 无 |
 
@@ -33,7 +33,7 @@ metadata **位置自由，但形状有规范**，否则将来无法分析、无�
 - **key**：`snake_case`，含义自解释（用 `report_type` 不用 `t`）。
 - **值**：用 JSON 基本类型或对象数组；**时间 / 速度一律 number（毫秒）**，不要字符串；同一字段**单位统一**。
 - **二进制（图片 / 文件 / 视频）绝不入库**：只存**引用（URI / 路径）+ 元数据（数量 / 尺寸 / 格式）**。
-- **原文 / 敏感文本走主字段**：`input_content` / `output_content`（现允许记录，受敏感内容策略约束，见 [schema.md](schema.md)），**不要塞进 metadata**。metadata 只放**指标**（如字数）。
+- **原文 / 敏感文本走主字段**：`input_content` / `output_content`（现允许记录，受敏感内容策略约束，见 [schema-数据契约.md](schema-数据契约.md)），**不要塞进 metadata**。metadata 只放**指标**（如字数）。
 
 ---
 
@@ -88,7 +88,7 @@ metadata **位置自由，但形状有规范**，否则将来无法分析、无�
 1. 加列（PG 加可空列是秒级，不重写表）：`ALTER TABLE usage_event ADD COLUMN report_type TEXT;`
 2. 回填历史：`UPDATE usage_event SET report_type = metadata->>'report_type' WHERE metadata ? 'report_type';`
 3. 接入层把 `metadata.report_type` 自动落进新列；
-4. 走数据契约四连动：升 `schema_version` + 改 [schema.md](schema.md) / [event.schema.json](../shared/schema/event.schema.json) / 建表 SQL + 在 [PROJECT_PLAN](../../PROJECT_PLAN.md) 决策记录记一条 + 重生成模型（见 [CLAUDE.md](../../CLAUDE.md) §3）。
+4. 走数据契约四连动：升 `schema_version` + 改 [schema-数据契约.md](schema-数据契约.md) / [event.schema.json](../shared/schema/event.schema.json) / 建表 SQL + 在 [PROJECT_PLAN](../../PROJECT_PLAN.md) 决策记录记一条 + 重生成模型（见 [CLAUDE.md](../../CLAUDE.md) §3）。
 
 注意事项：
 
@@ -102,4 +102,4 @@ metadata **位置自由，但形状有规范**，否则将来无法分析、无�
 ## 六、待定
 
 - **metadata 形状校验告警**：metadata 不符合本文约定（类型 / 必需 key）时，是否在接入层**记一条告警日志（仍照收、不拒收，守「不阻断入库」）**——**待定，需人工确认**。
-- **敏感内容策略读取侧**：`input_content` / `output_content` 原文记录已放开（决策 #34）；仅**读取侧可见范围**（多用户上看板后谁能看原文）+ **留存策略**仍**待定，需人工确认**（见 [schema.md](schema.md)）。
+- **敏感内容策略读取侧**：`input_content` / `output_content` 原文记录已放开（决策 #34）；仅**读取侧可见范围**（多用户上看板后谁能看原文）+ **留存策略**仍**待定，需人工确认**（见 [schema-数据契约.md](schema-数据契约.md)）。

@@ -64,7 +64,8 @@ def pending_migrations(migrations: list[Migration], applied: set[int]) -> list[M
 
 
 # --- 下面是动数据库的薄层（IO）。决策逻辑都在上面的纯函数里，已被单测覆盖；
-# --- 这层只负责"连库 + 读已办 + 逐张办"，按本项目惯例靠真实库集成验证（见 docs/smoke.md）。
+# --- 这层只负责"连库 + 读已办 + 逐张办"，按本项目惯例靠真实库集成验证
+# --- （见 docs/smoke-数据库冒烟.md）。
 
 
 def read_applied_versions(connection: Connection[TupleRow]) -> set[int]:

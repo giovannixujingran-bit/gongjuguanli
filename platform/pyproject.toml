@@ -1,5 +1,5 @@
 # pyproject.toml —— 后端（接入 / 存储 / 分析 / 账号 / 采集）工程配置 + 机器闸门
-# 闸门强度档：Phase 1 严格档（后端主链路必过）——见 docs/code-standards.md §五。
+# 闸门强度档：Phase 1 严格档（后端主链路必过）——见 docs/code-standards-代码规范.md §五。
 # 包管理：uv。
 
 [project]

@@ -1,6 +1,6 @@
 # CI —— 机器闸门兜底。
 # 现在：Phase 1 后端主链路关卡必过；前端仍为占位，继续宽松。
-# 见 platform/docs/code-standards.md §五「闸门强度按阶段校准」。
+# 见 platform/docs/code-standards-代码规范.md §五「闸门强度按阶段校准」。
 
 name: CI
 

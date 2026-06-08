@@ -39,15 +39,15 @@ PostgreSQL 落库实现与模拟数据测试；并新增真实数据库冒烟脚
 
 两个前端只通过共享后端的数据相连，**互不调用**。依赖只能自下而上单向流。
 
-## 三类工具的接入方式
+## 三种采集手段（按对工具的控制权决定，与开/闭源无关）
 
-| 类别 | 采集手段 | 数据粒度 |
+| 你对它的控制权 | 采集手段 | 数据粒度 |
 |---|---|---|
-| 自写 / 可改代码 | **工具自报**（触发点直接上报，SDK 为便捷封装，主路） | 最全：token + 工具 + 用户 + 团队 + 结果 |
-| 开源自部署（如 OpenClaw） | 改 base URL 指向本地转发服务，平台旁路代采 | token + 工具；用户粒度看透传 |
-| 纯黑盒现成 | 独立 API Key 区分，或走转发服务兜底 | 通常只到「哪个工具」 |
+| 能改**代码** | **工具自报**（触发点直接上报，SDK 为便捷封装，主路） | 最全：token + 工具 + 用户 + 团队 + 结果 |
+| 改不了 / 不想改代码，但能改**接口地址（base URL）** | 改 base URL 指向本地转发服务，平台旁路代采（不想 fork 的开源、可配 endpoint 的闭源都适用） | token + 工具；用户粒度看透传 |
+| 连地址都改不了，但能定它用**哪把 API Key** | 独立 API Key 区分到工具（供应商按 key 报量） | 通常只到「哪个工具」 |
 
-无论哪种，最终都按同一 schema 落库；差异由弹性选填字段与 `metadata` 自由区吸收。
+无论哪种，最终都按同一 schema 落库；差异由弹性选填字段与 `metadata` 自由区吸收。详见 [架构 §四](docs/architecture-架构与原则.md)。
 
 ---
 
@@ -55,7 +55,7 @@ PostgreSQL 落库实现与模拟数据测试；并新增真实数据库冒烟脚
 
 | 目录 | 职责 | 当前产出 |
 |---|---|---|
-| `docs/` | 落地文档（承接 SSOT） | ✅ [schema.md](docs/schema.md)、[contract.md](docs/contract.md) |
+| `docs/` | 落地文档（承接 SSOT） | ✅ [schema-数据契约.md](docs/schema-数据契约.md)、[contract-接入契约.md](docs/contract-接入契约.md) |
 | `shared/schema/` | 机器可校验 JSON Schema（唯一源） | ✅ [event.schema.json](shared/schema/event.schema.json) |
 | `shared/contracts/` | 由 schema 生成的 py/ts 模型（标「自动生成，勿手改」） | ✅ `event_model.py`、`event.d.ts` |
 | `shared/registry/` | 工具注册表定义/迁移 | 表见 `backend/storage/migrations/` |

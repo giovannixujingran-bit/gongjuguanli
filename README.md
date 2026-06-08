@@ -20,4 +20,4 @@
 
 ## 版本
 
-版本号与发版规范见 [CLAUDE.md「远程仓库与版本发布」](CLAUDE.md)。SemVer，tag 形如 `vX.Y.Z`，每个 tag 对应 [CHANGELOG](CHANGELOG.md) 的一个发布块。**注意仓库版本号 ≠ 事件数据契约 `schema_version`**（后者见 [schema.md](platform/docs/schema.md)）。
+版本号与发版规范见 [CLAUDE.md「远程仓库与版本发布」](CLAUDE.md)。SemVer，tag 形如 `vX.Y.Z`，每个 tag 对应 [CHANGELOG](CHANGELOG.md) 的一个发布块。**注意仓库版本号 ≠ 事件数据契约 `schema_version`**（后者见 [schema-数据契约.md](platform/docs/schema-数据契约.md)）。

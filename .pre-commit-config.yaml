@@ -1,6 +1,6 @@
 # .pre-commit-config.yaml —— 本地提交前先跑一遍机器闸门，CI 再兜底跑同一套。
 # 强度档：Phase 1 后端主链路必过；前端仍为占位宽松档。
-# 见 platform/docs/code-standards.md §五。
+# 见 platform/docs/code-standards-代码规范.md §五。
 
 default_language_version:
   python: python3.11

@@ -1,10 +1,10 @@
-<!-- 自动生成 by platform/tools/export_integration_kit.py —— 勿手改。源文件：platform/docs/ai-intake-guide.md。改源后重跑脚本重生成本包。 -->
+<!-- 自动生成 by platform/tools/export_integration_kit.py —— 勿手改。源文件：platform/docs/ai-intake-guide-AI接入向导.md。改源后重跑脚本重生成本包。 -->
 
 # AI 接入问诊向导 —— 给接入方的 AI 看的剧本
 
-> **这份给谁**：接入方用一个 AI（如 Claude Code）来帮自己的工具接入本平台时，把这份连同接入包一起喂给它。它是**剧本**，不是给人读的叙述——人读 [integration-guide.md](integration-guide.md)，AI 读这份。
+> **这份给谁**：接入方用一个 AI（如 Claude Code）来帮自己的工具接入本平台时，把这份连同接入包一起喂给它。它是**剧本**，不是给人读的叙述——人读 [integration-guide-接入指南.md](integration-guide-接入指南.md)，AI 读这份。
 >
-> **怎么用**：AI 顺着下面的「决策树」走，**能从工具代码/上下文推断的就直接填，推不出或属业务判断的才挂起来问工具方**，最后产出两样东西（§4）。字段定义一律链到 [schema.md](schema.md) / [contract.md](contract.md) / [metadata-conventions.md](metadata-conventions.md)，本文不复制。
+> **怎么用**：AI 顺着下面的「决策树」走，**能从工具代码/上下文推断的就直接填，推不出或属业务判断的才挂起来问工具方**，最后产出两样东西（§4）。字段定义一律链到 [schema-数据契约.md](schema-数据契约.md) / [contract-接入契约.md](contract-接入契约.md) / [metadata-conventions-metadata约定与字段治理.md](metadata-conventions-metadata约定与字段治理.md)，本文不复制。
 
 ---
 
@@ -28,12 +28,12 @@
 
 | 判定点 | 怎么自己定 | 结论 |
 |---|---|---|
-| **能否改代码** | 看工具是否有可改的调用/触发点 | 不能改 → 走 relay 兜底（**Phase 2D 暂未提供**，见 [contract.md](contract.md)），先止损、不继续接 |
-| **圈一硬性必填** | 全部可由埋点自动产生 | `record_id`=uuid4（每条唯一，失败重发用同一个）；`schema_version`=平台当前版本（见 [schema.md](schema.md) 顶部）；`tool_id`=平台发的；`start_time`/`end_time`/`duration_ms`/`status` 埋点时测。全工具必填，缺则被 422 打回 |
-| **调不调大模型、哪家 API** | 读调用代码 | 调 → 补圈二 `model`/`prompt_tokens`/`completion_tokens`/`total_tokens`/`cost`/`cost_source`，并按家做 **token 归一化**（OpenAI 原样；Claude `input→prompt`/`output→completion`/total 自补，见 [schema.md](schema.md)）。不调 → 圈二留 NULL |
+| **能否改代码** | 看工具是否有可改的调用/触发点 | 不能改 → 走 relay 兜底（**Phase 2D 暂未提供**，见 [contract-接入契约.md](contract-接入契约.md)），先止损、不继续接 |
+| **圈一硬性必填** | 全部可由埋点自动产生 | `record_id`=uuid4（每条唯一，失败重发用同一个）；`schema_version`=平台当前版本（见 [schema-数据契约.md](schema-数据契约.md) 顶部）；`tool_id`=平台发的；`start_time`/`end_time`/`duration_ms`/`status` 埋点时测。全工具必填，缺则被 422 打回 |
+| **调不调大模型、哪家 API** | 读调用代码 | 调 → 补圈二 `model`/`prompt_tokens`/`completion_tokens`/`total_tokens`/`cost`/`cost_source`，并按家做 **token 归一化**（OpenAI 原样；Claude `input→prompt`/`output→completion`/total 自补，见 [schema-数据契约.md](schema-数据契约.md)）。不调 → 圈二留 NULL |
 | **是否流式（SSE）** | 读调用代码 | 是 → 必须开 usage（OpenAI 兼容接口加 `stream_options.include_usage`），**流结束后**才记完整记录（token 这时才齐） |
 | **是否异步任务（生成图/视频）** | 读任务提交/查询代码 | 是 → 两段式采集（先提交后查状态），token 留 NULL，成本走源头返回 `cost`、`cost_source=source` |
-| **产出物（图/文件/文本）** | 读产出代码 | 按 [metadata-conventions.md](metadata-conventions.md) 的 `outputs` 约定记；**二进制绝不入库**，只存引用 + 尺寸/数量/格式；文本原文走主字段 `output_content`、指标走 `output_chars` |
+| **产出物（图/文件/文本）** | 读产出代码 | 按 [metadata-conventions-metadata约定与字段治理.md](metadata-conventions-metadata约定与字段治理.md) 的 `outputs` 约定记；**二进制绝不入库**，只存引用 + 尺寸/数量/格式；文本原文走主字段 `output_content`、指标走 `output_chars` |
 | **身份 / 入口来源** | 看工具怎么被打开 | 从门户打开 → 带 `Authorization: Bearer <token>`，`metadata.entry_source=portal`；自己接了平台 Auth → `direct`；识别不了 → 不带 token、`unknown`，平台兜底记 `anonymous`、不阻断入库 |
 | **失败/超时埋点** | 在错误处理处 | 失败也必须上报，`status` 填 `failed`/`timeout`（最有价值的数据，最易漏）。注意仍守 §0：上报本身失败要吞掉 |
 
@@ -55,7 +55,7 @@
 
 - **「一次使用」怎么界定？** 决定 `conversation_id` 这个聚合键。一次使用内多次调模型要用同一个值串起来；图省事直接塞 `record_id` 会让「按会话聚合」退化成「按调用」，使用率维度失真。问清楚业务上一次「使用」是什么。
 - **该在哪些触发点埋点？** 哪些按钮/调用算一次使用（触发式埋点，平台不自动观测）。
-- **要不要上报原文 `input_content` / `output_content`？** 原文写入侧已放开、可记录（读取侧权限待定，见 [schema.md](schema.md) 敏感内容策略），但记不记是工具方的业务敏感判断。
+- **要不要上报原文 `input_content` / `output_content`？** 原文写入侧已放开、可记录（读取侧权限待定，见 [schema-数据契约.md](schema-数据契约.md) 敏感内容策略），但记不记是工具方的业务敏感判断。
 - **质量信号 `result_quality` / `adopted` 从哪来、要不要记？** 有就多算几个维度，没有也照收。
 
 > 平台侧的事（领 `tool_id`、某个新 metadata 要不要立约定）**不在反问范围**——它要找平台方，不是工具方。把它放进 §4 方案书末尾的「需平台方处理」备注即可，别打断流程。
@@ -78,7 +78,7 @@
 
 1. **工具属哪类**：调不调模型 / 流式 / 异步 / 产出什么。
 2. **要上报哪些字段**：圈一（全填）+ 圈二（调模型才填）+ 圈三（按需）+ metadata（entry_source/auth_method/产出物…）。
-3. **示例事件 JSON**：照本工具实际拼一条最小记录（参照 [integration-guide.md](integration-guide.md) §2）。
+3. **示例事件 JSON**：照本工具实际拼一条最小记录（参照 [integration-guide-接入指南.md](integration-guide-接入指南.md) §2）。
 4. **待工具方确认清单**：§3 那几条没定的，列出来 + 建议默认值。
 5. **需平台方处理**（备注，不打断）：领 `tool_id`、若有新 metadata 要不要立约定。
 

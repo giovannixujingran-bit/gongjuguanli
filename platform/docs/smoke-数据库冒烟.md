@@ -12,7 +12,7 @@
 - 接入 API 已启动，默认地址 `http://127.0.0.1:8000/events`。
 - 环境变量里有真实 `DATABASE_URL`。
 
-> 本机 dev 可一条命令满足后两条：`cd platform; .\scripts\serve.ps1 start`（自动起 PG + 探活 DB + 起 API）。完整本机运行说明见 [execution-plan.md](execution-plan.md) §四。
+> 本机 dev 可一条命令满足后两条：`cd platform; .\scripts\serve.ps1 start`（自动起 PG + 探活 DB + 起 API）。完整本机运行说明见 [execution-plan-执行计划与技术栈.md](execution-plan-执行计划与技术栈.md) §四。
 
 ## 运行
 

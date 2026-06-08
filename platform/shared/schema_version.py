@@ -2,7 +2,7 @@
 
 升版本只改这里一处：采集端（SDK / 自报实现）、接入层都从此模块取版本，
 不再各自硬编码字面量。改动时仍需按 CLAUDE.md §3 四连动同步
-schema.md / event.schema.json / 建表 SQL，并把 CURRENT_SCHEMA_VERSION 升上来。
+schema-数据契约.md / event.schema.json / 建表 SQL，并把 CURRENT_SCHEMA_VERSION 升上来。
 """
 
 from __future__ import annotations

@@ -11,7 +11,7 @@ DataLevel = Literal["full", "partial", "minimal"]
 CollectMethod = Literal["report", "relay", "key"]
 
 # tool_id 命名规则（SSOT）：`<team>-<tool>` 全小写 kebab，至少两段，
-# 段内 [a-z0-9]+，单连字符相连，无前后缀/双连字符。规范见 platform/docs/registry.md。
+# 段内 [a-z0-9]+，单连字符相连，无前后缀/双连字符。规范见 platform/docs/registry-工具注册表.md。
 # 接入层请求模型用它做 Field(pattern=...) 自动校验（非法格式 → 422）。
 TOOL_ID_REGEX = r"^[a-z0-9]+(?:-[a-z0-9]+)+$"
 

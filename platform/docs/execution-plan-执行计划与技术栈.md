@@ -10,10 +10,10 @@
 > 严格按地基优先。Phase 0 不定死，后面全是返工。
 
 - **Phase 0 — 地基：Schema + 契约**
-  产出 [数据契约](schema.md) 与 [接入契约](contract.md) 的字段表、JSON Schema 校验定义、字段文档。这是后续一切的依据。
+  产出 [数据契约](schema-数据契约.md) 与 [接入契约](contract-接入契约.md) 的字段表、JSON Schema 校验定义、字段文档。这是后续一切的依据。
 
 - **Phase 1 — 存储层（共享）**
-  建 PostgreSQL 库与统一事件表（metadata 用 JSONB）、[工具注册表](registry.md)（**含门户展示字段**：category / display_name / description / icon / thumbnail / launch_url / sort_weight / enabled）、**用户账号表**（账号 / 密码哈希 / user_id / team_id / 角色）；建接入 API（接收一条流水 → 校验契约 → 落库）。三张表是两个前端共用的共享数据。
+  建 PostgreSQL 库与统一事件表（metadata 用 JSONB）、[工具注册表](registry-工具注册表.md)（**含门户展示字段**：category / display_name / description / icon / thumbnail / launch_url / sort_weight / enabled）、**用户账号表**（账号 / 密码哈希 / user_id / team_id / 角色）；建接入 API（接收一条流水 → 校验契约 → 落库）。三张表是两个前端共用的共享数据。
 
 - **Phase 1.5 — 真实数据库冒烟**
   在不接真实工具的前提下，用真实 PostgreSQL 验证 `模拟 JSON → FastAPI /events → usage_event` 的落库链路。它只验证平台自身：建表 SQL、DB 连接、幂等、`ingested_at`、metadata JSONB。若本地无 Docker，可在具备 Docker 的机器上执行；未通过前不进入真实工具试点。
@@ -27,14 +27,14 @@
 - **Phase 2.5 — 接入工程化（配合多方协作）**
   随真实工具试点暴露的协作摩擦补齐工具链，降低各团队自助接入的门槛：
   - **自助契约校验 CLI**（`tools/validate_payload.py`）：接入方在本地把自己构造的事件 JSON 喂给它，**离线**按 `shared/schema/event.schema.json` 校验合不合契约，当场报哪个字段不对。让「自行实现上报」（非用 SDK）的工具也能自检，减少接入来回。**待实现。**
-  - **`tool_id` 发放通道**：✅ **已实现**（决策 #32）。`POST /registry/tools` 管理员 API（与 `/auth/users` 同门禁）把「登记 → 发 ID」从手工 `INSERT` 变成有鉴权、带命名校验、重复报 409 的端点；命名规则已定稿 `<team>-<tool>`（机器源 `backend/storage/registry.py` 的 `TOOL_ID_REGEX`）。实现：`backend/ingestion/app.py` `register_tool` + `backend/storage/registry.py`。通道细则见 [工具注册表 §三](registry.md)。
+  - **`tool_id` 发放通道**：✅ **已实现**（决策 #32）。`POST /registry/tools` 管理员 API（与 `/auth/users` 同门禁）把「登记 → 发 ID」从手工 `INSERT` 变成有鉴权、带命名校验、重复报 409 的端点；命名规则已定稿 `<team>-<tool>`（机器源 `backend/storage/registry.py` 的 `TOOL_ID_REGEX`）。实现：`backend/ingestion/app.py` `register_tool` + `backend/storage/registry.py`。通道细则见 [工具注册表 §三](registry-工具注册表.md)。
   - **接入层连接池**：当前 `backend/storage` 每请求新建 PostgreSQL 连接；真实工具放量前换连接池（如 `psycopg_pool`），避免并发上报时连接开销与耗尽。**待放量前实现（需联网装依赖）。**
 
 - **Phase 3 — 分析层**
   基于原始流水计算四类结论（成本 / ROI / 采纳率 / 质量）。算式全部在此层，与采集解耦。
 
 - **Phase 4 — 展示层（两个前端）**
-  - **使用端 · 使用者门户**（`apps/user-portal`）：分类卡片、排序（偏好/频次/时间）、AI 工具推荐、登录入口（打开工具时注入 `user_id`）。详见 [使用端-工具门户](portal.md)。
+  - **使用端 · 使用者门户**（`apps/user-portal`）：分类卡片、排序（偏好/频次/时间）、AI 工具推荐、登录入口（打开工具时注入 `user_id`）。详见 [使用端-工具门户](portal-工具门户.md)。
   - **数据端 · 后台分析台**（`apps/admin-dashboard`）：明细查询 + 四类分析看板 + 接入管理页 + 账号管理。**后台看数据时可加一个「AI 数据分析」助手**（接 LLM API 对看板数据做自然语言分析）——**待定，需人工确认，后置实现**。
 
 - **Phase 5 — 批量接入存量工具**
@@ -44,7 +44,7 @@
 
 ## 二、建议的技术栈与目录结构
 
-技术栈**已锁定**（详见 [代码规范](code-standards.md)，换栈需在决策记录立项）：
+技术栈**已锁定**（详见 [代码规范](code-standards-代码规范.md)，换栈需在决策记录立项）：
 
 - 后端 / 接入 API / 分析层：Python 3.11+ + FastAPI + Pydantic v2
 - 数据库：PostgreSQL（metadata = JSONB，天然适配自由口袋）
@@ -101,28 +101,28 @@ platform/
 - CHANGELOG.md（阶段级能力摘要）
 
 【必读 —— 规范与契约（SSOT 真源，全在 platform/docs/）】
-- platform/docs/architecture.md         ← 架构与原则
-- platform/docs/execution-plan.md        ← 本文件
-- platform/docs/code-standards.md        ← 代码规范（写代码前必读）
-- platform/docs/schema.md + platform/shared/schema/event.schema.json  ← 数据契约真源（v0.2）
-- platform/docs/contract.md              ← 接入契约真源
-- platform/docs/registry.md              ← 工具注册表
-- platform/docs/portal.md                ← 使用端门户规划
+- platform/docs/architecture-架构与原则.md         ← 架构与原则
+- platform/docs/execution-plan-执行计划与技术栈.md        ← 本文件
+- platform/docs/code-standards-代码规范.md        ← 代码规范（写代码前必读）
+- platform/docs/schema-数据契约.md + platform/shared/schema/event.schema.json  ← 数据契约真源（v0.2）
+- platform/docs/contract-接入契约.md              ← 接入契约真源
+- platform/docs/registry-工具注册表.md              ← 工具注册表
+- platform/docs/portal-工具门户.md                ← 使用端门户规划
 
 【必读 —— 现有代码】
-- platform/README.md、platform/backend/ingestion/app.py、platform/backend/storage/events.py、platform/backend/auth/*、platform/collection/sdk/*、platform/integrations/_template/*、platform/tools/smoke_db.py、platform/tools/seed_admin.py、platform/docs/smoke.md、platform/backend/storage/migrations/0001_init.sql、platform/pyproject.toml、platform/.env.example
+- platform/README.md、platform/backend/ingestion/app.py、platform/backend/storage/events.py、platform/backend/auth/*、platform/collection/sdk/*、platform/integrations/_template/*、platform/tools/smoke_db.py、platform/tools/seed_admin.py、platform/docs/smoke-数据库冒烟.md、platform/backend/storage/migrations/0001_init.sql、platform/pyproject.toml、platform/.env.example
 
 【本轮要做 —— 真实 DB 冒烟 + Phase 2C】
 1. 真实 DB 冒烟：
    - 用真实 PostgreSQL 验证 `模拟 JSON → POST /events → usage_event`；
-   - 使用 platform/tools/smoke_db.py 与 platform/docs/smoke.md；
+   - 使用 platform/tools/smoke_db.py 与 platform/docs/smoke-数据库冒烟.md；
    - 若当前机器无 Docker，则明确记录未执行原因，并在具备 Docker / PostgreSQL 的机器上补跑；
    - 不接真实工具。
 2. Phase 2C 真实工具试点：
    - 选择一个低风险、可改代码、调用路径清楚的真实工具；
    - 复制 platform/integrations/_template 为该工具目录，填写配置与试点记录；
    - 使用 collection.sdk.PlatformTracker 或等价封装上报；
-   - 记圈一 + token + status + duration + metadata 入口来源；input_content / output_content 原文按需记录（已放开，见 schema.md 敏感内容策略）；
+   - 记圈一 + token + status + duration + metadata 入口来源；input_content / output_content 原文按需记录（已放开，见 schema-数据契约.md 敏感内容策略）；
    - 工具侧必须保留环境变量开关，支持关闭上报回滚。
 3. 验证：
    - 验证 portal / direct / unknown 至少覆盖实际存在的入口；

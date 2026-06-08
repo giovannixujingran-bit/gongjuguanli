@@ -72,7 +72,7 @@ class EventIngested(BaseModel):
 
 class ToolRegisterRequest(BaseModel):
     # tool_id 命名规则在此自动校验（非法格式 → 422）；规则 SSOT 见 backend/storage/registry.py
-    # 的 TOOL_ID_REGEX 与 platform/docs/registry.md。
+    # 的 TOOL_ID_REGEX 与 platform/docs/registry-工具注册表.md。
     tool_id: str = Field(pattern=TOOL_ID_REGEX)
     name: str = Field(min_length=1)
     team_id: str | None = None

@@ -1,8 +1,8 @@
 # 接入契约 —— 给工具方看的（落地文档）
 
 > 本文档是接入契约的 **SSOT（唯一真源）**；原 `规划/数据端/接入契约.md` 已随规划目录退役。
-> 字段定义见 [schema.md](schema.md)；机器可校验源是 [`../shared/schema/event.schema.json`](../shared/schema/event.schema.json)；
-> `tool_id` 来源见 [工具注册表](registry.md)。
+> 字段定义见 [schema-数据契约.md](schema-数据契约.md)；机器可校验源是 [`../shared/schema/event.schema.json`](../shared/schema/event.schema.json)；
+> `tool_id` 来源见 [工具注册表](registry-工具注册表.md)。
 >
 > **一句话**：要接入本平台，你只需保证最终落库的那条记录**格式一样**（统一 schema）。怎么采、用什么语言不限。
 
@@ -12,11 +12,11 @@
 
 平台不逐个适配工具，而是定一份契约、接入方满足。契约落成三样具体东西：
 
-1. **字段文档** —— [schema.md](schema.md)：每个字段的含义、必填/选填、类型。
+1. **字段文档** —— [schema-数据契约.md](schema-数据契约.md)：每个字段的含义、必填/选填、类型。
 2. **机器可校验定义** —— [event.schema.json](../shared/schema/event.schema.json)：数据进入接入层时**自动校验，不合规当场打回**（契约的「牙齿」）。
 3. **参考 SDK / 示例** —— Phase 2 产出（`../collection/sdk/`），让能配合的工具直接抄。
 
-> **自助校验（规划中）**：不想用 SDK、自行实现上报的工具，将可用 `tools/validate_payload.py` 在本地离线校验自己构造的事件合不合契约（按 event.schema.json）。属 Phase 2.5 接入工程化，见 [执行计划](execution-plan.md)；当前未实现，先以 event.schema.json 为准自校。
+> **自助校验（规划中）**：不想用 SDK、自行实现上报的工具，将可用 `tools/validate_payload.py` 在本地离线校验自己构造的事件合不合契约（按 event.schema.json）。属 Phase 2.5 接入工程化，见 [执行计划](execution-plan-执行计划与技术栈.md)；当前未实现，先以 event.schema.json 为准自校。
 
 ---
 
@@ -28,15 +28,15 @@
 | **LLM 专属（圈二）** | `model` / `prompt_tokens` / `completion_tokens` / `total_tokens` / `cost` / `cost_source` | 非 LLM 工具留 NULL，不影响入库 |
 | **弹性选填（圈三）** | `user_id` / `team_id` / `result_quality` / `adopted` / `input_content` / `output_content` / `metadata` | 有就多算几个维度；**没有也照收**，绝不因此拒收 |
 
-> `tool_id` **由平台统一分配**：接入前先登记拿 ID，你用它对接、每条记录回填。登记由平台管理员经 `POST /registry/tools` 发放（命名规则 `<team>-<tool>`、发放流程见 [工具注册表 §三](registry.md)）。
+> `tool_id` **由平台统一分配**：接入前先登记拿 ID，你用它对接、每条记录回填。登记由平台管理员经 `POST /registry/tools` 发放（命名规则 `<team>-<tool>`、发放流程见 [工具注册表 §三](registry-工具注册表.md)）。
 
 ---
 
 ## 三、接入方的硬性义务
 
-- **工具自报为主路**：能改代码的工具，在调用或按钮**触发点**把数据报给平台统一上报 API（参考 SDK 是便捷封装，也可自行实现）。改不了代码的黑盒才走转发服务 / 独立 key 兜底——**转发不是必经总闸**。
+- **工具自报为主路**：能改代码的工具，在调用或按钮**触发点**把数据报给平台统一上报 API（参考 SDK 是便捷封装，也可自行实现）。改不了 / 不想改代码的工具（纯黑盒 SaaS，或不愿 fork 维护的开源自部署）才走转发服务 / 独立 key 兜底——**转发不是必经总闸**。
 - **接住并回传门户注入的身份**：工具从平台入口被打开时，平台注入 `user_id`，上报时原样带回；绕过入口直接使用的记匿名。
-- **Token 归一化**：把各家原始 token 字段映射进统一字段（OpenAI `prompt/completion/total`；Claude `input→prompt`、`output→completion`、`total` 自补）。详见 [schema.md](schema.md) 归一化小节。
+- **Token 归一化**：把各家原始 token 字段映射进统一字段（OpenAI `prompt/completion/total`；Claude `input→prompt`、`output→completion`、`total` 自补）。详见 [schema-数据契约.md](schema-数据契约.md) 归一化小节。
 - **流式调用必须开启 usage 返回**：流式（SSE）默认末尾不带 usage（OpenAI 兼容接口需显式开 `stream_options.include_usage`），不开则 token 全 NULL。token 在流结束时才齐，须在**流结束后**再记完整记录。
 - **失败 / 超时也必须上报**：这恰是「哪个工具/中转站不稳定」的关键数据，最易漏记，契约强制。
 - **异步任务两段式**：先提交（拿 task id）、后查状态（拿耗时与 `cost`/结果）。采集分两段，token 留 NULL、成本走源头返回的 `cost`（`cost_source = source`）。
@@ -52,7 +52,7 @@
 | 异步任务类（生成图/视频） | 两段式采集：耗时与结果分两次拿，token 留 NULL，成本走源头 `cost` |
 | 「一次使用」界定 | 由工具按触发点自定义（触发式埋点，非平台自动观测）；一次使用内多次调用用同一 `conversation_id` 串联 |
 | 不调大模型的工具 | 圈二留 NULL，只记圈一（次数/耗时/status）+（可选）输入输出 / metadata |
-| 敏感内容边界 | 原文 `input_content`/`output_content` 可记录；仅读取侧可见范围待定，见 [schema.md](schema.md) 敏感内容策略一节 |
+| 敏感内容边界 | 原文 `input_content`/`output_content` 可记录；仅读取侧可见范围待定，见 [schema-数据契约.md](schema-数据契约.md) 敏感内容策略一节 |
 
 ---
 

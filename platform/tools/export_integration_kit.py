@@ -20,11 +20,11 @@ OUT_DIR = ROOT / "integrations" / "handoff-kit"
 
 # (源文件, 分发包内文件名)；.md 会加「自动生成」横幅，.json 原样复制（JSON 不能带注释）。
 SOURCES: list[tuple[Path, str]] = [
-    (ROOT / "docs" / "integration-guide.md", "接入指南.md"),
-    (ROOT / "docs" / "contract.md", "接入契约.md"),
-    (ROOT / "docs" / "schema.md", "字段文档.md"),
-    (ROOT / "docs" / "metadata-conventions.md", "metadata约定.md"),
-    (ROOT / "docs" / "ai-intake-guide.md", "AI接入向导.md"),
+    (ROOT / "docs" / "integration-guide-接入指南.md", "接入指南.md"),
+    (ROOT / "docs" / "contract-接入契约.md", "接入契约.md"),
+    (ROOT / "docs" / "schema-数据契约.md", "字段文档.md"),
+    (ROOT / "docs" / "metadata-conventions-metadata约定与字段治理.md", "metadata约定.md"),
+    (ROOT / "docs" / "ai-intake-guide-AI接入向导.md", "AI接入向导.md"),
     (ROOT / "shared" / "schema" / "event.schema.json", "event.schema.json"),
 ]
 
@@ -70,7 +70,8 @@ def render_readme() -> str:
 3. 接入契约.md       —— 义务细则（失败/流式/异步怎么处理、必填选填）。
 4. 字段文档.md       —— 每个字段的含义、类型、必填/选填全表。
 5. metadata约定.md   —— 要记主表没预置的东西（报告类型/分段耗时/图片产出…）时看这份的统一记法。
-6. AI接入向导.md     —— 用 AI 帮你接入时，把它喂给 AI；它会自助判定字段、只在必要时反问你，并产出接入配置+方案。
+6. AI接入向导.md     —— 用 AI 帮你接入时，把它喂给 AI；它会自助判定字段、
+                        只在必要时反问你，并产出接入配置 + 方案。
 
 两件最容易忽略的事
 ------------------
@@ -82,9 +83,9 @@ def render_readme() -> str:
 ----
 - 本包是导出快照（契约 {CURRENT_SCHEMA_VERSION}）。平台契约更新后，问平台方要新版本。
 - 《接入指南.md》正文里的链接写的是平台仓库内路径；对应文件就在本文件夹里：
-    contract.md                        → 本文件夹的「接入契约.md」
-    schema.md                          → 本文件夹的「字段文档.md」
-    metadata-conventions.md            → 本文件夹的「metadata约定.md」
+    contract-接入契约.md                        → 本文件夹的「接入契约.md」
+    schema-数据契约.md                          → 本文件夹的「字段文档.md」
+    metadata-conventions-metadata约定与字段治理.md            → 本文件夹的「metadata约定.md」
     ../shared/schema/event.schema.json → 本文件夹的「event.schema.json」
   参考 SDK 和试点模板是代码，未放进本包；需要的话找平台方要仓库 platform/ 访问权。
 - 有疑问直接找平台对接人。
@@ -98,8 +99,9 @@ def render_repo_readme() -> str:
 本目录由 `platform/tools/export_integration_kit.py` 从 SSOT 文档生成，供没有仓库访问权的
 接入方直接获取（整个文件夹发给对方即可）。
 
-- **不要手改本目录任何文件**：改 `docs/integration-guide.md` / `docs/contract.md` /
-  `docs/schema.md` / `shared/schema/event.schema.json` 等源文件后，重跑生成脚本：
+- **不要手改本目录任何文件**：改 `docs/integration-guide-接入指南.md` /
+  `docs/contract-接入契约.md` / `docs/schema-数据契约.md` /
+  `shared/schema/event.schema.json` 等源文件后，重跑生成脚本：
   `python tools/export_integration_kit.py`（详见 CLAUDE.md §3 改动传播规则）。
 - 本目录不是 SSOT，只是上述文档的分发副本。
 """

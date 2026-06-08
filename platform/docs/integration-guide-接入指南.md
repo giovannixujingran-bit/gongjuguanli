@@ -31,7 +31,7 @@
 | ✅ **能改代码**的工具（在调用/触发点加一段上报） | ❌ 改不了代码的黑盒工具（兜底 relay 属 Phase 2D，暂未提供） |
 | ✅ 记「圈一事实 + token + 状态 + 耗时 + 入口来源」，需要的话连同 `input_content`/`output_content` 原文一起记 | —— |
 
-不确定自己属于哪类，先找平台方确认。原文记录已放开（读取侧谁能看待定，见 [schema.md](schema.md) 敏感内容策略）。
+不确定自己属于哪类，先找平台方确认。原文记录已放开（读取侧谁能看待定，见 [schema-数据契约.md](schema-数据契约.md) 敏感内容策略）。
 
 ---
 
@@ -40,8 +40,8 @@
 | 步 | 做什么 | 找谁 / 看哪 |
 |---|---|---|
 | **① 领 `tool_id`** | 平台管理员给你登记，发一个固定 ID（命名 `<team>-<tool>`） | 平台方调 `POST /registry/tools`，把 ID 给你 |
-| **② 读契约** | 了解必填/选填、6 条硬性义务、边角情况 | [contract.md](contract.md) |
-| **③ 按 schema 构造记录** | 拼一条符合统一格式的 JSON | 见下方 §2 最小示例 + [schema.md](schema.md) |
+| **② 读契约** | 了解必填/选填、6 条硬性义务、边角情况 | [contract-接入契约.md](contract-接入契约.md) |
+| **③ 按 schema 构造记录** | 拼一条符合统一格式的 JSON | 见下方 §2 最小示例 + [schema-数据契约.md](schema-数据契约.md) |
 | **④ 上报** | 在工具里把记录 POST 给接入 API | 见下方 §3 |
 | **⑤ 自检 + 验收** | 用 `event.schema.json` 校验格式；按清单验收 | [event.schema.json](../shared/schema/event.schema.json) + [_template/pilot_checklist.md](../integrations/_template/pilot_checklist.md) |
 
@@ -49,7 +49,7 @@
 
 ## 2. 最小示例（直接抄改）
 
-**契约版本当前 = `v0.2`**（以 [schema.md](schema.md) 顶部为准）。下面是**非 LLM 工具 / 首轮试点**的最小记录，只含硬性必填（圈一）+ 入口来源：
+**契约版本当前 = `v0.2`**（以 [schema-数据契约.md](schema-数据契约.md) 顶部为准）。下面是**非 LLM 工具 / 首轮试点**的最小记录，只含硬性必填（圈一）+ 入口来源：
 
 ```json
 {
@@ -82,9 +82,9 @@
 - `status`：只能是 `success` / `failed` / `timeout`。**失败和超时也必须上报**（这是最有价值的数据）。
 - 时间用 ISO-8601 带时区（UTC）。
 
-字段全表（圈一/圈二/圈三逐字段含义、类型、必填）见 **[schema.md](schema.md)**；机器可校验的唯一真源是 **[event.schema.json](../shared/schema/event.schema.json)**——以它为准自校。
+字段全表（圈一/圈二/圈三逐字段含义、类型、必填）见 **[schema-数据契约.md](schema-数据契约.md)**；机器可校验的唯一真源是 **[event.schema.json](../shared/schema/event.schema.json)**——以它为准自校。
 
-> **要记的东西主表没预置怎么办？**（如「报告类型」「分段耗时」「图片产出」）→ 放进 `metadata`，但**按统一约定的形状记**，见 **[metadata-conventions.md](metadata-conventions.md)**。没有现成约定就找平台要一条，别自创格式。原文 / 图片二进制有专门规矩（原文走主字段、允许记录、二进制只存引用），也在那份里。
+> **要记的东西主表没预置怎么办？**（如「报告类型」「分段耗时」「图片产出」）→ 放进 `metadata`，但**按统一约定的形状记**，见 **[metadata-conventions-metadata约定与字段治理.md](metadata-conventions-metadata约定与字段治理.md)**。没有现成约定就找平台要一条，别自创格式。原文 / 图片二进制有专门规矩（原文走主字段、允许记录、二进制只存引用），也在那份里。
 
 ---
 
@@ -113,7 +113,7 @@ Content-Type: application/json
 
 ## 4. 你要在工具代码里改什么
 
-在**调用点 / 触发点**加埋点，注意这几条硬性义务（完整版见 [contract.md](contract.md) §三、§四）：
+在**调用点 / 触发点**加埋点，注意这几条硬性义务（完整版见 [contract-接入契约.md](contract-接入契约.md) §三、§四）：
 
 | 场景 | 怎么改 |
 |---|---|
@@ -126,7 +126,7 @@ Content-Type: application/json
 
 ## 5. 待定/边界（接入前请知悉）
 
-- **原文记录已放开**：可上报 `input_content` / `output_content` 原文（写入侧不设门禁）。仅**读取侧**（谁登录后能在看板查看原文）随多用户上线再按角色分级，细则待定，见 [schema.md](schema.md) 敏感内容策略。
+- **原文记录已放开**：可上报 `input_content` / `output_content` 原文（写入侧不设门禁）。仅**读取侧**（谁登录后能在看板查看原文）随多用户上线再按角色分级，细则待定，见 [schema-数据契约.md](schema-数据契约.md) 敏感内容策略。
 - **黑盒工具兜底（relay）暂未提供**（Phase 2D）：改不了代码的工具暂时接不进来，请排期等待。
 - **自助校验 CLI 规划中**：暂以 [event.schema.json](../shared/schema/event.schema.json) 为准自校。
 
@@ -136,8 +136,8 @@ Content-Type: application/json
 
 本指南可单独阅读，但接入方真正实现时还需要**机器源**。发给对方时一并提供（或给仓库 `platform/` 访问权）：
 
-1. 本指南 `platform/docs/integration-guide.md`
-2. 接入契约 [contract.md](contract.md)、字段文档 [schema.md](schema.md)
+1. 本指南 `platform/docs/integration-guide-接入指南.md`
+2. 接入契约 [contract-接入契约.md](contract-接入契约.md)、字段文档 [schema-数据契约.md](schema-数据契约.md)
 3. **机器可校验源** [event.schema.json](../shared/schema/event.schema.json)（自校必需）
 4. 参考 SDK [collection/sdk/](../collection/sdk/README.md) 与试点模板 [_template/](../integrations/_template/README.md)
 
