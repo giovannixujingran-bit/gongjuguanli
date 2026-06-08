@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>内部工具汇总与分析平台 · 说明文档</title>
+<style>
+  :root{
+    --bg:#FCFBF8;        /* 暖白底 */
+    --navy:#1A2B4A;      /* 深蓝(标题/主文) */
+    --brick:#C0563B;     /* 砖红强调 */
+    --ink:#3A3A37;       /* 正文 */
+    --ink-soft:#6B6B66;  /* 次要 */
+    --rule:#E4E0D7;      /* 细线 */
+    --card:#fff;
+    --serif:Georgia,"Times New Roman","Songti SC","SimSun",serif;
+    --sans:"Segoe UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--ink);background:var(--bg);line-height:1.6}
+
+  /* 布局：左固定目录 + 右内容 */
+  .wrap{display:grid;grid-template-columns:248px 1fr;max-width:1180px;margin:0 auto}
+  .toc{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+       padding:38px 22px 38px 28px;border-right:1px solid var(--rule)}
+  .toc .brand{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--navy);line-height:1.3;margin-bottom:4px}
+  .toc .ver{font-size:12px;color:var(--ink-soft);letter-spacing:.4px;margin-bottom:22px}
+  .toc nav a{display:block;font-size:14.5px;color:var(--ink-soft);text-decoration:none;
+             padding:9px 0 9px 14px;border-left:2px solid var(--rule);line-height:1.4}
+  .toc nav a:hover{color:var(--navy)}
+  .toc nav a.active{color:var(--brick);border-left-color:var(--brick);font-weight:700}
+  .toc nav a .num{font-family:var(--serif);font-size:12px;color:var(--brick);margin-right:7px}
+
+  main{padding:52px 56px 90px}
+  section{padding:30px 0 38px;border-bottom:1px solid var(--rule);scroll-margin-top:24px}
+  section:last-child{border-bottom:none}
+  .label{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:2.5px;
+         color:var(--brick);text-transform:uppercase;margin-bottom:12px}
+  h2{font-family:var(--serif);font-size:32px;font-weight:700;color:var(--navy);line-height:1.2}
+  .rule{width:64px;height:3px;background:var(--navy);margin:16px 0 22px}
+  p{font-size:16.5px;margin:10px 0}
+  p .hl{color:var(--navy);font-weight:700}
+  .lead{font-size:18px;color:var(--ink-soft);font-style:italic;font-family:var(--serif);line-height:1.55}
+
+  /* 原则回扣徽标 */
+  .recall{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--brick);
+          background:#fbf1ed;border:1px solid #e8cdc4;border-radius:999px;padding:4px 13px;
+          margin:6px 0 4px;font-weight:700}
+  .recall::before{content:"↳"}
+
+  /* hero */
+  .hero{border-bottom:1px solid var(--rule);padding:56px 0 40px}
+  .hero h1{font-family:var(--serif);font-size:46px;font-weight:700;color:var(--navy);line-height:1.14}
+  .hero .sub{font-size:19px;color:var(--ink-soft);font-style:italic;font-family:var(--serif);margin-top:16px;line-height:1.5}
+  .hero .four{display:flex;flex-wrap:wrap;gap:0;margin-top:26px}
+  .hero .four div{padding:2px 22px;border-left:2px solid var(--brick)}
+  .hero .four div:first-child{padding-left:0;border-left:none}
+  .hero .four b{font-family:var(--serif);font-size:20px;color:var(--navy);display:block}
+  .hero .four span{font-size:13px;color:var(--ink-soft)}
+  .hero .reading{margin-top:26px;font-size:14.5px;color:var(--ink-soft);background:var(--card);
+                 border:1px solid var(--rule);border-radius:5px;padding:14px 18px;line-height:1.6}
+  .hero .reading b{color:var(--brick)}
+
+  /* 三列 */
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:18px}
+  .cols .col{padding:6px 26px;border-left:2px solid var(--brick)}
+  .cols .col:first-child{padding-left:0;border-left:none}
+  .cols .n{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--brick);letter-spacing:.5px}
+  .cols h3{font-size:20px;color:var(--navy);margin:8px 0 10px;font-weight:700;line-height:1.3}
+  .cols p{font-size:15.5px;color:var(--ink);line-height:1.6;margin:6px 0}
+  .cols .why{margin-top:11px;font-size:13.5px;color:var(--ink-soft);border-top:1px solid var(--rule);padding-top:9px}
+
+  /* 两列(定位) */
+  .two{display:grid;grid-template-columns:1.35fr 1fr;gap:40px;margin-top:8px;align-items:start}
+  .kv .item{padding:14px 0;border-bottom:1px solid var(--rule)}
+  .kv .item:last-child{border-bottom:none}
+  .kv .k{font-family:var(--serif);font-size:17px;color:var(--brick);font-weight:700;margin-bottom:5px}
+  .kv .v{font-size:16px;color:var(--ink);line-height:1.6}
+  .kv .v b{color:var(--navy)}
+  .boxcard{border:1px solid var(--rule);background:var(--card);border-radius:5px;padding:22px 24px}
+  .boxcard .label{margin-bottom:12px}
+  .boxcard ol{list-style:none;counter-reset:a}
+  .boxcard li{counter-increment:a;font-family:var(--serif);font-size:17px;color:var(--navy);
+              padding:11px 0;border-bottom:1px dashed var(--rule);display:flex;gap:11px;align-items:baseline}
+  .boxcard li:last-child{border-bottom:none}
+  .boxcard li::before{content:counter(a);color:var(--brick);font-size:14px;font-weight:700}
+
+  /* ===== 流程图通用 ===== */
+  .flow{margin:8px 0 6px}
+  .fbox{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--brick);
+        border-radius:5px;padding:13px 18px}
+  .fbox b{font-family:var(--serif);font-size:17px;color:var(--navy)}
+  .fbox span{display:block;font-size:14px;color:var(--ink-soft);margin-top:2px;line-height:1.45}
+  .fbox.dark{background:var(--navy);border-color:var(--navy);border-left-color:var(--brick)}
+  .fbox.dark b{color:#fff}
+  .fbox.dark span{color:#c3ccdb}
+  .down{display:block;text-align:center;color:var(--brick);font-size:20px;line-height:1;margin:7px 0}
+  .down small{display:block;font-size:12.5px;color:var(--ink-soft);font-style:normal;margin-top:2px;font-family:var(--sans)}
+
+  /* 架构数据流：前端两列 */
+  .frontends{display:flex;gap:12px}
+  .frontends .fbox{flex:1;border-left-color:var(--navy)}
+
+  /* 部署流程：横向编号步骤 */
+  .steps{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:10px 0 6px}
+  .step{flex:1;min-width:120px;position:relative;background:var(--card);border:1px solid var(--rule);
+        border-radius:5px;padding:13px 14px;margin-right:26px;margin-bottom:14px}
+  .step:last-child{margin-right:0}
+  .step::after{content:"→";position:absolute;right:-21px;top:50%;transform:translateY(-50%);
+               color:var(--brick);font-size:19px;font-weight:700}
+  .step:last-child::after{content:""}
+  .step .sn{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;
+            background:var(--brick);color:#fff;border-radius:50%;font-size:12px;font-weight:700;margin-bottom:7px}
+  .step b{display:block;font-size:14.5px;color:var(--navy);line-height:1.35}
+  .step .d{display:block;font-size:12px;color:var(--ink-soft);line-height:1.35;margin-top:4px}
+  .devnote{font-size:13.5px;color:var(--ink-soft);background:var(--card);border:1px solid var(--rule);
+           border-radius:5px;padding:11px 15px;margin-top:8px;line-height:1.6}
+  .devnote b{color:var(--brick)}
+  .devnote code{font-family:var(--serif);background:#f1ede4;padding:1px 6px;border-radius:3px;font-size:13px}
+
+  /* 采集三手段：能力闸门 */
+  .gates .g{display:grid;grid-template-columns:200px 1fr;gap:0;border:1px solid var(--rule);
+            border-radius:5px;background:var(--card);margin-bottom:12px;overflow:hidden}
+  .gates .g .cond{background:#f6f2ea;padding:15px 18px;border-right:1px solid var(--rule)}
+  .gates .g .cond .q{font-size:13px;color:var(--ink-soft)}
+  .gates .g .cond .m{font-family:var(--serif);font-size:18px;color:var(--brick);font-weight:700;margin-top:3px}
+  .gates .g .body{padding:15px 18px}
+  .gates .g .body .h{font-size:16px;color:var(--navy);font-weight:700}
+  .gates .g .body .d{font-size:14.5px;color:var(--ink);margin-top:4px;line-height:1.55}
+  .gates .g .body .lvl{font-size:13px;color:var(--ink-soft);margin-top:7px}
+
+  /* 取舍表 */
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:15.5px}
+  thead th{font-family:var(--serif);text-align:left;color:#fff;background:var(--navy);
+           padding:12px 16px;font-weight:700}
+  tbody td{padding:12px 16px;border-bottom:1px solid var(--rule);color:var(--ink);vertical-align:top;line-height:1.5}
+  tbody tr:nth-child(even){background:var(--card)}
+  tbody td:first-child{font-weight:700;color:var(--navy);white-space:nowrap}
+  tbody td:last-child{color:var(--brick)}
+
+  /* 前端 AI 设想 */
+  .ai{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:10px}
+  .ai .panel{border:1px solid var(--rule);background:var(--card);border-radius:5px;padding:22px 24px}
+  .ai .panel .t{font-family:var(--serif);font-size:19px;color:var(--navy);font-weight:700}
+  .ai .panel .t small{display:block;font-size:13px;color:var(--ink-soft);font-style:italic;margin-top:2px;font-family:var(--serif)}
+  .ai .panel .need{margin-top:14px;font-size:16px;color:var(--ink);line-height:1.6}
+  .ai .panel .need b{color:var(--brick)}
+  .pending{display:inline-block;margin-top:14px;font-size:12.5px;letter-spacing:.5px;color:var(--ink-soft);
+           border:1px dashed var(--rule);border-radius:999px;padding:4px 12px}
+
+  @media (max-width:880px){
+    .wrap{grid-template-columns:1fr}
+    .toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--rule);
+         padding:24px 22px}
+    .toc nav{display:flex;flex-wrap:wrap;gap:4px 0}
+    .toc nav a{border-left:none;border-bottom:2px solid var(--rule);padding:7px 14px}
+    main{padding:30px 22px 70px}
+    h2{font-size:26px}
+    .cols,.two,.ai{grid-template-columns:1fr;gap:0}
+    .cols .col{border-left:none;border-top:1px solid var(--rule);padding:14px 0}
+    .cols .col:first-child{border-top:none}
+    .two{gap:24px}
+    .ai{gap:16px}
+    .step{margin-right:0}
+    .step::after{content:"↓";right:50%;top:auto;bottom:-19px;transform:translateX(50%)}
+    .gates .g{grid-template-columns:1fr}
+    .gates .g .cond{border-right:none;border-bottom:1px solid var(--rule)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 目录 -->
+  <aside class="toc">
+    <div class="brand">内部工具汇总<br>与分析平台</div>
+    <div class="ver">说明文档 · v0.0.1</div>
+    <nav id="toc">
+      <a href="#positioning"><span class="num">01</span>定位与问题</a>
+      <a href="#principles"><span class="num">02</span>三条核心原则</a>
+      <a href="#arch"><span class="num">03</span>架构与数据流</a>
+      <a href="#contract"><span class="num">04</span>统一数据契约</a>
+      <a href="#run"><span class="num">05</span>运行方式</a>
+      <a href="#collect"><span class="num">06</span>采集三手段</a>
+      <a href="#tradeoffs"><span class="num">07</span>关键取舍</a>
+      <a href="#frontends"><span class="num">08</span>前端的 AI 设想</a>
+    </nav>
+  </aside>
+
+  <main>
+    <!-- Hero -->
+    <header class="hero">
+      <h1>把每一次工具使用，<br>沉淀为可分析的数据资产</h1>
+      <p class="sub">部署在公司局域网内的统一中枢，把各类工具的「每一次使用」汇总记录，<br>并在统一数据契约之上做成本、ROI、使用率、质量四类分析。</p>
+      <div class="four">
+        <div><b>成本</b><span>资源消耗</span></div>
+        <div><b>ROI</b><span>投入产出</span></div>
+        <div><b>使用率</b><span>频次采纳</span></div>
+        <div><b>质量</b><span>结果评估</span></div>
+      </div>
+      <div class="reading">
+        <b>怎么读这份文档：</b>整套设计由<b>三条核心原则</b>（第 02 节）贯穿，后面每一节都会标「↳ 落实原则 X」回扣它——顺着读，就能看出每个设计为什么这么定，而不是一堆孤立的功能。
+      </div>
+    </header>
+
+    <!-- 01 定位与问题 -->
+    <section id="positioning">
+      <div class="label">定位与问题</div>
+      <h2>它是什么，要解决什么</h2>
+      <div class="rule"></div>
+      <div class="two">
+        <div class="kv">
+          <div class="item"><div class="k">定位</div><div class="v">部署在公司局域网内的统一中枢，把各类工具（<b>自写 / 开源自部署 / 黑盒</b>）的<b>每一次使用</b>汇总记录，并在其上做分析。</div></div>
+          <div class="item"><div class="k">要解决的问题</div><div class="v">公司内部工具持续增多，但每个工具的<b>使用频次、用户采纳、资源成本与产出质量</b>缺乏统一、可比的度量——管理者难以判断哪些工具值得投入、哪些在闲置。</div></div>
+          <div class="item"><div class="k">怎么组成</div><div class="v"><b>两个前端</b>（使用端·使用者门户 / 数据端·后台分析台）<b>＋ 一套共享后端</b>（采集 / 存储 / 分析 / 账号 / 注册表）。</div></div>
+        </div>
+        <div class="boxcard">
+          <div class="label">统一度量的四个维度</div>
+          <ol><li>成本与 token 消耗</li><li>效率与投入产出 ROI</li><li>使用率与采纳情况</li><li>结果质量评估</li></ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 三条核心原则 -->
+    <section id="principles">
+      <div class="label">核心设计原则</div>
+      <h2>三条原则，决定了其余一切</h2>
+      <div class="rule"></div>
+      <p class="lead">这是整套设计的骨架。后面每个具体设计，都是这三条的落地——读到时会看到对应的回扣徽标。</p>
+      <div class="cols">
+        <div class="col">
+          <div class="n">原则 01</div><h3>数据契约统一<br>接入方式可变</h3>
+          <p>不强求工具长得一样，只强求它们最终落库的那条记录格式一样（统一 schema）。怎么接随工具，记录长什么样不容商量。</p>
+          <div class="why">格式统一，分析层才能跨工具横向比较。</div>
+        </div>
+        <div class="col">
+          <div class="n">原则 02</div><h3>先把事实记准<br>怎么算以后再说</h3>
+          <p>记录时只老实存「死的事实」——这次用了多少、花了多久、成没成、问了啥答了啥。至于「单价多少钱、ROI 怎么算」这类会变的算法，先不算，等分析时再套公式。</p>
+          <div class="why">哪天改了价格或算法，重算一遍就行，不用回头改历史数据。</div>
+        </div>
+        <div class="col">
+          <div class="n">原则 03</div><h3>埋点放自己手里<br>不绑外部供应商</h3>
+          <p>记录数据的那段代码，放在自己能掌控的东西里（自家工具的 SDK，或自建的转发服务），别写在随时可能更换的第三方中转站上。</p>
+          <div class="why">哪天换了中转站，只改一处配置，已记的数据和逻辑都不受影响。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 架构与数据流 -->
+    <section id="arch">
+      <div class="label">整体架构</div>
+      <h2>一条记录，怎么流过五层</h2>
+      <div class="rule"></div>
+      <span class="recall">落实原则 02：先把事实记准，算法放分析层</span>
+      <p>五层架构、两个前端共用一套后端。下图是<b class="hl">一次使用</b>从产生到被看见的完整流动：</p>
+      <div class="flow">
+        <div class="fbox"><b>各类工具</b><span>自写脚本 · 开源自部署 · 黑盒 SaaS——使用发生的地方</span></div>
+        <div class="down">↓<small>三种采集手段（见第 06 节）：工具自报 / 本地转发 / 独立 key</small></div>
+        <div class="fbox dark"><b>接入层 · 统一上报 API</b><span>所有数据唯一入口；进入即自动按 schema 校验契约</span></div>
+        <div class="down">↓</div>
+        <div class="fbox"><b>存储层 · PostgreSQL</b><span>统一事件表 · 工具注册表 · 用户账号表（metadata 用 JSONB）</span></div>
+        <div class="down">↓</div>
+        <div class="fbox"><b>分析层</b><span>成本 · ROI · 采纳率 · 质量——算式都在此层，可随时改（原则 02）</span></div>
+        <div class="down">↓</div>
+        <div class="frontends">
+          <div class="fbox"><b>使用端 · 使用者门户</b><span>读注册表「展示信息」+ 读事件表「使用情况」做排序</span></div>
+          <div class="fbox"><b>数据端 · 后台分析台</b><span>读分析层四类结论 + 接入 / 账号管理</span></div>
+        </div>
+      </div>
+      <p style="font-size:14.5px;color:var(--ink-soft)">两个前端只通过共享后端的数据相连，不互相调用；各自不存业务数据。</p>
+    </section>
+
+    <!-- 04 数据契约 -->
+    <section id="contract">
+      <div class="label">统一数据契约</div>
+      <h2>放大看：那条记录长什么样</h2>
+      <div class="rule"></div>
+      <span class="recall">落实原则 01：数据契约统一，接入方式可变</span>
+      <p class="lead">工具千差万别，但落库的那条记录格式必须一样——这是全平台可比较的地基。字段分三圈。</p>
+      <div class="cols">
+        <div class="col">
+          <div class="n">圈一 · 公共必填</div><h3>任何工具都得给</h3>
+          <p>记录 ID · 工具 · 使用者 · 起止时间 · 耗时 · 成败状态。</p>
+          <div class="why">入场券：给不出这些，不许接入。</div>
+        </div>
+        <div class="col">
+          <div class="n">圈二 · LLM 专属</div><h3>调大模型的工具填</h3>
+          <p>模型名 · 输入 / 输出 token · 成本（按统一字段归一化）。</p>
+          <div class="why">不调模型的工具留空，不影响入库。</div>
+        </div>
+        <div class="col">
+          <div class="n">圈三 · 弹性选填</div><h3>有就多算几个维度</h3>
+          <p>输入 / 输出原文 · 质量 · 是否采纳 · metadata 自由字段。</p>
+          <div class="why">新字段先进 metadata，按需要再晋升为列。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 运行方式 -->
+    <section id="run">
+      <div class="label">运行方式</div>
+      <h2>这套东西，怎么跑起来</h2>
+      <div class="rule"></div>
+      <p>目标部署形态是 <b class="hl">docker-compose</b>，局域网内一键起。启动链路：</p>
+      <div class="steps">
+        <div class="step"><span class="sn">1</span><b>docker-compose up</b><span class="d">一条命令，按清单一键起整套服务</span></div>
+        <div class="step"><span class="sn">2</span><b>起 PostgreSQL</b><span class="d">数据库容器跑起来（此时还是空库）</span></div>
+        <div class="step"><span class="sn">3</span><b>跑迁移建表</b><span class="d">按编号执行迁移脚本，把三张表建好/更新</span></div>
+        <div class="step"><span class="sn">4</span><b>起接入 API</b><span class="d">后端起来，开始能收数据</span></div>
+        <div class="step"><span class="sn">5</span><b>起两个前端</b><span class="d">门户 + 看板</span></div>
+        <div class="step"><span class="sn">6</span><b>健康检查通过 ✓</b><span class="d">确认每个组件都活着、连得上</span></div>
+      </div>
+      <div class="devnote">
+        <b>本机开发变体：</b>当前开发机用「免安装 PostgreSQL + <code>serve.ps1</code>」——一条命令自动 <b>起 PG → 真实探活 DB → 起接入 API → 探活 /health</b>，连不上当场报错、不假装起好。
+      </div>
+    </section>
+
+    <!-- 06 采集三手段 -->
+    <section id="collect">
+      <div class="label">采集层</div>
+      <h2>数据从哪来：三种采集手段</h2>
+      <div class="rule"></div>
+      <span class="recall">落实原则 03：埋点放自己手里，不绑外部供应商</span>
+      <p>用哪种手段，取决于<b class="hl">你对这个工具握有哪一级控制权</b>——<b class="hl">与它开源还是闭源无关</b>。越往上数据越全，能走上面的就别用下面的：</p>
+      <div class="gates">
+        <div class="g">
+          <div class="cond"><div class="q">能改它的</div><div class="m">代码</div></div>
+          <div class="body"><div class="h">工具自报（主路）</div><div class="d">在调用 / 按钮触发点直接上报，SDK 是便捷封装，也可自行实现。</div><div class="lvl">数据最全：token + 工具 + 用户 + 团队 + 结果</div></div>
+        </div>
+        <div class="g">
+          <div class="cond"><div class="q">改不了 / 不想改代码，但能改</div><div class="m">接口地址</div></div>
+          <div class="body"><div class="h">本地转发服务</div><div class="d">把 base URL 指向平台转发服务，旁路代采。不想 fork 的开源、可配 endpoint 的闭源都适用。</div><div class="lvl">token + 工具（+ 原文）；缺用户 / 触发语义</div></div>
+        </div>
+        <div class="g">
+          <div class="cond"><div class="q">连地址都改不了，但能定它用</div><div class="m">哪把 key</div></div>
+          <div class="body"><div class="h">独立 API Key</div><div class="d">给每个工具发专属 key，供应商按 key 报量，凭 key 认出是哪个工具。</div><div class="lvl">最粗：通常只到「哪个工具 + 总用量」</div></div>
+        </div>
+      </div>
+      <p style="font-size:14.5px;color:var(--ink-soft)">判定看控制权、不看出身：闭源工具只要暴露可配置 base URL，照样走转发；转发 / 独立 key 只是兜底，不是所有流量的必经总闸。</p>
+    </section>
+
+    <!-- 07 关键取舍 -->
+    <section id="tradeoffs">
+      <div class="label">关键取舍</div>
+      <h2>每个选择，都有「为什么」</h2>
+      <div class="rule"></div>
+      <table>
+        <thead><tr><th>决策</th><th>我们的选择</th><th>为什么</th></tr></thead>
+        <tbody>
+          <tr><td>技术栈</td><td>锁定 Python + FastAPI</td><td>重心是数据分析与 LLM 埋点，Python 是主场</td></tr>
+          <tr><td>数据契约</td><td>一份 schema 生成各层模型</td><td>消灭「改一处漏四处」</td></tr>
+          <tr><td>写入侧鉴权</td><td>内网不做，只认 tool_id</td><td>威胁模型务实，绝不阻断入库</td></tr>
+          <tr><td>字段治理</td><td>metadata 三层 ＋ 按信号晋升</td><td>既灵活又不失控，长期可维护</td></tr>
+          <tr><td>转发服务</td><td>隔离、可替换、非必经</td><td>换中转站不动数据主干</td></tr>
+          <tr><td>库结构演进</td><td>迁移执行器幂等管理</td><td>「schema 可演进」真正落到库上</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 08 前端的 AI 设想 -->
+    <section id="frontends">
+      <div class="label">前瞻 · 待定</div>
+      <h2>两个前端要用到 AI 的地方</h2>
+      <div class="rule"></div>
+      <p class="lead">两个前端各有一处设想引入 AI。这里只点明「哪里需要 AI」——具体形态尚未确定。</p>
+      <div class="ai">
+        <div class="panel">
+          <div class="t">使用端 · 使用者门户<small>面向普通使用者的入口</small></div>
+          <div class="need">用 AI 帮用户<b>按需求推荐工具</b>：使用者描述「我想做什么」，AI 从工具目录里匹配出合适的工具。</div>
+          <div class="pending">具体形态待定（用哪家模型 / 怎么交互 / 是否计入统计）</div>
+        </div>
+        <div class="panel">
+          <div class="t">数据端 · 后台分析台<small>面向管理者的看板</small></div>
+          <div class="need">用 AI 把「提问」直接变成「<b>解读 ＋ 表格 / 图表</b>」：管理者用大白话<b>随时问</b>——比如「XX 部门用 XX 工具的使用效率」「上月成本最高的三个工具」——AI 基于四类分析数据，既给自然语言解读，也<b>现场生成对应的表格和图表</b>。</div>
+          <div class="pending">具体形态待定（用哪家模型 / 怎么交互 / 是否计入统计）</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  // 目录高亮：当前可见小节
+  const links=[...document.querySelectorAll('#toc a')];
+  const map=new Map(links.map(a=>[a.getAttribute('href').slice(1),a]));
+  const obs=new IntersectionObserver(es=>{
+    es.forEach(e=>{ if(e.isIntersecting){
+      links.forEach(l=>l.classList.remove('active'));
+      const a=map.get(e.target.id); if(a)a.classList.add('active');
+    }});
+  },{rootMargin:'-30% 0px -60% 0px'});
+  document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>
