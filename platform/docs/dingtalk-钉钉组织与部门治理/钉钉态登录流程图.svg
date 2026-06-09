@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="720" viewBox="0 0 760 720" font-family="'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#5b6b7a"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="760" height="720" fill="#f7f9fb"/>
+  <text x="380" y="44" text-anchor="middle" font-size="24" font-weight="700" fill="#1f2d3a">钉钉态登录 · 认人流程</text>
+  <text x="380" y="70" text-anchor="middle" font-size="14" fill="#7a8896">员工在钉钉里点开门户，平台借钉钉身份认出「人 + 部门」，全程零密码</text>
+
+  <!-- 1 钉钉客户端 -->
+  <rect x="280" y="100" width="200" height="56" rx="10" fill="#e8f0fe" stroke="#4a7fd6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="380" y="134" text-anchor="middle" font-size="17" font-weight="600" fill="#1f3a66">钉钉客户端</text>
+
+  <line x1="380" y1="156" x2="380" y2="190" stroke="#5b6b7a" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="392" y="178" font-size="13" fill="#5b6b7a">员工点开</text>
+
+  <!-- 2 门户 H5 -->
+  <rect x="260" y="192" width="240" height="60" rx="10" fill="#ffffff" stroke="#4a7fd6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="380" y="218" text-anchor="middle" font-size="17" font-weight="600" fill="#1f3a66">门户（H5 微应用）</text>
+  <text x="380" y="239" text-anchor="middle" font-size="12" fill="#7a8896">挂在钉钉工作台里的网页</text>
+
+  <line x1="380" y1="252" x2="380" y2="286" stroke="#5b6b7a" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="392" y="274" font-size="13" fill="#5b6b7a">调 requestAuthCode</text>
+
+  <!-- 3 钉钉 JSAPI -->
+  <rect x="280" y="288" width="200" height="56" rx="10" fill="#fff7e6" stroke="#e0a23a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="380" y="322" text-anchor="middle" font-size="17" font-weight="600" fill="#8a5a14">钉钉 JSAPI</text>
+
+  <line x1="380" y1="344" x2="380" y2="384" stroke="#5b6b7a" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="392" y="362" font-size="13" fill="#5b6b7a">返回 authCode</text>
+  <text x="392" y="378" font-size="12" fill="#a0701a">（5 分钟一次性）</text>
+
+  <!-- 4 门户后端 -->
+  <rect x="280" y="386" width="200" height="56" rx="10" fill="#ffffff" stroke="#4a7fd6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="380" y="420" text-anchor="middle" font-size="17" font-weight="600" fill="#1f3a66">门户后端</text>
+
+  <line x1="380" y1="442" x2="380" y2="476" stroke="#5b6b7a" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="392" y="464" font-size="13" fill="#5b6b7a">拿 authCode 换</text>
+
+  <!-- 5 userid -->
+  <rect x="300" y="478" width="160" height="52" rx="10" fill="#eaf7ef" stroke="#46a06a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="380" y="510" text-anchor="middle" font-size="17" font-weight="600" fill="#1d6b3e">userid</text>
+
+  <line x1="380" y1="530" x2="380" y2="564" stroke="#5b6b7a" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="392" y="552" font-size="13" fill="#5b6b7a">join 部门数据</text>
+
+  <!-- 部门数据（侧挂） -->
+  <rect x="540" y="476" width="190" height="74" rx="10" fill="#f0ecf9" stroke="#8a6bc4" stroke-width="1.5" stroke-dasharray="5 4" filter="url(#shadow)"/>
+  <text x="635" y="506" text-anchor="middle" font-size="15" font-weight="600" fill="#5a3f96">部门数据</text>
+  <text x="635" y="528" text-anchor="middle" font-size="12" fill="#7a6aa0">组织同步预先</text>
+  <text x="635" y="544" text-anchor="middle" font-size="12" fill="#7a6aa0">从钉钉整批拉好</text>
+  <line x1="540" y1="513" x2="462" y2="540" stroke="#8a6bc4" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+
+  <!-- 6 结果 -->
+  <rect x="250" y="566" width="260" height="64" rx="12" fill="#1f3a66" filter="url(#shadow)"/>
+  <text x="380" y="595" text-anchor="middle" font-size="14" fill="#a9c2ea">认出身份</text>
+  <text x="380" y="618" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">张三 · 财务部</text>
+
+  <text x="380" y="678" text-anchor="middle" font-size="12" fill="#9aa6b2">设计稿 · 待实现　|　关联决策 #38</text>
+</svg>

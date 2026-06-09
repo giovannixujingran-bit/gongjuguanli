@@ -84,6 +84,7 @@ root_packages = ["backend", "collection", "shared"]
 name = "单向分层：接入/分析 → 存储/账号 → 采集/共享"
 type = "layers"
 layers = [
+    "backend.org_sync",
     "backend.ingestion",
     "backend.analytics",
     "backend.auth",

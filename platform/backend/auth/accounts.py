@@ -16,7 +16,7 @@ Role = Literal["admin", "user"]
 class UserAccount:
     user_id: str
     username: str
-    password_hash: str
+    password_hash: str | None  # 钉钉免登账号无密码（决策 #38/P2，密码登录退役）
     team_id: str | None
     role: Role
 
@@ -74,6 +74,21 @@ class PostgresUserAccountRepository:
 
         return row_to_account(row)
 
+    def upsert_dingtalk_user(self, *, dingtalk_userid: str, name: str) -> str:
+        params = {
+            "user_id": str(uuid4()),
+            "username": dingtalk_userid,  # 无密码登录后 username 仅作唯一标识，取 userid
+            "dingtalk_userid": dingtalk_userid,
+            "display_name": name,
+        }
+        with db_connect(self._database_url) as connection:
+            with connection.cursor(row_factory=dict_row) as cursor:
+                cursor.execute(UPSERT_DINGTALK_USER_SQL, params)
+                row = cursor.fetchone()
+        if not isinstance(row, dict):
+            raise RuntimeError("upsert_dingtalk_user returned no row")
+        return str(row["user_id"])
+
     def get_by_username(self, username: str) -> UserAccount | None:
         return self._fetch_one("username", username)
 
@@ -107,6 +122,9 @@ def authenticate(
     account = repository.get_by_username(username)
     if account is None:
         return None
+    if account.password_hash is None:
+        # 无密码账号（钉钉免登建的）不允许走密码登录（决策 #38/P2）。
+        return None
     if not verify_password(password, account.password_hash):
         return None
     return account
@@ -118,7 +136,17 @@ def row_to_account(row: object) -> UserAccount:
     return UserAccount(
         user_id=str(row["user_id"]),
         username=str(row["username"]),
-        password_hash=str(row["password_hash"]),
+        password_hash=None if row["password_hash"] is None else str(row["password_hash"]),
         team_id=None if row["team_id"] is None else str(row["team_id"]),
         role="admin" if row["role"] == "admin" else "user",
     )
+
+
+# 钉钉同步建账号：无密码（P2），按 dingtalk_userid 幂等 upsert（命中部分唯一索引）。
+UPSERT_DINGTALK_USER_SQL = """
+INSERT INTO user_account (user_id, username, password_hash, dingtalk_userid, display_name, role)
+VALUES (%(user_id)s, %(username)s, NULL, %(dingtalk_userid)s, %(display_name)s, 'user')
+ON CONFLICT (dingtalk_userid) WHERE dingtalk_userid IS NOT NULL
+DO UPDATE SET display_name = EXCLUDED.display_name, updated_at = now()
+RETURNING user_id
+"""
