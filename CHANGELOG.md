@@ -5,10 +5,13 @@
 
 ## Unreleased
 
+## v0.2.0 — 2026-06-09
+
 ### Added
 
 - **钉钉组织同步（Phase A 钉钉打通，决策 #38/#39）**：新增 `backend/org_sync`，从钉钉拉取部门树 + 人员并落平台库（新增 `department` 表、`user_account.dingtalk_userid` + `display_name`、`user_department` 关系表，迁移 `0002`–`0004`）。钉钉接口用仓库已有的 `httpx` 直调经典通讯录 topapi（`gettoken` / `department/listsub` / `user/listid` / `user/get`），藏在 `DingtalkClient` 抽象后（`HttpxDingtalkClient` 实现 + token 缓存）；官方新 SDK 不覆盖部门树遍历，故不用 SDK（决策 #39）。同步命令 `tools/sync_dingtalk.py`（需 `DATABASE_URL` / `DINGTALK_CLIENT_ID` / `DINGTALK_CLIENT_SECRET`）。**已在真实钉钉企业 + 本机 PostgreSQL 16 端到端验证**：拉真实 6 人 + 部门落库、二次重跑幂等、全套机器闸门绿。
 - **设计稿《钉钉组织同步与部门化工具治理》**：`platform/docs/dingtalk-钉钉组织与部门治理/`（4 份分册 + 钉钉态登录流程图 SVG）。原待定项 T1–T6 已人工拍定为 P1–P6（同步频率每小时+手动、密码退役、新员工即时拉、白名单关联表、内网 PC、软删保留）。**员工免登端点与 Phase B 部门化可见性治理仍为设计稿、待实现。**
+- **Smart Tool Hub 高保真 mockup**：新增 `platform/docs/mockups/stitch_smart_tool_hub/` 设计说明、单页 `code.html`、截图与 zip 包，并将原 `presentation/index.html` 重命名为 `presentation/项目总览.html`，便于把内部项目总览与门户视觉参考分开管理。
 
 ### Changed
 
