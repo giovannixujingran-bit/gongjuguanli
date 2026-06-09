@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ToolSphere - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#45464d",
+                        "secondary-fixed": "#e1e0ff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "background": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#e5eeff",
+                        "secondary": "#4648d4",
+                        "surface": "#f8f9ff",
+                        "primary-fixed": "#dae2fd",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "tertiary-fixed": "#e0e3e5",
+                        "secondary-fixed-dim": "#c0c1ff",
+                        "outline": "#76777d",
+                        "secondary-container": "#6063ee",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "surface-bright": "#f8f9ff",
+                        "primary-fixed-dim": "#bec6e0",
+                        "inverse-primary": "#bec6e0",
+                        "on-tertiary-container": "#818486",
+                        "surface-tint": "#565e74",
+                        "on-secondary-fixed": "#07006c",
+                        "on-surface": "#0b1c30",
+                        "tertiary-container": "#191c1e",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#fffbff",
+                        "primary-container": "#131b2e",
+                        "tertiary": "#000000",
+                        "outline-variant": "#c6c6cd",
+                        "surface-container-low": "#eff4ff",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#cbdbf5",
+                        "surface-variant": "#d3e4fe",
+                        "inverse-surface": "#213145",
+                        "primary": "#000000",
+                        "on-primary-container": "#7c839b",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-secondary-fixed-variant": "#2f2ebe",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-background": "#0b1c30",
+                        "on-primary-fixed": "#131b2e",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "2xl": "1.5rem"
+                    },
+                    spacing: {
+                        "base": "4px",
+                        "margin-mobile": "16px",
+                        "md": "1rem",
+                        "xl": "2rem",
+                        "margin-desktop": "48px",
+                        "xxl": "4rem",
+                        "sm": "0.5rem",
+                        "xs": "0.25rem",
+                        "lg": "1.5rem",
+                        "gutter": "24px",
+                        "container-max": "1440px"
+                    },
+                    fontFamily: {
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    fontSize: {
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+                        "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "headline-lg": ["30px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "600" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "display-lg-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }]
+                    },
+                    boxShadow: {
+                        'level-1': '0px 4px 20px rgba(15, 23, 42, 0.05)',
+                        'level-2': '0px 10px 30px rgba(15, 23, 42, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f8f9ff; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface antialiased bg-background flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-50 flex justify-between items-center px-margin-desktop h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant/20 shadow-sm transition-all w-full">
+<div class="flex items-center gap-xl">
+<div class="flex items-center gap-sm">
+<!-- Mobile menu button -->
+<button class="lg:hidden p-xs rounded-md hover:bg-surface-container-low transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<img alt="Organization Logo" class="hidden sm:block w-8 h-8 rounded-full" data-alt="A minimalist, abstract 3D logo design featuring intertwined geometric shapes in shades of deep indigo and pure white." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlkPQzaebWD4_OalvjklIPCApSgc5ZYnnF_mJVlXVXrckd-Q2HXUjawHjdL1vPRHZd3MjgeOh_AJRXsoV6ys3W5WaT_mGGI-b0orXYbkPurmULI0IX-ci9WmS9XOgzjASGlFbcIKTvlI3AsawEwkMqxPJwy-Iyg8T1tudVkDD1fsDlbBSkp8yoq2mB5E8UhQWaLBksGLea_wcTSXah5cowXvTbX6sfSBZXUSi-pySufQzBxaml8wC03HrmQzkklkoI0aMPttNlNXlh"/>
+<div class="font-display-lg text-headline-md font-bold text-primary">ToolSphere</div>
+</div>
+<!-- Navigation Links -->
+<nav class="hidden lg:flex items-center gap-md">
+<a class="flex items-center gap-xs px-sm py-xs text-secondary border-b-2 border-secondary font-label-md text-label-md" href="#">
+                Dashboard
+            </a>
+<a class="flex items-center gap-xs px-sm py-xs text-on-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md" href="#">
+                Departments
+            </a>
+<a class="flex items-center gap-xs px-sm py-xs text-on-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md" href="#">
+                Tool Types
+            </a>
+<a class="flex items-center gap-xs px-sm py-xs text-on-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md" href="#">
+                Collections
+            </a>
+<a class="flex items-center gap-xs px-sm py-xs text-on-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md" href="#">
+                Settings
+            </a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="hidden md:block py-xs px-md bg-secondary text-on-primary rounded-lg font-label-md text-label-md hover:bg-secondary-container transition-colors">
+            Submit Tool
+        </button>
+<button class="p-xs rounded-full text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<img alt="User profile avatar" class="w-8 h-8 rounded-full border border-outline-variant/30 cursor-pointer hover:opacity-80 transition-opacity" data-alt="A clean, professional headshot of a user against a bright, light-gray background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3KDANui9U6myAQvW5PO0SH_QFWrXTf-qgniH_MKLu8Io5ZXcLYaOJD5UV6HXfHEUM-dwMWheLtlMNBrAQXrXy9fCRJ63G6vL3dp1lazYs_DYLqqha3H6yBOdMXDD_1B5_mOONJaD1xqeZX5Y4AI7Hg6xn74t-0Neih4niL8fXMvkXsysT4dJ0e6DZpFheeVhiuX5MSh_ZGD7PMq1gWBO01i_SuSe4yRQ10qXBwA2oRKtd4vkvJXUHEBNySVhTGdTHHzcxdpx0pY6u"/>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 pt-xl px-margin-mobile lg:px-margin-desktop pb-xxl max-w-container-max mx-auto w-full">
+<!-- Search Section -->
+<section class="mb-xxl flex flex-col items-center justify-center w-full">
+<div class="w-full max-w-4xl">
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded-full flex items-center p-xs shadow-level-2 transition-all focus-within:shadow-md">
+<span class="material-symbols-outlined text-on-surface-variant ml-md">search</span>
+<input class="w-full bg-transparent border-none focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-on-surface-variant/50 px-md py-sm" placeholder="Search tools or describe your workflow..." type="text"/>
+<div class="flex items-center gap-sm shrink-0 pr-xs">
+<button class="px-md py-sm rounded-full bg-surface-container-low hover:bg-surface-variant text-secondary font-label-md text-label-md transition-all flex items-center gap-xs border border-outline-variant/10 whitespace-nowrap">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+                    AI Search
+                </button>
+<button class="px-xl py-sm bg-secondary text-on-primary rounded-full font-label-md text-label-md hover:bg-secondary-container transition-colors shadow-sm whitespace-nowrap">
+                    Search
+                </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Tools Section -->
+<section>
+<div class="flex flex-col md:flex-row items-start md:items-center mb-xl gap-md justify-center">
+<div class="flex items-center gap-sm flex-wrap">
+<button class="px-md py-xs rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-variant transition-colors border border-outline-variant/20">
+                            Most Popular
+                        </button>
+<button class="px-md py-xs rounded-full bg-transparent text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-low transition-colors border border-outline-variant/20">
+                            Recent
+                        </button>
+<button class="px-md py-xs rounded-full bg-transparent text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-low transition-colors border border-outline-variant/20 flex items-center gap-xs">
+                            By Department <span class="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+</button>
+</div>
+</div>
+<!-- Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest rounded-2xl p-lg shadow-level-1 hover:shadow-level-2 hover:-translate-y-1 transition-all duration-300 flex flex-col gap-md border border-outline-variant/10">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">design_services</span>
+</div>
+<span class="px-sm py-xs bg-surface-container text-on-surface-variant rounded-md font-label-sm text-label-sm">Design</span>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg font-bold text-on-surface mb-xs">Figma AI Assistant</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">An AI-powered design assistant for creative teams to generate initial wireframes and design systems rapidly.</p>
+</div>
+<div class="mt-auto pt-sm flex justify-between items-center border-t border-outline-variant/10">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-primary-fixed-dim border-2 border-surface-container-lowest"></div>
+<div class="w-6 h-6 rounded-full bg-secondary-fixed-dim border-2 border-surface-container-lowest"></div>
+<div class="w-6 h-6 rounded-full bg-surface-variant border-2 border-surface-container-lowest flex items-center justify-center font-label-sm text-[10px] text-on-surface">+4</div>
+</div>
+<button class="text-secondary font-label-md text-label-md flex items-center gap-xs hover:text-secondary-container transition-colors">
+                                Launch <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest rounded-2xl p-lg shadow-level-1 hover:shadow-level-2 hover:-translate-y-1 transition-all duration-300 flex flex-col gap-md border border-outline-variant/10">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<span class="px-sm py-xs bg-surface-container text-on-surface-variant rounded-md font-label-sm text-label-sm">DevOps</span>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg font-bold text-on-surface mb-xs">DeployBot X</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Automated CI/CD pipeline management tool with intelligent rollback features and performance monitoring.</p>
+</div>
+<div class="mt-auto pt-sm flex justify-between items-center border-t border-outline-variant/10">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-primary-fixed-dim border-2 border-surface-container-lowest"></div>
+<div class="w-6 h-6 rounded-full bg-secondary-fixed-dim border-2 border-surface-container-lowest"></div>
+</div>
+<button class="text-secondary font-label-md text-label-md flex items-center gap-xs hover:text-secondary-container transition-colors">
+                                Launch <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest rounded-2xl p-lg shadow-level-1 hover:shadow-level-2 hover:-translate-y-1 transition-all duration-300 flex flex-col gap-md border border-outline-variant/10">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">analytics</span>
+</div>
+<span class="px-sm py-xs bg-surface-container text-on-surface-variant rounded-md font-label-sm text-label-sm">Marketing</span>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg font-bold text-on-surface mb-xs">TrendSight</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Real-time market trend analysis utilizing natural language processing to synthesize social sentiment.</p>
+</div>
+<div class="mt-auto pt-sm flex justify-between items-center border-t border-outline-variant/10">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-primary-fixed-dim border-2 border-surface-container-lowest"></div>
+<div class="w-6 h-6 rounded-full bg-surface-variant border-2 border-surface-container-lowest flex items-center justify-center font-label-sm text-[10px] text-on-surface">+12</div>
+</div>
+<button class="text-secondary font-label-md text-label-md flex items-center gap-xs hover:text-secondary-container transition-colors">
+                                Launch <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>
