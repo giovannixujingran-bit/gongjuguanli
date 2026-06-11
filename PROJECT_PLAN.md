@@ -100,7 +100,9 @@
 
 44. **读取侧最小门禁：分析读取与 AI 查询必须登录，门户卡片保持公开**：`/analytics/events` 返回 `user_id` / `input_preview` / `output_preview`，属敏感内容；且合并版前台已通过钉钉 PC 工作台首页（裸 URL 直挂，**过渡形态**——免登/部门可见性仍按 #38 设计稿后续实现）暴露给全员，不能匿名可读。试点期取「登录即可读」：`/analytics/*` 与 `/ai/query`（付费上游，顺带挡匿名刷量）挂现有 bearer token 门禁，账号本就只能由 admin 经 `/auth/users` 发放，登录态即受控集合；`/portal/tools` 只含展示字段，门户首页免登录、保持公开。更细的读取侧策略（按部门/角色细分、input/output 预览脱敏）仍「待定，需人工确认」。CORS 由写死通配改为 `PORTAL_CORS_ORIGINS` 可配（默认 `*`：鉴权走 Authorization 头、无 cookie，通配不放大 CSRF 面；正式部署应填门户来源）。不涉数据契约，不升 `schema_version`。
 
-45. **合并版前台工具卡片以 stitch_merged_portal 模板的 glass-card 为准（取代 #42 卡片样式部分）**：线上合并版前台（`apps/web/index.html`）的真实工具卡片一度改成 #42 的缩略图媒体卡，与用户定稿模板 `mockups/stitch_merged_portal/code.html`（确定使用端前台）的玻璃拟态 glass-card 不一致；用户拍板以模板为准。卡片结构 = 缩略图（缺图渐变占位）+ 48px 图标块 + 在线点 + 分类胶囊 + 标题/三行简介 + ⚡usage_count + 通栏「使用工具」按钮，网格 1/2/3/4 列；线上 `renderToolCard` 与模板逐字一致。#42 的布局（chips+单网格）、双主题、搜索双轨等其余部分继续有效；纯 UI 对齐，不涉契约与后端。
+45. **合并版前台工具卡片以 stitch_merged_portal 模板的 glass-card 为准（取代 #42 卡片样式部分）**：线上合并版前台（`apps/web/index.html`）的真实工具卡片一度改成 #42 的缩略图媒体卡，与用户定稿模板 `mockups/stitch_merged_portal/code.html`（确定使用端前台）的玻璃拟态 glass-card 不一致；用户拍板以模板为准。卡片结构 = 缩略图（缺图渐变占位）+ 48px 图标块 + 在线点 + 分类胶囊 + 标题/三行简介 + ⚡usage_count + 通栏「使用工具」按钮，网格 1/2/3/4 列；线上 `renderToolCard` 与模板逐字一致。#42 的布局（chips+单网格）、双主题、搜索双轨等其余部分继续有效；纯 UI 对齐，不涉契约与后端。（卡片顶部缩略图块随后被 #46 去除。）
+
+46. **工具卡片去掉顶部缩略图块**：#45 的卡片带「缩略图（缺图渐变占位）」顶块，实际上线后占位图与下方图标块信息重复、卡片过高，用户拍板全部卡片去掉该块——图标块即视觉主体，其余结构（图标块+在线点+分类胶囊+标题+三行简介+usage_count+通栏按钮）不变。注册表 `thumbnail` 字段**保留不删**（契约/注册表不动），只是门户卡片暂不消费；将来若需图片再恢复。线上 `apps/web/index.html` 与模板 `mockups/stitch_merged_portal/code.html` 同步修改，维持逐字一致。纯 UI，不涉契约与后端。
 
 ## 下一步
 

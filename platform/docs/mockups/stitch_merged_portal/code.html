@@ -902,15 +902,8 @@
     const desc = escapeHtml(tool.description || '');
     const launch = escapeHtml(tool.launch_url || '#');
     const usage = fmtNumber(tool.usage_count);
-    const media = tool.thumbnail
-      ? `<img class="w-full h-full object-cover rounded-[20px]" alt="${name}" src="${escapeHtml(tool.thumbnail)}">`
-      : `<div class="h-36 rounded-[20px] bg-gradient-to-br from-primary-fixed to-tertiary-fixed flex flex-col items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-primary text-[44px]">${escapeHtml(iconFor(tool))}</span>
-          <span class="font-label-md text-sm text-on-surface-variant px-4 text-center">${name}</span>
-        </div>`;
     return `
       <div class="glass-card rounded-[28px] p-6 flex flex-col group h-full" data-category="${category}" data-name="${name}" data-desc="${desc}">
-        <div class="mb-5">${media}</div>
         <div class="flex justify-between items-start mb-4">
           <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shadow-inner">
             <span class="material-symbols-outlined text-[28px]">${escapeHtml(iconFor(tool))}</span>
