@@ -1,0 +1,13 @@
+tool_id = "aird-report"
+name = "AI报告"
+team_id = "aird"
+data_level = "partial"
+collect_method = "report"
+
+category = "趋势资产"
+display_name = "AI报告生成平台"
+description = "AI辅助生成趋势报告，目前稳定支持\"风格/主题/单品\"企划"
+icon = "auto_awesome"
+launch_url = "https://192.168.40.105:5173/"
+sort_weight = 100
+enabled = true

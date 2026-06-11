@@ -74,8 +74,9 @@ platform/
 ├── integrations/                # 「存放各个工具」：每个工具一子目录（接入适配/配置）
 │   └── _template/               #   接入模板（新工具照抄）
 ├── apps/                        # 两个前端
-│   ├── user-portal/             #   使用端 · 使用者门户（Phase 4）
-│   └── admin-dashboard/         #   数据端 · 后台分析台（Phase 4）
+│   ├── web/                     #   合并版前台（试点期正式入口：门户 + 数据页单文件静态页，Phase 2C）
+│   ├── user-portal/             #   使用端 · 使用者门户（Phase 4 拆分，占位）
+│   └── admin-dashboard/         #   数据端 · 后台分析台（Phase 4 拆分，占位）
 └── docker-compose.yml
 ```
 
@@ -166,6 +167,18 @@ cd platform
 - **开机不会自动恢复**：免安装 PG 不是常驻服务。要开机自启，跑一次 `.\scripts\autostart.ps1 install`（登录时自动 `serve start`）；撤销用 `.\scripts\autostart.ps1 remove`。
 - 验证整条链：`GET http://127.0.0.1:8000/health` 返回 `{"status":"ok"}`；`POST /events` 一条事件应 `202 inserted:true`。
 
+### 局域网试点入口（含钉钉）
+
+试点期前台/入口的部署事实（本节是唯一真相，改了入口必须改这里）：
+
+| 项 | 现状 |
+|---|---|
+| 前台静态服务 | `platform/apps/web/` 起在 `0.0.0.0:5174`（任意静态文件服务器即可） |
+| 后端 API | `0.0.0.0:8000`（上文 `serve.ps1`）；前台默认按 `location.hostname:8000` 推导，可用 localStorage `portal-api-base` 覆盖 |
+| 钉钉入口 | 钉钉 PC 端工作台首页直挂 `http://<本机局域网IP>:5174/`（当前 `192.168.0.102`）。**过渡形态**：免登 + 部门可见性按钉钉设计稿（决策 #38，待实现）后续替换 |
+| 读取侧门禁 | 门户卡片 `/portal/tools` 公开；`/analytics/*` 与 `/ai/query` 需登录态 bearer token（决策 #44），数据页内置登录框，账号由管理员经 `/auth/users` 发放 |
+| CORS | 默认 `*`（鉴权走 Authorization 头、无 cookie）；正式部署在 `.env` 的 `PORTAL_CORS_ORIGINS` 填门户来源收紧 |
+
 ---
 
 ## 五、已知非标准项 / 待收敛
@@ -180,5 +193,6 @@ cd platform
 | 凭据/脚本散落 | `admin-cred.txt`、smoke 脚本在 `D:\pg-portable` | 凭据走密钥管理；脚本归仓库 | 低 |
 | ~~迁移执行~~ | ✅ **已落地**：`tools/migrate.py` 幂等执行器 + `schema_migrations` 跟踪表（决策 #35）。逻辑在 `backend/storage/migrate.py`，用法见 [migrations/README](../backend/storage/migrations/README.md) | —— | 完成 |
 | 连接池 | 每请求新开连接（已加连接超时兜底） | 放量前接 `psycopg_pool` | 放量前 |
+| 钉钉入口地址 | 直挂开发机 DHCP 地址 `192.168.0.102`（会漂，漂了入口即断） | 给开发机固定 IP 或用主机名/内网域名，再写回钉钉配置 | 中 |
 
 > 这些原先只记在 AI 记忆里，现搬入仓库成为可追踪事实（呼应 CLAUDE.md「占位明确」）。

@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Callable
 from datetime import UTC, datetime
 from functools import lru_cache
+from typing import Literal
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from backend.auth.accounts import (
@@ -17,13 +20,29 @@ from backend.auth.accounts import (
     authenticate,
 )
 from backend.auth.tokens import TokenClaims, bearer_token, issue_token, verify_token
-from backend.storage.events import PostgresUsageEventRepository, StoredEvent, UsageEventRepository
+from backend.ingestion.ai_query import (
+    DEFAULT_BASE_URL,
+    DEFAULT_MODEL,
+    AiQueryError,
+    ApimartGeminiClient,
+)
+from backend.storage.events import (
+    PostgresUsageEventReader,
+    PostgresUsageEventRepository,
+    StoredEvent,
+    UsageEventReader,
+    UsageEventRepository,
+    UsageSummary,
+)
 from backend.storage.registry import (
     TOOL_ID_REGEX,
     CollectMethod,
     DataLevel,
+    PostgresToolDirectory,
     PostgresToolRegistryRepository,
     ToolAlreadyExistsError,
+    ToolConfig,
+    ToolDirectory,
     ToolRegistration,
     ToolRegistryRepository,
 )
@@ -90,12 +109,164 @@ class ToolPublic(BaseModel):
     model_default: str | None = None
 
 
+class ToolCardPublic(BaseModel):
+    tool_id: str
+    display_name: str
+    category: str | None = None
+    description: str | None = None
+    icon: str | None = None
+    thumbnail: str | None = None
+    launch_url: str | None = None
+    usage_count: int = 0
+
+
+class EventRowPublic(BaseModel):
+    record_id: UUID
+    tool_id: str
+    tool_name: str
+    model: str | None = None
+    user_id: str
+    input_preview: str | None = None
+    output_preview: str | None = None
+    status: str
+    total_tokens: int | None = None
+    duration_ms: int
+    start_time: datetime
+
+
+class EventPagePublic(BaseModel):
+    rows: list[EventRowPublic]
+    total: int
+    limit: int
+    offset: int
+
+
+class DailyUsagePublic(BaseModel):
+    day: str
+    events: int
+    tokens: int
+
+
+class SummaryPublic(BaseModel):
+    total_events: int
+    success_events: int
+    avg_duration_ms: float | None = None
+    total_tokens: int
+    daily: list[DailyUsagePublic]
+    events_by_tool: dict[str, int]
+
+
+class AiQueryRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+
+
+class AiQueryResponse(BaseModel):
+    answer: str
+
+
 def create_app() -> FastAPI:
     application = FastAPI(title="内部工具汇总接入 API")
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_allow_origins(),
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @application.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @application.get("/portal/tools", response_model=list[ToolCardPublic])
+    def portal_tools(
+        directory: ToolDirectory = Depends(get_tool_directory),
+        reader: UsageEventReader = Depends(get_event_reader),
+    ) -> list[ToolCardPublic]:
+        counts = reader.summarize().events_by_tool
+        return [
+            tool_card(tool, usage_count=counts.get(tool.tool_id, 0))
+            for tool in directory.list_enabled_tools()
+        ]
+
+    @application.get("/analytics/events", response_model=EventPagePublic)
+    def analytics_events(
+        tool_id: str | None = Query(default=None),
+        event_status: Literal["success", "failed", "timeout"] | None = Query(
+            default=None, alias="status"
+        ),
+        since_hours: int | None = Query(default=None, ge=1, le=24 * 365),
+        limit: int = Query(default=10, ge=1, le=100),
+        offset: int = Query(default=0, ge=0),
+        reader: UsageEventReader = Depends(get_event_reader),
+        directory: ToolDirectory = Depends(get_tool_directory),
+        _viewer: TokenClaims = Depends(required_token_claims),
+    ) -> EventPagePublic:
+        page = reader.list_events(
+            tool_id=tool_id,
+            status=event_status,
+            since_hours=since_hours,
+            limit=limit,
+            offset=offset,
+        )
+        names = {
+            tool.tool_id: tool.display_name or tool.name for tool in directory.list_enabled_tools()
+        }
+        return EventPagePublic(
+            rows=[
+                EventRowPublic(
+                    record_id=row.record_id,
+                    tool_id=row.tool_id,
+                    tool_name=names.get(row.tool_id, row.tool_id),
+                    model=row.model,
+                    user_id=row.user_id,
+                    input_preview=row.input_preview,
+                    output_preview=row.output_preview,
+                    status=row.status,
+                    total_tokens=row.total_tokens,
+                    duration_ms=row.duration_ms,
+                    start_time=row.start_time,
+                )
+                for row in page.rows
+            ],
+            total=page.total,
+            limit=limit,
+            offset=offset,
+        )
+
+    @application.get("/analytics/summary", response_model=SummaryPublic)
+    def analytics_summary(
+        reader: UsageEventReader = Depends(get_event_reader),
+        _viewer: TokenClaims = Depends(required_token_claims),
+    ) -> SummaryPublic:
+        summary = reader.summarize()
+        return SummaryPublic(
+            total_events=summary.total_events,
+            success_events=summary.success_events,
+            avg_duration_ms=summary.avg_duration_ms,
+            total_tokens=summary.total_tokens,
+            daily=[
+                DailyUsagePublic(day=d.day, events=d.events, tokens=d.tokens) for d in summary.daily
+            ],
+            events_by_tool=summary.events_by_tool,
+        )
+
+    @application.post("/ai/query", response_model=AiQueryResponse)
+    def ai_query(
+        request: AiQueryRequest,
+        reader: UsageEventReader = Depends(get_event_reader),
+        ask: AskAi | None = Depends(get_ai_answerer),
+        _viewer: TokenClaims = Depends(required_token_claims),
+    ) -> AiQueryResponse:
+        if ask is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="AI query is not configured: set APIMART_API_KEY on the server",
+            )
+        try:
+            answer = ask(build_ai_prompt(request.question, reader.summarize()))
+        except AiQueryError as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+        return AiQueryResponse(answer=answer)
 
     @application.post(
         "/events",
@@ -276,6 +447,38 @@ def public_tool(tool: ToolRegistration) -> ToolPublic:
     )
 
 
+def tool_card(tool: ToolConfig, *, usage_count: int) -> ToolCardPublic:
+    return ToolCardPublic(
+        tool_id=tool.tool_id,
+        display_name=tool.display_name or tool.name,
+        category=tool.category,
+        description=tool.description,
+        icon=tool.icon,
+        thumbnail=tool.thumbnail,
+        launch_url=tool.launch_url,
+        usage_count=usage_count,
+    )
+
+
+def build_ai_prompt(question: str, summary: UsageSummary) -> str:
+    by_tool = "\n".join(
+        f"- {tool_id}: {count} calls" for tool_id, count in sorted(summary.events_by_tool.items())
+    )
+    daily = "\n".join(f"- {d.day}: {d.events} calls, {d.tokens} tokens" for d in summary.daily)
+    avg = "unknown" if summary.avg_duration_ms is None else f"{summary.avg_duration_ms:.0f}ms"
+    return (
+        "你是公司内部工具平台的数据分析助手。只依据下面的真实平台数据回答，"
+        "用中文、简洁、引用具体数字；如果数据不足，请直接说明，不要编造。"
+        "派生指标公式尚未定稿，因此只做事实陈述和直观对比。\n\n"
+        "[平台数据快照]\n"
+        f"- 总调用: {summary.total_events}; 成功: {summary.success_events}\n"
+        f"- 平均耗时: {avg}; 累计 token: {summary.total_tokens}\n"
+        f"[各工具调用次数]\n{by_tool or '- 暂无'}\n"
+        f"[近 14 天逐日]\n{daily or '- 暂无'}\n\n"
+        f"[用户问题]\n{question}"
+    )
+
+
 def public_claims(claims: TokenClaims) -> UserPublic:
     return UserPublic(
         user_id=claims.user_id,
@@ -283,6 +486,13 @@ def public_claims(claims: TokenClaims) -> UserPublic:
         team_id=claims.team_id,
         role=claims.role,
     )
+
+
+def cors_allow_origins() -> list[str]:
+    # 鉴权走 Authorization 头（无 cookie），通配不会放大 CSRF 面；正式部署仍应在
+    # PORTAL_CORS_ORIGINS 填门户来源（逗号分隔），见 .env.example。
+    raw = os.environ.get("PORTAL_CORS_ORIGINS", "*")
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
 
 
 @lru_cache(maxsize=1)
@@ -347,6 +557,31 @@ def get_user_repository() -> UserAccountRepository:
 @lru_cache(maxsize=1)
 def get_tool_registry_repository() -> ToolRegistryRepository:
     return PostgresToolRegistryRepository(get_database_url())
+
+
+@lru_cache(maxsize=1)
+def get_event_reader() -> UsageEventReader:
+    return PostgresUsageEventReader(get_database_url())
+
+
+@lru_cache(maxsize=1)
+def get_tool_directory() -> ToolDirectory:
+    return PostgresToolDirectory(get_database_url())
+
+
+AskAi = Callable[[str], str]
+
+
+def get_ai_answerer() -> AskAi | None:
+    api_key = os.environ.get("APIMART_API_KEY")
+    if api_key is None or not api_key.strip():
+        return None
+    client = ApimartGeminiClient(
+        api_key=api_key,
+        base_url=os.environ.get("APIMART_BASE_URL", DEFAULT_BASE_URL),
+        model=os.environ.get("APIMART_MODEL", DEFAULT_MODEL),
+    )
+    return client.ask
 
 
 app = create_app()

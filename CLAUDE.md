@@ -43,7 +43,7 @@ platform/                    代码区 + 全部规范文档（唯一 SSOT，原 
 ├ docs/contract-接入契约.md            接入义务、边角情况、兜底。【给工具方看·细则】
 ├ docs/portal-工具门户.md              分类卡片、排序逻辑、AI 工具推荐。【使用端前端规划】
 ├ docs/dingtalk-钉钉组织与部门治理/      【设计稿·待实现】钉钉组织同步+部门化工具治理（钉钉免登+部门可见性白名单）。决策 #38；4 份分册，实现后落各正文并归档。
-└ backend / collection / shared / integrations / apps  代码：接入 API、生成模型、存储层、参考 SDK、demo、Auth API、试点模板；relay/分析层/前端仍占位。
+└ backend / collection / shared / integrations / apps  代码：接入 API、生成模型、存储层、参考 SDK、demo、Auth API、试点模板、合并版前台（apps/web，门户+数据页，试点期正式入口）；relay/分析层仍占位。局域网部署与钉钉入口的事实只记在 execution-plan §四。
    （integrations/handoff-kit/＝接入资料分发包，由 tools/export_integration_kit.py 从接入文档生成，非 SSOT，勿手改。）
 ```
 

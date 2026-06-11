@@ -67,6 +67,19 @@
 | 重复登记 | `409`（`tool_id` 是主键，重复显式报错，不静默） |
 | 非法 `tool_id` | `422`（命名规则由请求模型 `pattern` 自动校验） |
 
-> **本通道只发接入字段**（让工具能尽快上报）。门户**展示字段**（`category`/`display_name`/`thumbnail` 等）后续由门户后台 / 更新接口设置，不在本端点 MVP 范围。
+> **本通道只发接入字段**（让工具能尽快上报）。试点 / 正式上架所需的门户**展示字段**（`category`/`display_name`/`thumbnail` 等）走下文「声明式同步通道」，不在本端点 MVP 范围。
 >
 > 实现：接入层 `backend/ingestion/app.py` 的 `register_tool` + 存储层 `backend/storage/registry.py`（`PostgresToolRegistryRepository`，`INSERT ... ON CONFLICT (tool_id) DO NOTHING` 落 `tool_registry`）。
+
+## 四、声明式同步通道（含展示字段）
+
+当工具已经进入试点或正式上架，注册表的完整行以 `platform/integrations/<tool_id>/tool.toml` 声明为准，数据库只是运行时物化结果。该通道用于同步**接入字段 + 门户展示字段**，适合补齐 `category` / `display_name` / `description` / `icon` / `thumbnail` / `launch_url` / `sort_weight` / `enabled`。
+
+| 项 | 说明 |
+|---|---|
+| 声明文件 | `platform/integrations/<tool_id>/tool.toml`，目录名必须等于 `tool_id` |
+| 校验 | `python tools/apply_registry.py --check`，只校验不连库 |
+| 同步 | `python tools/apply_registry.py`，读取 `DATABASE_URL`，幂等 UPSERT 到 `tool_registry` |
+| 范围 | 只同步 `tool_registry`；不改事件表，不升事件 `schema_version` |
+
+`tool.toml` 只允许注册表已有字段，未知字段直接校验失败；这保证声明文件、数据库列、门户读取字段保持同一套形状。若将来新增注册表字段，先按本文件第二节更新字段定义，再改存储层与同步脚本。

@@ -96,6 +96,10 @@
 
 42. **门户首页布局改「chips + 单网格」，以 stitch 中文版为唯一视觉基线（取代决策 #25 的布局与参考稿部分）**：原定稿的「收藏 → 最近使用 → 分类」三段式在现阶段工具数量少时会大面积显空，且收藏/最近使用功能后端尚无；改为 **单一网格 + 视图 chips**——首版仅「全部」视图，「最近使用」「按分类」「按部门」（部门数据钉钉 Phase A 已落库）等后续按需以 chips 追加，不动布局。卡片仍是 #25 的缩略图媒体卡（缺图自动「icon+名称+色块」占位），叠 `category` 标签，不放使用热度；顶栏精简为 logo + 日/夜切换 + 当前用户（导航页/提交工具/通知现阶段无对应功能，全部去掉）。搜索维持双轨：普通搜索本地即时过滤（参考稿内真实现），「✨ AI 推荐」后端未实现、前端先占位（样式完整、标「演示数据 · 功能开发中」）。视觉基线取 Stitch 生成的 Smart Tool Hub 风格中文化版 [code.html](platform/docs/mockups/stitch_smart_tool_hub/code.html)，原参考稿 门户首页-mockup.html 退役删除（参考稿只留一份，避免双轨）。门户名定「内部工具门户」。卡片/双主题/交互原则等 #25 其余部分继续有效；不涉任何契约与代码，不升事件契约版本。
 
+43. **真实工具上架走声明式 `tool.toml`，门户/分析页读取共享后端只读 API**：`POST /registry/tools` 仍是接入字段的管理员发放通道（#32），但试点/正式上架需要同时维护门户展示字段。为避免“数据库手工改一半、声明文件没有源头”的漂移，完整注册表行改以 `platform/integrations/<tool_id>/tool.toml` 为声明源，`tools/apply_registry.py` 校验并幂等 UPSERT 到 `tool_registry`；数据库只是运行时物化结果。该通道只改注册表，不改事件表、不升 `schema_version`。使用端/数据端读取侧新增共享后端只读 API：`GET /portal/tools` 读启用工具卡片，`GET /analytics/events` / `GET /analytics/summary` 读非测试流量明细与原始聚合（计算公式仍待定，不在本轮拍板）。数据页 AI 查询接 APIMart Gemini，密钥只走 `APIMART_API_KEY`，模型默认 `gemini-3.5-flash`。首个真实声明为 `aird-report`，展示名「AI报告生成平台」、分类「趋势资产」、截图暂空，由门户占位图兜底。
+
+44. **读取侧最小门禁：分析读取与 AI 查询必须登录，门户卡片保持公开**：`/analytics/events` 返回 `user_id` / `input_preview` / `output_preview`，属敏感内容；且合并版前台已通过钉钉 PC 工作台首页（裸 URL 直挂，**过渡形态**——免登/部门可见性仍按 #38 设计稿后续实现）暴露给全员，不能匿名可读。试点期取「登录即可读」：`/analytics/*` 与 `/ai/query`（付费上游，顺带挡匿名刷量）挂现有 bearer token 门禁，账号本就只能由 admin 经 `/auth/users` 发放，登录态即受控集合；`/portal/tools` 只含展示字段，门户首页免登录、保持公开。更细的读取侧策略（按部门/角色细分、input/output 预览脱敏）仍「待定，需人工确认」。CORS 由写死通配改为 `PORTAL_CORS_ORIGINS` 可配（默认 `*`：鉴权走 Authorization 头、无 cookie，通配不放大 CSRF 面；正式部署应填门户来源）。不涉数据契约，不升 `schema_version`。
+
 ---
 
 ## 下一步

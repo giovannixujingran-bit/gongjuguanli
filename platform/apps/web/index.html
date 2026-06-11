@@ -1,0 +1,1193 @@
+<!DOCTYPE html><html class="light" lang="zh-CN" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AI 工具中心 | Aether Analytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#ffffff",
+                      "background": "#f7f9fb",
+                      "surface-container-high": "#e6e8ea",
+                      "on-primary-container": "#fffbff",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#494454",
+                      "primary-fixed": "#e9ddff",
+                      "on-primary-fixed": "#23005c",
+                      "on-secondary-fixed-variant": "#005236",
+                      "surface-variant": "#e0e3e5",
+                      "surface-dim": "#d8dadc",
+                      "on-secondary-container": "#00714d",
+                      "surface-container-highest": "#e0e3e5",
+                      "outline-variant": "#cbc3d7",
+                      "inverse-surface": "#2d3133",
+                      "on-tertiary-container": "#fcfcff",
+                      "secondary-fixed": "#6ffbbe",
+                      "on-tertiary-fixed-variant": "#004c6e",
+                      "primary-fixed-dim": "#d0bcff",
+                      "secondary-fixed-dim": "#4edea3",
+                      "error-container": "#ffdad6",
+                      "on-background": "#191c1e",
+                      "outline": "#7b7486",
+                      "secondary-container": "#6cf8bb",
+                      "on-secondary-fixed": "#002113",
+                      "surface-tint": "#6d3bd7",
+                      "inverse-on-surface": "#eff1f3",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed": "#c9e6ff",
+                      "tertiary-container": "#007cb1",
+                      "surface-container-low": "#f2f4f6",
+                      "primary": "#6b38d4",
+                      "on-tertiary": "#ffffff",
+                      "inverse-primary": "#d0bcff",
+                      "surface-bright": "#f7f9fb",
+                      "on-error": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-container": "#eceef0",
+                      "tertiary-fixed-dim": "#89ceff",
+                      "on-primary-fixed-variant": "#5516be",
+                      "surface": "#f7f9fb",
+                      "primary-container": "#8455ef",
+                      "tertiary": "#00628d",
+                      "on-tertiary-fixed": "#001e2f",
+                      "secondary": "#006c49",
+                      "on-surface": "#191c1e",
+                      "error": "#ba1a1a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "section-gap": "128px",
+                      "margin-mobile": "24px",
+                      "container-max": "1200px",
+                      "gutter": "32px",
+                      "margin-desktop": "64px"
+              },
+              "fontFamily": {
+                      "headline-xl-mobile": ["Geist"],
+                      "label-sm": ["Geist"],
+                      "body-md": ["Geist"],
+                      "label-md": ["Geist"],
+                      "headline-xl": ["Geist"],
+                      "headline-md": ["Geist"],
+                      "body-lg": ["Geist"],
+                      "headline-lg": ["Geist"]
+              },
+              "fontSize": {
+                      "headline-xl-mobile": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Geist', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .mesh-gradient {
+            background: 
+                radial-gradient(at 0% 0%, rgba(107, 56, 212, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 108, 73, 0.05) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(201, 230, 255, 0.1) 0px, transparent 50%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.02);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 30px 60px rgba(107, 56, 212, 0.06);
+            border-color: rgba(107, 56, 212, 0.2);
+        }
+        .search-container:focus-within {
+            box-shadow: none;
+        }
+        .search-container:focus-within .search-icon {
+            color: #6b38d4;
+            transform: scale(1.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(107, 56, 212, 0.1);
+            border-radius: 10px;
+        }
+        @keyframes breath {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+        .breathing-glow {
+            animation: breath 4s ease-in-out infinite;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .banner-track {
+            display: flex;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Scale the copied source closer to the reference proportions while
+           keeping the search and category controls visible. */
+        @media (min-width: 768px) {
+            header {
+                height: 54px !important;
+            }
+            aside {
+                width: 238px !important;
+            }
+            main {
+                margin-left: 238px !important;
+                max-width: none !important;
+                padding: 22px 42px 70px !important;
+            }
+            main > section:first-of-type {
+                margin-bottom: 22px !important;
+                padding-top: 0 !important;
+            }
+            .search-container > div:first-child {
+                padding-top: 12px !important;
+                padding-bottom: 12px !important;
+                border-radius: 18px !important;
+            }
+            section.glass-card {
+                min-height: 320px !important;
+                border-radius: 30px !important;
+                margin-bottom: 28px !important;
+            }
+            .banner-track > div {
+                padding: 34px 42px !important;
+                gap: 40px !important;
+            }
+            .banner-track h2 {
+                font-size: 42px !important;
+                line-height: 1.12 !important;
+                margin-bottom: 20px !important;
+                letter-spacing: 0 !important;
+            }
+            .banner-track p {
+                font-size: 17px !important;
+                line-height: 1.55 !important;
+                margin-bottom: 34px !important;
+            }
+            .banner-track button {
+                padding: 14px 30px !important;
+                border-radius: 16px !important;
+            }
+            .banner-track .w-24 {
+                width: 88px !important;
+                height: 88px !important;
+            }
+            .banner-track .w-32 {
+                width: 120px !important;
+                height: 120px !important;
+            }
+            main > section:nth-of-type(3) {
+                margin-bottom: 28px !important;
+            }
+            main > section:nth-of-type(3) button {
+                padding: 9px 28px !important;
+            }
+        }
+        @media (min-width: 768px) and (max-width: 1439px) {
+            main > section.grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+        }
+        #data-view {
+            display: none;
+        }
+        body[data-active-view="data"] main > section:not(#data-view) {
+            display: none !important;
+        }
+        body[data-active-view="data"] #data-view {
+            display: block;
+        }
+        .data-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.03);
+        }
+        .data-input:focus {
+            outline: none;
+            border-bottom-color: #6b38d4;
+            box-shadow: 0 4px 12px -6px rgba(107, 56, 212, 0.3);
+        }
+        .nav-active {
+            color: #6b38d4 !important;
+            border-right-color: #6b38d4 !important;
+            background: rgba(132, 85, 239, 0.1) !important;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen mesh-gradient selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="w-full h-16 bg-white/70 backdrop-blur-xl flex justify-between items-center px-gutter sticky top-0 z-50 border-b border-white/10 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3">
+  
+  <span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">
+    POP AI 工具中心
+  </span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-full">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="relative group">
+<button class="p-2 text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">palette</span>
+</button>
+<!-- Theme Popover -->
+<div class="absolute right-0 top-full mt-2 p-3 bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 flex gap-2">
+<div class="w-6 h-6 rounded-full bg-[#6b38d4] cursor-pointer border border-white/50 shadow-sm hover:scale-110 transition-transform" title="Purple"></div>
+<div class="w-6 h-6 rounded-full bg-[#00628d] cursor-pointer border border-white/50 shadow-sm hover:scale-110 transition-transform" title="Blue"></div>
+<div class="w-6 h-6 rounded-full bg-[#006c49] cursor-pointer border border-white/50 shadow-sm hover:scale-110 transition-transform" title="Emerald"></div>
+<div class="w-6 h-6 rounded-full bg-[#b45309] cursor-pointer border border-white/50 shadow-sm hover:scale-110 transition-transform" title="Amber"></div>
+<div class="w-6 h-6 rounded-full bg-[#475569] cursor-pointer border border-white/50 shadow-sm hover:scale-110 transition-transform" title="Slate"></div>
+</div>
+</div><div class="w-10 h-10 rounded-full bg-primary-container overflow-hidden">
+<img alt="User profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEefnsvhNLquk7SEFIFr29YN93OfNq76yskZQMG4k92evRP-2LcXDnu33T3bvunuLTToK0B81EbKovqL63gFGSKDenpF2AwK70N9_MYF3JVjZxt1vdUTXBgOhCZWv6DERGyPhMbylhwiuysl0UOb06gSUOpOAl7ENaE0mwea1j-hSJacVwn_VBDxTZQWpZExGMCU5vTxl6Z6tlIyvZF0axVUDxuSCFnmT7pGt7DV5igfrk77lNcHFjNoJqf5ya4UB1Z-TxiJVUNbc">
+</div>
+</div>
+</header>
+<div class="flex">
+<!-- SideNavBar -->
+<aside class="hidden md:flex h-screen w-64 fixed left-0 top-0 flex-col py-8 border-r border-white/10 bg-surface-container-lowest/80 backdrop-blur-2xl z-40">
+<div class="px-6 mb-12 flex items-center gap-3">
+<div>
+<p class="font-headline-md text-headline-md text-primary leading-none">Aether</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1 px-4 overflow-y-auto custom-scrollbar">
+<a data-view="tools" class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-primary border-r-2 border-primary bg-primary-container/10 transition-all duration-300 nav-active" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">auto_awesome</span>
+                    AI 工具库
+                </a>
+<a data-view="data" class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300 border-r-2 border-transparent" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                    数据分析
+                </a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                    资产管理
+                </a><a class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined">summarize</span>
+                    数据汇总
+                </a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    系统设置
+                </a>
+</nav>
+<div class="px-6 mt-auto">
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 p-gutter max-w-[1400px] mx-auto w-full min-h-screen">
+<!-- Header Section -->
+<section class="mb-6 pt-2 text-center md:text-left"><div class=""><div class="flex flex-col md:flex-row items-center gap-6"><div class="search-container relative group rounded-3xl transition-all duration-500 flex-1 w-full"><div class="relative flex items-center bg-white rounded-[20px] px-6 py-4 border border-outline-variant/30 transition-all group-focus-within:border-primary/80 group-focus-within:shadow-[0_0_0_1px_rgba(107,56,212,0.45)]"><span class="material-symbols-outlined search-icon text-on-surface-variant/50 mr-4 transition-all duration-300">search</span><input class="w-full border-none focus:ring-0 bg-transparent font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/40" placeholder="搜索 AI 工具、模型或插件..." type="text"><div class="flex items-center gap-2"><button class="w-10 h-10 rounded-full border border-outline-variant/30 hover:bg-surface-variant/50 text-on-surface-variant transition-all duration-300 flex items-center justify-center shadow-sm" title="普通搜索">
+  <span class="material-symbols-outlined text-[20px]">search</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-primary text-on-primary shadow-md shadow-primary/20 hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center" title="AI 搜索">
+  <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+</button></div></div></div></div></div></section>
+<!-- Dynamic Hero Banner -->
+<section class="mb-gutter relative overflow-hidden rounded-[32px] glass-card min-h-[340px] group">
+<div class="banner-track h-full" style="transform: translateX(0%);">
+<!-- Slide 1: Script Lab (Moved from grid) -->
+<div class="min-w-full p-10 flex flex-col md:flex-row gap-12 items-center bg-cover bg-center" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuAmfn_7UwXqOhwl27EuPdUD-MwFZnPF3ohekYqhPLvI6ENA0N3D5CAobQMMUCtN-KrKUyNs6yNZAgaLNUboEN5QBZm9wMITsh6Y2zyDL1CbGmn01BOPXRMODSuuuBBiyLTIsYvaTdU-zD0R_xgiakJcXGNuft59cV5CzEdHQqOeN4zVWXFcKBqBN-xNzvewLiov-oenCUf0UQ58croM8bGOfjusTZVMokqGEgirRJYFqrl2i0xpMd2GG1ju_gXX-2fKxavfIeNZV94&quot;);">
+<div class="md:w-1/2">
+<div class="flex items-center gap-3 mb-6">
+<span class="px-3 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-[10px] uppercase tracking-wider">热门工具</span>
+<span class="px-3 py-1 rounded-full bg-secondary/10 text-secondary font-label-sm text-[10px] uppercase tracking-wider">BETA 测试中</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface mb-6">自动化脚本实验室</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant/70 mb-10 max-w-xl">
+                    无需代码基础，通过自然语言对话即可生成复杂的自动化工作流脚本，完美连接您的所有数据应用与业务流程。
+                </p>
+<div class="flex items-center gap-6">
+<button class="px-8 py-4 rounded-2xl bg-primary text-on-primary shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 font-label-md">
+<span class="">立即体验</span>
+<span class="material-symbols-outlined">rocket_launch</span>
+</button>
+<div class="flex items-center gap-2 text-on-surface-variant/60">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span class="font-label-md">890 次使用</span>
+</div>
+</div>
+</div>
+<div class="md:w-1/2 relative flex items-center justify-center min-h-[240px]">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 blur-3xl opacity-50 rounded-full scale-110"></div>
+<div class="relative z-10 flex gap-6 items-center">
+<div class="w-24 h-24 bg-white rounded-3xl shadow-2xl flex items-center justify-center text-primary -rotate-12 animate-bounce" style="animation-duration: 4s">
+<span class="material-symbols-outlined text-4xl">api</span>
+</div>
+<div class="w-32 h-32 bg-white rounded-[40px] shadow-2xl flex items-center justify-center text-secondary animate-bounce" style="animation-delay: 0.5s; animation-duration: 5s">
+<span class="material-symbols-outlined text-5xl">hub</span>
+</div>
+<div class="w-24 h-24 bg-white rounded-3xl shadow-2xl flex items-center justify-center text-tertiary rotate-12 animate-bounce" style="animation-delay: 1.2s; animation-duration: 4.5s">
+<span class="material-symbols-outlined text-4xl">schema</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Slide 2 Placeholder for Dynamic Banner Feel -->
+<div class="min-w-full p-10 flex flex-col md:flex-row gap-12 items-center bg-cover bg-center" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuDsuHPwpa2CGWnS32aGsgspyEF3OsOK1R2jhPuCHRKkheizLkL90eK1E46aDkrrLXKvLcio6s9u2N-uXDSwdPfGqdsXP5j8BXOzG-5au0_Iwzo1Qr2Ui2yunbszPv5axc0iOntE1ihHxiUvwQYNiuSG3pi5t9wPHgspG2WoCBO4e0tr1hMsEIUbSPWPb3envS60tNgGPH-nSKE7Tki7sRcPK6yPRyw54kgouxrlImYL-0GFNHTzRAXQRPmtjLY6Qp0RL2tt5s0_ARo&quot;);">
+<div class="md:w-1/2">
+<div class="flex items-center gap-3 mb-6">
+<span class="px-3 py-1 rounded-full bg-secondary/10 text-secondary font-label-sm text-[10px] uppercase tracking-wider">新工具上线</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface mb-6">跨次元数据可视化</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant/70 mb-10 max-w-xl">
+                    将枯燥的电子表格转化为令人惊叹的 3D 交互式叙事，多维度实时展现业务增长动态。
+                </p>
+<button class="px-8 py-4 rounded-2xl bg-secondary text-on-secondary shadow-xl shadow-secondary/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 font-label-md">
+<span class="">探索新功能</span>
+<span class="material-symbols-outlined">auto_graph</span>
+</button>
+</div>
+<div class="md:w-1/2 flex items-center justify-center relative">
+<div class="w-64 h-64 flex items-center justify-center">
+</div>
+</div>
+</div>
+</div>
+<!-- Banner Navigation Dots -->
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+<div class="h-1.5 rounded-full bg-primary w-8"></div>
+<div class="h-1.5 rounded-full bg-outline-variant/30 w-2"></div>
+<div class="w-2 h-1.5 rounded-full bg-outline-variant/30"></div>
+</div>
+</section>
+<!-- AI Tool Categories -->
+<section class="mb-8">
+<div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
+<button class="whitespace-nowrap px-8 py-2.5 rounded-full font-label-md text-label-md shadow-md shadow-primary/20 transition-all bg-primary text-on-primary">全部</button>
+<button class="whitespace-nowrap px-8 py-2.5 rounded-full hover:bg-white font-label-md text-label-md border border-outline-variant/20 transition-all bg-white/50 text-on-surface-variant">数据处理</button>
+<button class="whitespace-nowrap px-8 py-2.5 rounded-full hover:bg-white font-label-md text-label-md border border-outline-variant/20 transition-all bg-white/50 text-on-surface-variant">图像生成</button>
+<button class="whitespace-nowrap px-8 py-2.5 rounded-full hover:bg-white font-label-md text-label-md border border-outline-variant/20 transition-all bg-white/50 text-on-surface-variant">自动化脚本</button>
+<button class="whitespace-nowrap px-8 py-2.5 rounded-full hover:bg-white font-label-md text-label-md border border-outline-variant/20 transition-all bg-white/50 text-on-surface-variant">语言模型</button>
+<button class="whitespace-nowrap px-8 py-2.5 rounded-full hover:bg-white font-label-md text-label-md border border-outline-variant/20 transition-all bg-white/50 text-on-surface-variant">预测分析</button>
+</div>
+</section>
+<!-- Tool Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter mb-section-gap">
+<!-- Tool Card 1 -->
+<div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
+<div class="flex justify-between items-start mb-5">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shadow-inner">
+<span class="material-symbols-outlined text-[28px]">database</span>
+</div>
+<div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><p class="font-label-sm text-[10px] text-secondary">在线</p></div>
+</div>
+<h3 class="font-headline-md text-[20px] text-on-surface mb-2">智能数据挖掘</h3>
+<p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">基于深度学习的高级模式识别，从杂乱的原始数据中提取结构化洞察，支持多维度关联分析。</p>
+<div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span class="font-label-md text-xs">3.2k</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span class="font-label-md text-xs">使用手册</span>
+</div>
+</div>
+<button class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
+<span class="">使用工具</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Tool Card 2 -->
+<div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
+<div class="flex justify-between items-start mb-5">
+<div class="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary group-hover:scale-110 transition-transform duration-500 shadow-inner">
+<span class="material-symbols-outlined text-[28px]">insights</span>
+</div>
+<div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><p class="font-label-sm text-[10px] text-secondary">在线</p></div>
+</div>
+<h3 class="font-headline-md text-[20px] text-on-surface mb-2">自动化洞察</h3>
+<p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">实时监测数据波动，自动生成叙述性分析报告，发现潜在的商业机会与风险预警。</p>
+<div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span class="font-label-md text-xs">1.5k</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span class="font-label-md text-xs">使用手册</span>
+</div>
+</div>
+<button class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
+<span class="">使用工具</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Tool Card 3 -->
+<div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
+<div class="flex justify-between items-start mb-5">
+<div class="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform duration-500 shadow-inner">
+<span class="material-symbols-outlined text-[28px]">draw</span>
+</div>
+<div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span><p class="font-label-sm text-[10px] text-secondary">在线</p></div></div>
+<h3 class="font-headline-md text-[20px] text-on-surface mb-2">AI 资产生成器</h3>
+<p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">根据文字描述或品牌调性自动生成矢量图标、图表背景及素材，助力品牌视觉升级。</p>
+<div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span class="font-label-md text-xs">4.8k</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span class="font-label-md text-xs">使用手册</span>
+</div>
+</div>
+<button class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
+<span class="">使用工具</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Tool Card 4 -->
+<div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
+<div class="flex justify-between items-start mb-5">
+<div class="w-12 h-12 rounded-xl bg-error-container flex items-center justify-center text-error group-hover:scale-110 transition-transform duration-500 shadow-inner">
+<span class="material-symbols-outlined text-[28px]">sentiment_satisfied</span>
+</div>
+<div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-[#b45309]"></span><p class="font-label-sm text-[10px] text-[#b45309]">维护中</p></div></div>
+<h3 class="font-headline-md text-[20px] text-on-surface mb-2">情感分析引擎</h3>
+<p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">深度剖析社交媒体及用户评价背后的情绪基调，精准捕捉客户满意度与舆论导向。</p>
+<div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span class="font-label-md text-xs">2.1k</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span class="font-label-md text-xs">使用手册</span>
+</div>
+</div>
+<button class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
+<span class="">使用工具</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Tool Card 5 -->
+<div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
+<div class="flex justify-between items-start mb-5">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shadow-inner">
+<span class="material-symbols-outlined text-[28px]">language</span>
+</div>
+<div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><p class="font-label-sm text-[10px] text-secondary">在线</p></div>
+</div>
+<h3 class="font-headline-md text-[20px] text-on-surface mb-2">多语言翻译助手</h3>
+<p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">支持全球 100+ 语言的高级神经网络翻译，保留原文语境与术语准确性。</p>
+<div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span class="font-label-md text-xs">6.4k</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span class="font-label-md text-xs">使用手册</span>
+</div>
+</div>
+<button class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
+<span class="">使用工具</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Tool Card 6 -->
+<div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
+<div class="flex justify-between items-start mb-5">
+<div class="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary group-hover:scale-110 transition-transform duration-500 shadow-inner">
+<span class="material-symbols-outlined text-[28px]">query_stats</span>
+</div>
+<div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><p class="font-label-sm text-[10px] text-secondary">在线</p></div>
+</div>
+<h3 class="font-headline-md text-[20px] text-on-surface mb-2">销量预测模型</h3>
+<p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">结合季节性因素与市场趋势，为未来 12 个月的销量提供高精度区间预测。</p>
+<div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span class="font-label-md text-xs">1.1k</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span class="font-label-md text-xs">使用手册</span>
+</div>
+</div>
+<button class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
+<span class="">使用工具</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Tool Card 7 -->
+<div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
+<div class="flex justify-between items-start mb-5">
+<div class="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform duration-500 shadow-inner">
+<span class="material-symbols-outlined text-[28px]">qr_code_2</span>
+</div>
+<div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><p class="font-label-sm text-[10px] text-secondary">在线</p></div>
+</div>
+<h3 class="font-headline-md text-[20px] text-on-surface mb-2">智能赋码系统</h3>
+<p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">自动为海量库存资产生成唯一识别码并关联云端属性，极大简化仓储管理难度。</p>
+<div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span class="font-label-md text-xs">2.7k</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span class="font-label-md text-xs">使用手册</span>
+</div>
+</div>
+<button class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
+<span class="">使用工具</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Tool Card 8 -->
+<div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
+<div class="flex justify-between items-start mb-5">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shadow-inner">
+<span class="material-symbols-outlined text-[28px]">auto_fix_high</span>
+</div>
+<div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><p class="font-label-sm text-[10px] text-secondary">在线</p></div>
+</div>
+<h3 class="font-headline-md text-[20px] text-on-surface mb-2">文档一键清洗</h3>
+<p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">智能识别文档中的冗余信息与排版错误，瞬间输出符合标准格式的专业文档报告。</p>
+<div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span class="font-label-md text-xs">920</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span class="font-label-md text-xs">使用手册</span>
+</div>
+</div>
+<button class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
+<span class="">使用工具</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</section>
+<section id="data-view" class="space-y-gutter">
+<section class="data-panel rounded-[16px] relative overflow-hidden p-6">
+<div class="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 blur-[80px] rounded-full"></div>
+<div class="flex flex-col relative z-10 space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">auto_awesome</span>
+</div>
+<h2 class="font-headline-md text-headline-md">AI 查询</h2>
+</div>
+<span class="text-label-sm text-on-surface-variant/40 tracking-widest uppercase">系统 v2.4.0</span>
+</div>
+<div class="w-full relative">
+<textarea class="data-input w-full bg-transparent border-0 border-b border-outline-variant/30 py-4 text-headline-md font-headline-md placeholder:text-on-surface-variant/30 resize-none pb-12" placeholder="询问 AI 关于数据的任何问题..." rows="2"></textarea>
+<div class="absolute right-0 bottom-2">
+<button class="bg-primary-container text-white px-6 py-2 rounded-full font-label-md shadow-sm hover:scale-105 transition-transform duration-300 flex items-center space-x-2">
+<span>生成报告</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<div class="lg:col-span-1 data-panel rounded-[16px] p-8 space-y-6 flex flex-col justify-between min-h-[360px]">
+<div>
+<div class="flex items-center space-x-2 mb-4">
+<div class="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
+<span class="text-label-sm text-on-surface-variant uppercase tracking-widest">实时总结</span>
+</div>
+<p class="font-body-lg text-body-lg leading-relaxed">
+基于您的 <span class="text-primary font-semibold">Q3 数据录入</span>，跨区域延迟明显增加了 12%，主要影响了非缓存节点。
+</p>
+</div>
+<div class="bg-surface-container-lowest/40 p-4 rounded-xl border border-outline-variant/10">
+<p class="text-label-sm text-on-surface-variant/60 mb-2 italic">建议</p>
+<p class="text-body-md text-on-surface-variant">向新加坡 (AS-S) 集群部署边缘缓存以优化吞吐量。</p>
+</div>
+</div>
+<div class="lg:col-span-2 data-panel rounded-[16px] p-8 min-h-[360px]">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="font-headline-md text-headline-md">数据库洞察趋势</h3>
+<p class="text-label-md text-on-surface-variant/60">涵盖所有生产集群</p>
+</div>
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-label-sm">实际</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<span class="text-label-sm">预测</span>
+</div>
+</div>
+</div>
+<div class="h-64 w-full relative">
+<svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 200">
+<defs>
+<linearGradient id="usageDataChartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#6b38d4" stop-opacity="0.3"></stop>
+<stop offset="100%" stop-color="#6b38d4" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<path d="M0 150 Q 150 120, 300 160 T 600 80 T 1000 120 L 1000 200 L 0 200 Z" fill="url(#usageDataChartGradient)"></path>
+<path d="M0 150 Q 150 120, 300 160 T 600 80 T 1000 120" fill="none" stroke="#6b38d4" stroke-linecap="round" stroke-width="4"></path>
+<path d="M0 160 Q 200 150, 400 140 T 800 110 T 1000 90" fill="none" opacity="0.4" stroke="#006c49" stroke-dasharray="8 4" stroke-width="2"></path>
+<circle cx="600" cy="80" fill="#6b38d4" r="6" stroke="white" stroke-width="2"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none border-b border-outline-variant/10">
+<div class="w-full border-t border-outline-variant/5"></div>
+<div class="w-full border-t border-outline-variant/5"></div>
+<div class="w-full border-t border-outline-variant/5"></div>
+</div>
+</div>
+<div class="flex justify-between mt-6 text-label-sm text-on-surface-variant/40 uppercase tracking-tighter">
+<span>1月</span><span>2月</span><span>3月</span><span>4月</span><span>5月</span><span>6月</span><span>7月</span>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+<div class="data-panel rounded-[16px] p-6 flex flex-col items-center text-center">
+<span class="text-label-sm text-on-surface-variant mb-6 w-full text-left uppercase tracking-widest font-semibold">Token 消耗</span>
+<div class="relative w-32 h-32 mb-4">
+<svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" r="40" stroke="rgba(107, 56, 212, 0.1)" stroke-width="8"></circle>
+<circle cx="50" cy="50" fill="none" r="40" stroke="#6b38d4" stroke-dasharray="251.2" stroke-dashoffset="80.3" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-headline-md text-headline-md text-primary">68%</span>
+</div>
+</div>
+<p class="text-label-sm text-on-surface-variant/60">34万 / 50万 每月 Token</p>
+</div>
+<div class="data-panel rounded-[16px] p-6">
+<span class="text-label-sm text-on-surface-variant mb-6 block uppercase tracking-widest font-semibold">使用频率</span>
+<div class="flex items-end justify-between h-20 mb-4 space-x-1">
+<div class="w-full bg-primary/20 rounded-t-full h-[40%]"></div>
+<div class="w-full bg-primary/20 rounded-t-full h-[60%]"></div>
+<div class="w-full bg-primary/40 rounded-t-full h-[80%]"></div>
+<div class="w-full bg-primary rounded-t-full h-[100%]"></div>
+<div class="w-full bg-primary/60 rounded-t-full h-[50%]"></div>
+<div class="w-full bg-primary/30 rounded-t-full h-[70%]"></div>
+<div class="w-full bg-primary/40 rounded-t-full h-[90%]"></div>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-headline-md font-headline-md">+14%</p>
+<span class="text-label-sm text-secondary font-bold">环比上周</span>
+</div>
+</div>
+<div class="data-panel rounded-[16px] p-6 space-y-6">
+<span class="text-label-sm text-on-surface-variant uppercase tracking-widest font-semibold">图像生成统计</span>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-label-md mb-2"><span>输入查询</span><span class="font-bold">2.4k</span></div>
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-tertiary w-[85%] rounded-full"></div></div>
+</div>
+<div>
+<div class="flex justify-between text-label-md mb-2"><span>输出资产</span><span class="font-bold">1.8k</span></div>
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-secondary w-[60%] rounded-full"></div></div>
+</div>
+</div>
+</div>
+<div class="data-panel rounded-[16px] p-6 flex flex-col justify-between">
+<span class="text-label-sm text-on-surface-variant uppercase tracking-widest font-semibold">运行健康度</span>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2"><span class="material-symbols-outlined text-primary text-[20px]">speed</span><span class="text-label-md">平均延迟</span></div>
+<span class="font-headline-md text-headline-md">124<span class="text-label-sm font-normal">ms</span></span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2"><span class="material-symbols-outlined text-secondary text-[20px]">check_circle</span><span class="text-label-md">成功率</span></div>
+<span class="font-headline-md text-headline-md">99.9<span class="text-label-sm font-normal">%</span></span>
+</div>
+</div>
+</div>
+</section>
+</section>
+<!-- Bottom Floating Visual (Soft Mesh) -->
+<div class="fixed -bottom-32 -left-32 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="fixed -top-32 -right-32 w-96 h-96 bg-secondary/5 blur-[120px] rounded-full pointer-events-none"></div>
+</main>
+</div>
+<!-- Scripts for Interactions -->
+<script>
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                document.querySelector('input').focus();
+            }
+        });
+
+        // Search highlight effect
+        const searchInput = document.querySelector('input');
+        const searchIcon = document.querySelector('.search-icon');
+        
+        searchInput.addEventListener('focus', () => {
+            searchIcon.classList.add('text-primary');
+        });
+        
+        searchInput.addEventListener('blur', () => {
+            searchIcon.classList.remove('text-primary');
+        });
+
+        // Filter button active state
+        const filterBtns = document.querySelectorAll('button.whitespace-nowrap');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => {
+                    b.classList.remove('bg-primary', 'text-on-primary');
+                    b.classList.add('bg-white/50', 'text-on-surface-variant');
+                });
+                btn.classList.remove('bg-white/50', 'text-on-surface-variant');
+                btn.classList.add('bg-primary', 'text-on-primary');
+            });
+        });
+
+        // Left navigation view switching
+        const viewLinks = document.querySelectorAll('aside nav a[data-view]');
+        const setActiveView = (view) => {
+            document.body.dataset.activeView = view === 'data' ? 'data' : 'tools';
+            viewLinks.forEach(link => {
+                const isActive = link.dataset.view === document.body.dataset.activeView;
+                link.classList.toggle('nav-active', isActive);
+                link.classList.toggle('text-primary', isActive);
+                link.classList.toggle('border-primary', isActive);
+                link.classList.toggle('bg-primary-container/10', isActive);
+                link.classList.toggle('text-on-surface-variant', !isActive);
+                link.classList.toggle('border-transparent', !isActive);
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        viewLinks.forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                setActiveView(link.dataset.view);
+            });
+        });
+        setActiveView('tools');
+
+        // Simple Auto-sliding Banner Simulation
+        const bannerTrack = document.querySelector('.banner-track');
+        let currentSlide = 0;
+        const dots = document.querySelectorAll('.absolute.bottom-6 .rounded-full');
+
+        function updateBanner() {
+            bannerTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+            dots.forEach((dot, index) => {
+                if (index === currentSlide) {
+                    dot.classList.add('bg-primary', 'w-8');
+                    dot.classList.remove('bg-outline-variant/30', 'w-2');
+                } else {
+                    dot.classList.remove('bg-primary', 'w-8');
+                    dot.classList.add('bg-outline-variant/30', 'w-2');
+                }
+            });
+        }
+
+        setInterval(() => {
+            currentSlide = (currentSlide + 1) % 2; // Loop between 2 slides
+            updateBanner();
+        }, 6000);
+    </script>
+<script>
+(() => {
+  const apiBase = localStorage.getItem('portal-api-base')
+    || `${location.protocol.startsWith('http') ? location.protocol : 'http:'}//${location.hostname || '127.0.0.1'}:8000`;
+
+  const tokenKey = 'portal-token';
+  const authHeaders = () => {
+    const token = localStorage.getItem(tokenKey);
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  };
+
+  const json = async (path, options = {}) => {
+    const { headers: extraHeaders, ...rest } = options;
+    const response = await fetch(`${apiBase}${path}`, {
+      headers: { 'Content-Type': 'application/json', ...authHeaders(), ...(extraHeaders || {}) },
+      ...rest,
+    });
+    if (response.status === 401) {
+      localStorage.removeItem(tokenKey);
+      const error = new Error(`${path} 401`);
+      error.unauthorized = true;
+      throw error;
+    }
+    if (!response.ok) throw new Error(`${path} ${response.status}`);
+    return response.json();
+  };
+
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[char]));
+
+  const fmtNumber = (value) => new Intl.NumberFormat('zh-CN').format(Number(value || 0));
+  const fmtDuration = (ms) => {
+    const value = Number(ms || 0);
+    return value >= 1000 ? `${(value / 1000).toFixed(1)}s` : `${value}ms`;
+  };
+  const fmtTime = (iso) => {
+    if (!iso) return '-';
+    return new Intl.DateTimeFormat('zh-CN', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(iso));
+  };
+  const statusText = (status) => ({
+    success: '生成成功',
+    failed: '生成失败',
+    timeout: '请求超时',
+  }[status] || status || '-');
+  const statusClass = (status) => ({
+    success: 'text-green-600',
+    failed: 'text-red-500',
+    timeout: 'text-amber-600',
+  }[status] || 'text-gray-500');
+  const priorityText = (status) => status === 'failed' || status === 'timeout' ? '高' : '中';
+  const priorityClass = (status) => status === 'failed' || status === 'timeout'
+    ? 'bg-red-50 text-red-600'
+    : 'bg-indigo-50 text-indigo-600';
+
+  let portalTools = [];
+
+  function iconFor(tool) {
+    return tool.icon || 'auto_awesome';
+  }
+
+  function renderToolCard(tool) {
+    const name = escapeHtml(tool.display_name || tool.tool_id);
+    const category = escapeHtml(tool.category || '未分类');
+    const desc = escapeHtml(tool.description || '');
+    const launch = escapeHtml(tool.launch_url || '#');
+    const media = tool.thumbnail
+      ? `<div class="relative h-36">
+          <img class="w-full h-full object-cover" alt="${name}" src="${escapeHtml(tool.thumbnail)}">
+          <span class="absolute top-sm right-sm px-sm py-xs bg-surface-container-lowest/80 backdrop-blur-sm text-on-surface-variant rounded-md text-label-sm">${category}</span>
+        </div>`
+      : `<div class="relative h-36 bg-gradient-to-br from-thumb-a to-thumb-b flex flex-col items-center justify-center gap-xs">
+          <span class="material-symbols-outlined text-secondary text-[40px]" style="font-variation-settings: 'FILL' 1;">${escapeHtml(iconFor(tool))}</span>
+          <span class="text-label-md text-on-surface-variant px-md text-center">${name}</span>
+          <span class="absolute top-sm right-sm px-sm py-xs bg-surface-container-lowest/80 backdrop-blur-sm text-on-surface-variant rounded-md text-label-sm">${category}</span>
+        </div>`;
+    return `
+      <div class="tool-card bg-surface-container-lowest rounded-2xl shadow-level-1 hover:shadow-level-2 hover:-translate-y-1 transition-all duration-300 flex flex-col border border-outline-variant/10 overflow-hidden" data-category="${category}" data-name="${name}" data-desc="${desc}">
+        ${media}
+        <div class="flex flex-col gap-sm p-lg flex-1">
+          <div class="flex items-center gap-sm">
+            <span class="material-symbols-outlined text-secondary text-[20px]">${escapeHtml(iconFor(tool))}</span>
+            <h4 class="text-body-lg font-bold text-on-surface">${name}</h4>
+          </div>
+          <p class="text-body-sm text-on-surface-variant line-clamp-2">${desc}</p>
+          <div class="mt-auto pt-sm flex justify-end items-center border-t border-outline-variant/10">
+            <a href="${launch}" target="_blank" rel="noopener noreferrer" class="text-secondary text-label-md flex items-center gap-xs hover:text-secondary-container transition-colors">
+              打开 <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+            </a>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderCategoryButtons(toolGrid) {
+    const categorySection = toolGrid.previousElementSibling;
+    if (!categorySection) return;
+    const categories = ['全部', ...new Set(portalTools.map((tool) => tool.category || '未分类'))];
+    categorySection.innerHTML = categories.map((category, index) => `
+      <button data-category="${escapeHtml(category)}" class="whitespace-nowrap px-6 py-2 rounded-full font-label-md text-label-md transition-all duration-300 ${index === 0 ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' : 'bg-white/50 text-on-surface-variant hover:bg-white'}">
+        ${escapeHtml(category)}
+      </button>
+    `).join('');
+    categorySection.querySelectorAll('button[data-category]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const active = button.dataset.category;
+        categorySection.querySelectorAll('button').forEach((item) => {
+          item.classList.toggle('bg-primary', item === button);
+          item.classList.toggle('text-on-primary', item === button);
+          item.classList.toggle('bg-white/50', item !== button);
+          item.classList.toggle('text-on-surface-variant', item !== button);
+        });
+        toolGrid.querySelectorAll('[data-category]').forEach((card) => {
+          card.classList.toggle('hidden', active !== '全部' && card.dataset.category !== active);
+        });
+      });
+    });
+  }
+
+  async function loadTools() {
+    const toolGrid = document.querySelector('main > section.grid');
+    if (!toolGrid) return;
+    portalTools = await json('/portal/tools');
+    if (!portalTools.length) return;
+    toolGrid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter mb-section-gap';
+    toolGrid.innerHTML = portalTools.map(renderToolCard).join('');
+    renderCategoryButtons(toolGrid);
+  }
+
+  function ensureEventTable() {
+    const dataView = document.getElementById('data-view');
+    if (!dataView || document.getElementById('usage-event-table')) return;
+    dataView.insertAdjacentHTML('beforeend', `
+      <section class="data-panel rounded-[16px] p-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
+              <span class="material-symbols-outlined text-primary">bar_chart</span>
+            </div>
+            <div>
+              <h2 class="font-headline-md text-headline-md">数据汇总</h2>
+              <p id="usage-event-count" class="text-label-md text-on-surface-variant/60">真实工具调用明细</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <select id="event-tool-filter" class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none"></select>
+            <select id="event-status-filter" class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none">
+              <option value="">状态: 全部</option>
+              <option value="success">状态: 成功</option>
+              <option value="failed">状态: 失败</option>
+              <option value="timeout">状态: 超时</option>
+            </select>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-100">
+                <th class="pb-4 font-semibold">请求 ID</th>
+                <th class="pb-4 font-semibold">工具名称</th>
+                <th class="pb-4 font-semibold">所用模型</th>
+                <th class="pb-4 font-semibold">用户</th>
+                <th class="pb-4 font-semibold">输入预览</th>
+                <th class="pb-4 font-semibold">输出 / 状态</th>
+                <th class="pb-4 font-semibold">优先级</th>
+                <th class="pb-4 font-semibold">TOKENS</th>
+                <th class="pb-4 font-semibold">用时</th>
+              </tr>
+            </thead>
+            <tbody id="usage-event-table" class="text-xs"></tbody>
+          </table>
+        </div>
+      </section>
+    `);
+  }
+
+  async function loadEvents() {
+    ensureEventTable();
+    const table = document.getElementById('usage-event-table');
+    const count = document.getElementById('usage-event-count');
+    const toolFilter = document.getElementById('event-tool-filter');
+    const statusFilter = document.getElementById('event-status-filter');
+    if (!table || !toolFilter || !statusFilter) return;
+
+    if (!toolFilter.dataset.ready) {
+      toolFilter.innerHTML = '<option value="">工具类型: 全部</option>' + portalTools.map((tool) =>
+        `<option value="${escapeHtml(tool.tool_id)}">${escapeHtml(tool.category || '未分类')}: ${escapeHtml(tool.display_name)}</option>`
+      ).join('');
+      toolFilter.dataset.ready = '1';
+      toolFilter.addEventListener('change', loadEvents);
+      statusFilter.addEventListener('change', loadEvents);
+    }
+
+    const params = new URLSearchParams({ limit: '10' });
+    if (toolFilter.value) params.set('tool_id', toolFilter.value);
+    if (statusFilter.value) params.set('status', statusFilter.value);
+    const page = await json(`/analytics/events?${params.toString()}`);
+    count.textContent = `显示第 1 至 ${Math.min(page.rows.length, page.total)} 项，共 ${page.total} 项`;
+    table.innerHTML = page.rows.map((row) => `
+      <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+        <td class="py-4 text-gray-500">${escapeHtml(String(row.record_id).slice(0, 8))}</td>
+        <td class="py-4">
+          <div class="flex items-center space-x-2">
+            <span class="material-symbols-outlined text-[14px] p-1 bg-blue-50 text-blue-500 rounded">auto_awesome</span>
+            <span class="font-medium text-gray-900 whitespace-nowrap">${escapeHtml(row.tool_name)}</span>
+          </div>
+        </td>
+        <td class="py-4 text-gray-500 whitespace-nowrap">${escapeHtml(row.model || '-')}</td>
+        <td class="py-4 text-gray-600 whitespace-nowrap">${escapeHtml(row.user_id || '-')}</td>
+        <td class="py-4 text-gray-500 max-w-[220px] truncate">${escapeHtml(row.input_preview || '-')}</td>
+        <td class="py-4 ${statusClass(row.status)} font-medium text-[11px] max-w-[220px] truncate">${escapeHtml(row.output_preview || statusText(row.status))}</td>
+        <td class="py-4"><span class="px-2 py-1 ${priorityClass(row.status)} rounded text-[10px]">${priorityText(row.status)}</span></td>
+        <td class="py-4 text-gray-600">${fmtNumber(row.total_tokens)}</td>
+        <td class="py-4 text-gray-600 whitespace-nowrap">${fmtDuration(row.duration_ms)}</td>
+      </tr>
+    `).join('') || '<tr><td class="py-8 text-center text-gray-400" colspan="9">暂无真实调用数据</td></tr>';
+  }
+
+  async function loadSummary() {
+    const summary = await json('/analytics/summary');
+    const dataView = document.getElementById('data-view');
+    if (!dataView) return;
+    const summaryText = dataView.querySelector('.lg\\:col-span-1 p');
+    if (summaryText) {
+      summaryText.innerHTML = `当前已接入 <span class="text-primary font-semibold">${fmtNumber(summary.total_events)}</span> 次真实调用，成功 <span class="text-primary font-semibold">${fmtNumber(summary.success_events)}</span> 次，累计 Token <span class="text-primary font-semibold">${fmtNumber(summary.total_tokens)}</span>。`;
+    }
+    const statNumbers = dataView.querySelectorAll('.text-headline-md.font-headline-md, .font-headline-md.text-headline-md');
+    if (statNumbers[0]) statNumbers[0].textContent = `${fmtNumber(summary.total_tokens)}`;
+    if (statNumbers[1]) statNumbers[1].textContent = `${fmtNumber(summary.total_events)}`;
+  }
+
+  function ensureLoginPanel() {
+    const dataView = document.getElementById('data-view');
+    if (!dataView) return;
+    let panel = document.getElementById('data-login-panel');
+    if (!panel) {
+      dataView.insertAdjacentHTML('afterbegin', `
+        <section id="data-login-panel" class="data-panel rounded-[16px] p-8 mb-8">
+          <div class="flex items-center space-x-3 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
+              <span class="material-symbols-outlined text-primary">lock</span>
+            </div>
+            <div>
+              <h2 class="font-headline-md text-headline-md">登录后查看数据</h2>
+              <p class="text-label-md text-on-surface-variant/60">调用明细含使用者输入/输出预览，需平台账号（找管理员开通）</p>
+            </div>
+          </div>
+          <div class="flex flex-col md:flex-row gap-3 max-w-xl">
+            <input id="data-login-username" type="text" placeholder="用户名" autocomplete="username"
+              class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
+            <input id="data-login-password" type="password" placeholder="密码" autocomplete="current-password"
+              class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
+            <button id="data-login-btn" class="bg-primary text-on-primary rounded-lg px-6 py-2 text-sm whitespace-nowrap">登录</button>
+          </div>
+          <p id="data-login-error" class="text-label-md text-red-500 mt-3 hidden">用户名或密码不正确</p>
+        </section>
+      `);
+      panel = document.getElementById('data-login-panel');
+      const submit = async () => {
+        const username = document.getElementById('data-login-username').value.trim();
+        const password = document.getElementById('data-login-password').value;
+        const errorTip = document.getElementById('data-login-error');
+        if (!username || !password) return;
+        try {
+          const result = await json('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ username, password }),
+          });
+          localStorage.setItem(tokenKey, result.access_token);
+          errorTip.classList.add('hidden');
+          panel.classList.add('hidden');
+          await loadDataViews();
+        } catch (error) {
+          errorTip.classList.remove('hidden');
+        }
+      };
+      panel.querySelector('#data-login-btn').addEventListener('click', submit);
+      panel.querySelector('#data-login-password').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') submit();
+      });
+    }
+    panel.classList.remove('hidden');
+  }
+
+  function bindAiQuery() {
+    const dataView = document.getElementById('data-view');
+    if (!dataView) return;
+    const textarea = dataView.querySelector('textarea');
+    const button = dataView.querySelector('textarea + div button, .data-input + div button');
+    const output = dataView.querySelector('.lg\\:col-span-1 p');
+    if (!textarea || !button || !output) return;
+    if (button.dataset.aiBound) return;
+    button.dataset.aiBound = '1';
+    button.addEventListener('click', async () => {
+      const question = textarea.value.trim();
+      if (!question) return;
+      const old = button.textContent;
+      button.textContent = '生成中...';
+      button.disabled = true;
+      try {
+        const result = await json('/ai/query', {
+          method: 'POST',
+          body: JSON.stringify({ question }),
+        });
+        output.textContent = result.answer;
+      } catch (error) {
+        if (error.unauthorized) {
+          ensureLoginPanel();
+          output.textContent = '登录已过期，请在上方重新登录后再试。';
+        } else {
+          output.textContent = 'AI 查询暂未可用，请确认服务端已填写 APIMART_API_KEY。';
+        }
+      } finally {
+        button.textContent = old;
+        button.disabled = false;
+      }
+    });
+  }
+
+  async function loadDataViews() {
+    try {
+      await Promise.all([loadSummary(), loadEvents()]);
+      bindAiQuery();
+    } catch (error) {
+      if (error.unauthorized) {
+        ensureLoginPanel();
+      } else {
+        console.warn('Analytics binding skipped:', error);
+      }
+    }
+  }
+
+  let booted = false;
+  async function bootRealData() {
+    if (booted) return;
+    booted = true;
+    try {
+      await loadTools();
+    } catch (error) {
+      console.warn('Portal real-data binding skipped:', error);
+    }
+    await loadDataViews();
+  }
+
+  document.addEventListener('DOMContentLoaded', bootRealData);
+  if (document.readyState !== 'loading') bootRealData();
+})();
+</script>
+
+
+</body></html>

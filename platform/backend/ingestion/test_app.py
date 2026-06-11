@@ -1,25 +1,31 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi.testclient import TestClient
 
 from backend.auth.accounts import Role, UserAccount, UserAccountRepository
 from backend.auth.passwords import hash_password
+from backend.ingestion.ai_query import AiQueryError
 from backend.ingestion.app import (
     create_app,
+    get_ai_answerer,
     get_auth_token_secret,
+    get_event_reader,
     get_repository,
+    get_tool_directory,
     get_tool_registry_repository,
     get_user_repository,
 )
-from backend.storage.events import StoredEvent
+from backend.storage.events import DailyUsage, EventPage, EventRow, StoredEvent, UsageSummary
 from backend.storage.registry import (
     CollectMethod,
     DataLevel,
     ToolAlreadyExistsError,
+    ToolConfig,
     ToolRegistration,
     ToolRegistryRepository,
 )
@@ -108,6 +114,80 @@ class MemoryToolRegistryRepository:
         return self.tools.get(tool_id)
 
 
+SAMPLE_SUMMARY = UsageSummary(
+    total_events=8,
+    success_events=6,
+    avg_duration_ms=2100.0,
+    total_tokens=12345,
+    daily=[DailyUsage(day="2026-06-10", events=3, tokens=4000)],
+    events_by_tool={"aird-report": 8},
+)
+
+
+SAMPLE_TOOL = ToolConfig(
+    tool_id="aird-report",
+    name="AI报告",
+    team_id="aird",
+    data_level="partial",
+    collect_method="report",
+    category="趋势资产",
+    display_name="AI报告生成平台",
+    description='AI辅助生成趋势报告，目前稳定支持"风格/主题/单品"企划',
+    launch_url="https://192.168.40.105:5173/",
+)
+
+
+@dataclass
+class MemoryUsageEventReader:
+    page: EventPage
+    summary: UsageSummary
+    seen_filters: dict[str, object] = field(default_factory=dict)
+
+    def list_events(
+        self,
+        *,
+        tool_id: str | None = None,
+        status: str | None = None,
+        since_hours: int | None = None,
+        limit: int = 10,
+        offset: int = 0,
+    ) -> EventPage:
+        self.seen_filters = {
+            "tool_id": tool_id,
+            "status": status,
+            "since_hours": since_hours,
+            "limit": limit,
+            "offset": offset,
+        }
+        return self.page
+
+    def summarize(self) -> UsageSummary:
+        return self.summary
+
+
+@dataclass
+class MemoryToolDirectory:
+    tools: list[ToolConfig] = field(default_factory=lambda: [SAMPLE_TOOL])
+
+    def list_enabled_tools(self) -> list[ToolConfig]:
+        return self.tools
+
+
+def sample_event_row() -> EventRow:
+    return EventRow(
+        record_id=UUID(SAMPLE_RECORD_ID),
+        tool_id="aird-report",
+        model="gemini-3.5-flash",
+        user_id="user-001",
+        input_preview="生成风格企划",
+        output_preview="报告生成成功",
+        status="success",
+        total_tokens=1240,
+        duration_ms=1200,
+        start_time=datetime(2026, 6, 10, 8, 0, tzinfo=UTC),
+    )
+
+
 def test_ingest_event_accepts_simulated_payload_and_defaults_anonymous_user() -> None:
     repository = MemoryUsageEventRepository()
     client = client_with_repository(repository)
@@ -165,6 +245,106 @@ def test_ingest_event_rejects_missing_required_field() -> None:
 
     assert response.status_code == 422
     assert repository.events == {}
+
+
+def test_portal_tools_returns_cards_with_real_usage_counts() -> None:
+    client, _, _ = read_client()
+
+    # 门户卡片不含敏感内容，首页无登录态，保持公开。
+    response = client.get("/portal/tools")
+
+    assert response.status_code == 200
+    [card] = response.json()
+    assert card["tool_id"] == "aird-report"
+    assert card["display_name"] == "AI报告生成平台"
+    assert card["category"] == "趋势资产"
+    assert card["launch_url"] == "https://192.168.40.105:5173/"
+    assert card["usage_count"] == 8
+
+
+def test_read_side_requires_login() -> None:
+    # 决策 #44：分析明细/聚合与 AI 查询必须带登录态 token（敏感细则仍待定，先挡匿名）。
+    client, _, _ = read_client()
+
+    assert client.get("/analytics/events").status_code == 401
+    assert client.get("/analytics/summary").status_code == 401
+    assert client.post("/ai/query", json={"question": "hi"}).status_code == 401
+
+
+def test_analytics_events_resolves_tool_name_and_passes_filters() -> None:
+    client, reader, auth = read_client()
+
+    response = client.get(
+        "/analytics/events",
+        headers=auth,
+        params={"tool_id": "aird-report", "status": "success", "since_hours": 24, "limit": 5},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 1
+    assert body["rows"][0]["tool_name"] == "AI报告生成平台"
+    assert body["rows"][0]["total_tokens"] == 1240
+    assert reader.seen_filters == {
+        "tool_id": "aird-report",
+        "status": "success",
+        "since_hours": 24,
+        "limit": 5,
+        "offset": 0,
+    }
+
+
+def test_analytics_summary_returns_raw_aggregates() -> None:
+    client, _, auth = read_client()
+
+    response = client.get("/analytics/summary", headers=auth)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_events"] == 8
+    assert body["success_events"] == 6
+    assert body["total_tokens"] == 12345
+    assert body["daily"] == [{"day": "2026-06-10", "events": 3, "tokens": 4000}]
+    assert body["events_by_tool"] == {"aird-report": 8}
+
+
+def test_ai_query_returns_503_when_key_not_configured() -> None:
+    client, _, auth = read_client(ai_answerer=None)
+
+    response = client.post("/ai/query", headers=auth, json={"question": "上周用量怎么样？"})
+
+    assert response.status_code == 503
+    assert "APIMART_API_KEY" in response.json()["detail"]
+
+
+def test_ai_query_feeds_real_summary_into_prompt() -> None:
+    prompts: list[str] = []
+
+    def fake_ask(prompt: str) -> str:
+        prompts.append(prompt)
+        return "共 8 次调用。"
+
+    client, _, auth = read_client(ai_answerer=fake_ask)
+
+    response = client.post("/ai/query", headers=auth, json={"question": "总共调用了多少次？"})
+
+    assert response.status_code == 200
+    assert response.json()["answer"] == "共 8 次调用。"
+    [prompt] = prompts
+    assert "总调用: 8" in prompt
+    assert "aird-report: 8 calls" in prompt
+    assert "总共调用了多少次？" in prompt
+
+
+def test_ai_query_maps_upstream_failure_to_502() -> None:
+    def failing_ask(prompt: str) -> str:
+        raise AiQueryError("boom")
+
+    client, _, auth = read_client(ai_answerer=failing_ask)
+
+    response = client.post("/ai/query", headers=auth, json={"question": "你好"})
+
+    assert response.status_code == 502
 
 
 def test_admin_creates_user_then_login_and_me() -> None:
@@ -354,6 +534,33 @@ def test_register_tool_rejects_invalid_tool_id_format() -> None:
 
 def client_with_repository(repository: MemoryUsageEventRepository) -> TestClient:
     return client_with_repositories(repository)
+
+
+def read_client(
+    *,
+    summary: UsageSummary = SAMPLE_SUMMARY,
+    ai_answerer: Callable[[str], str] | None = None,
+) -> tuple[TestClient, MemoryUsageEventReader, dict[str, str]]:
+    """Client + reader + 一个普通登录用户的 Authorization 头（读取侧门禁用）。"""
+    reader = MemoryUsageEventReader(
+        page=EventPage(rows=[sample_event_row()], total=1),
+        summary=summary,
+    )
+    user_repository = MemoryUserAccountRepository()
+    user_repository.create_user(username="viewer", password="secret", user_id="user-009")
+    app = create_app()
+    app.dependency_overrides[get_repository] = lambda: MemoryUsageEventRepository()
+    app.dependency_overrides[get_user_repository] = lambda: user_repository
+    app.dependency_overrides[get_auth_token_secret] = lambda: "test-secret"
+    app.dependency_overrides[get_event_reader] = lambda: reader
+    app.dependency_overrides[get_tool_directory] = lambda: MemoryToolDirectory()
+    app.dependency_overrides[get_ai_answerer] = lambda: ai_answerer
+    client = TestClient(app)
+    token = client.post(
+        "/auth/login",
+        json={"username": "viewer", "password": "secret"},
+    ).json()["access_token"]
+    return client, reader, {"Authorization": f"Bearer {token}"}
 
 
 def client_with_repositories(

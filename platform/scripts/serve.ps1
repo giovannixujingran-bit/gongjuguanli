@@ -41,6 +41,8 @@ if (Test-Path $envFile) {
 }
 
 $BindHost = if ($env:PLATFORM_HOST) { $env:PLATFORM_HOST } else { '127.0.0.1' }
+# 0.0.0.0 是监听通配地址，不能拿来当客户端连接目标；本机探活一律走回环。
+$ProbeHost = if ($BindHost -eq '0.0.0.0') { '127.0.0.1' } else { $BindHost }
 $Port = if ($env:PLATFORM_PORT) { $env:PLATFORM_PORT } else { '8000' }
 $Py = if ($env:PLATFORM_PYTHON) { $env:PLATFORM_PYTHON } else { 'python' }
 $RunDir = Join-Path $PlatformDir '.run'
@@ -62,11 +64,16 @@ function Test-ApiRunning {
   if ($p) { return [bool](Get-Process -Id $p -ErrorAction SilentlyContinue) }
   return $false
 }
+function Get-DbHost {
+  # DB 在哪由 DATABASE_URL 说了算（与 API 监听地址无关）。
+  if ($env:DATABASE_URL -and $env:DATABASE_URL -match '@([^:/@]+)') { return $matches[1] }
+  return '127.0.0.1'
+}
 function Test-DbReady {
   # 真探活：能否在 2s 内 TCP 连上 PostgreSQL。不通就别假装 API 起好了。
   try {
     $client = New-Object System.Net.Sockets.TcpClient
-    $async = $client.BeginConnect($BindHost, 5432, $null, $null)
+    $async = $client.BeginConnect((Get-DbHost), 5432, $null, $null)
     $ok = $async.AsyncWaitHandle.WaitOne(2000)
     if ($ok) { $client.EndConnect($async) }
     $client.Close()
@@ -97,7 +104,7 @@ function Start-Api {
   try { & (Join-Path $PSScriptRoot 'pg.ps1') start }
   catch { Write-Warning "自动启动 PG 失败：$_" }
   if (-not (Test-DbReady)) {
-    throw "PostgreSQL 不可达（${BindHost}:5432）。请先起 DB 再起 API：.\scripts\pg.ps1 start"
+    throw "PostgreSQL 不可达（$(Get-DbHost):5432）。请先起 DB 再起 API：.\scripts\pg.ps1 start"
   }
 
   Invoke-Migrations
@@ -116,7 +123,7 @@ function Start-Api {
   for ($i = 0; $i -lt 10; $i++) {
     Start-Sleep -Milliseconds 700
     try {
-      $r = Invoke-RestMethod -Uri "http://${BindHost}:${Port}/health" -TimeoutSec 2
+      $r = Invoke-RestMethod -Uri "http://${ProbeHost}:${Port}/health" -TimeoutSec 2
       if ($r.status -eq 'ok') { Write-Host "API 就绪 -> http://${BindHost}:${Port}  (日志: $LogFile)"; return }
     }
     catch { }
