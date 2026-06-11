@@ -407,7 +407,7 @@
 </div>
 </section>
 <!-- Tool Grid -->
-<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter mb-section-gap">
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-section-gap">
 <!-- Tool Card 1 -->
 <div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
 <div class="flex justify-between items-start mb-5">
@@ -906,31 +906,35 @@
     const category = escapeHtml(tool.category || '未分类');
     const desc = escapeHtml(tool.description || '');
     const launch = escapeHtml(tool.launch_url || '#');
+    const usage = fmtNumber(tool.usage_count);
     const media = tool.thumbnail
-      ? `<div class="relative h-36">
-          <img class="w-full h-full object-cover" alt="${name}" src="${escapeHtml(tool.thumbnail)}">
-          <span class="absolute top-sm right-sm px-sm py-xs bg-surface-container-lowest/80 backdrop-blur-sm text-on-surface-variant rounded-md text-label-sm">${category}</span>
-        </div>`
-      : `<div class="relative h-36 bg-gradient-to-br from-thumb-a to-thumb-b flex flex-col items-center justify-center gap-xs">
-          <span class="material-symbols-outlined text-secondary text-[40px]" style="font-variation-settings: 'FILL' 1;">${escapeHtml(iconFor(tool))}</span>
-          <span class="text-label-md text-on-surface-variant px-md text-center">${name}</span>
-          <span class="absolute top-sm right-sm px-sm py-xs bg-surface-container-lowest/80 backdrop-blur-sm text-on-surface-variant rounded-md text-label-sm">${category}</span>
+      ? `<img class="w-full h-full object-cover rounded-[20px]" alt="${name}" src="${escapeHtml(tool.thumbnail)}">`
+      : `<div class="h-36 rounded-[20px] bg-gradient-to-br from-primary-fixed to-tertiary-fixed flex flex-col items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[44px]">${escapeHtml(iconFor(tool))}</span>
+          <span class="font-label-md text-sm text-on-surface-variant px-4 text-center">${name}</span>
         </div>`;
     return `
-      <div class="tool-card bg-surface-container-lowest rounded-2xl shadow-level-1 hover:shadow-level-2 hover:-translate-y-1 transition-all duration-300 flex flex-col border border-outline-variant/10 overflow-hidden" data-category="${category}" data-name="${name}" data-desc="${desc}">
-        ${media}
-        <div class="flex flex-col gap-sm p-lg flex-1">
-          <div class="flex items-center gap-sm">
-            <span class="material-symbols-outlined text-secondary text-[20px]">${escapeHtml(iconFor(tool))}</span>
-            <h4 class="text-body-lg font-bold text-on-surface">${name}</h4>
+      <div class="glass-card rounded-[28px] p-6 flex flex-col group h-full" data-category="${category}" data-name="${name}" data-desc="${desc}">
+        <div class="mb-5">${media}</div>
+        <div class="flex justify-between items-start mb-4">
+          <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shadow-inner">
+            <span class="material-symbols-outlined text-[28px]">${escapeHtml(iconFor(tool))}</span>
           </div>
-          <p class="text-body-sm text-on-surface-variant line-clamp-2">${desc}</p>
-          <div class="mt-auto pt-sm flex justify-end items-center border-t border-outline-variant/10">
-            <a href="${launch}" target="_blank" rel="noopener noreferrer" class="text-secondary text-label-md flex items-center gap-xs hover:text-secondary-container transition-colors">
-              打开 <span class="material-symbols-outlined text-[18px]">open_in_new</span>
-            </a>
+          <div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><p class="font-label-sm text-[10px] text-secondary">在线</p></div>
+        </div>
+        <div class="mb-3"><span class="px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-label-sm">${category}</span></div>
+        <h3 class="font-headline-md text-[20px] text-on-surface mb-2">${name}</h3>
+        <p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">${desc}</p>
+        <div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">bolt</span>
+            <span class="font-label-md text-xs">${usage}</span>
           </div>
         </div>
+        <a href="${launch}" target="_blank" rel="noopener noreferrer" class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
+          <span>使用工具</span>
+          <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </a>
       </div>`;
   }
 
@@ -964,7 +968,6 @@
     if (!toolGrid) return;
     portalTools = await json('/portal/tools');
     if (!portalTools.length) return;
-    toolGrid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter mb-section-gap';
     toolGrid.innerHTML = portalTools.map(renderToolCard).join('');
     renderCategoryButtons(toolGrid);
   }

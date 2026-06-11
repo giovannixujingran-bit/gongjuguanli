@@ -35,7 +35,7 @@
 
 ## 三、界面设计（UI）
 
-> **本节为门户 UI 定稿。** 配套**已确认的视觉参考稿**（可点、浅/深可切、数据为占位）：[mockups/stitch_smart_tool_hub/code.html](mockups/stitch_smart_tool_hub/code.html)（设计系统说明见同目录 [DESIGN.md](mockups/stitch_smart_tool_hub/DESIGN.md)）。前端按本节 + 该参考实现；该文件以本节为准，不是另一份 SSOT。
+> **本节为门户 UI 定稿。** 布局/搜索/双主题的视觉参考稿仍是 [mockups/stitch_smart_tool_hub/code.html](mockups/stitch_smart_tool_hub/code.html)（设计系统说明见同目录 [DESIGN.md](mockups/stitch_smart_tool_hub/DESIGN.md)）；**工具卡片样式以合并版前台模板 [mockups/stitch_merged_portal/code.html](mockups/stitch_merged_portal/code.html) 为准**（决策 #45）。前端按本节 + 参考稿实现；参考稿以本节为准，不是另一份 SSOT。
 
 **布局范式：居中搜索框 + 视图 chips + 单一网格**（启动器风，决策 #42）。桌面优先（局域网内网页）、卡片圆角，网格列数随窗口自适应。**支持浅色 / 深色双主题**——同一套布局只换配色，顶栏（吸顶）放一个**日 / 夜切换**按钮，默认浅色。门户要注入 `user_id`，故**必须登录才进**。
 
@@ -57,21 +57,23 @@
 - **首版只有「全部」一个视图**：单网格按 §二 排序逻辑排列全部上架工具。chips 行结构保留，**后续视图**（「最近使用」「按分类」「按部门」——部门数据已由钉钉同步落库，可见性治理见 [钉钉设计稿](dingtalk-钉钉组织与部门治理/README-总览与索引.md)）按需追加，不另改布局。
 - **收藏 / 拖拽排序**同样后置：等收藏功能实现时以「我的收藏」视图或置顶形式并入，不再单设分区。
 
-### 卡片（图片式「媒体卡」）
+### 卡片（玻璃拟态 glass-card，决策 #45）
 
 ```
 ┌────────────────────────┐
-│      功能缩略图 thumbnail │  ← 占卡片主体；无图时用「icon+名称+色块」占位图
-│              〔分类标签〕 │  ← category 小标签叠右上角
-├────────────────────────┤
-│ [icon] 工具展示名         │  ← icon + display_name
-│ 一句话功能介绍…            │  ← description（超出省略）
-│                 打开 ↗   │  ← 跳 launch_url（新标签页）
+│   功能缩略图 thumbnail    │  ← 圆角块；无图时用「icon+名称+渐变色块」占位图
+│ [icon块]         ● 在线  │  ← 48px 图标块 + 在线状态呼吸点
+│ 〔分类胶囊〕              │  ← category 小胶囊
+│ 工具展示名                │  ← display_name（标题）
+│ 一句话功能介绍…           │  ← description（至多三行，超出省略）
+│ ⚡ 使用次数               │  ← usage_count（真实统计）
+│ 〔    使用工具 →    〕    │  ← 通栏按钮，新标签页打开 launch_url
 └────────────────────────┘
 ```
 
-- 缩略图取注册表 `thumbnail`；**缺图自动生成**「`icon` + `display_name` + 色块」占位图（不留空、不强制工具方必传）。
-- 点卡片主体 → 新标签页打开 `launch_url`（打开瞬间注入 `user_id`）；hover 缩略图轻微放大/亮起。仅展示 `enabled = true`。
+- 缩略图取注册表 `thumbnail`；**缺图自动生成**「`icon` + `display_name` + 渐变色块」占位图（不留空、不强制工具方必传）。
+- 点「使用工具」→ 新标签页打开 `launch_url`（打开瞬间注入 `user_id`）；hover 图标块轻微放大。仅展示 `enabled = true`。
+- 卡片实现以 [mockups/stitch_merged_portal/code.html](mockups/stitch_merged_portal/code.html) 的 `renderToolCard` 为准；线上合并版前台 `platform/apps/web/index.html` 与之保持逐字一致。
 
 ### 三块交互行为
 
