@@ -1,4 +1,4 @@
-# 内部工具汇总与分析平台 —— 总纲
+﻿# 内部工具汇总与分析平台 —— 总纲
 
 > 本文件是入口/索引。规范内容全部在 `platform/docs/`（schema / contract / architecture / execution-plan / code-standards / registry / portal）。
 > 一句话：把公司各类工具（自写 / 开源自部署 / 黑盒）的**每一次使用**汇总记录，在统一数据契约之上做成本、ROI、使用率、质量四类分析。平台由**两个前端（使用端·使用者门户 / 数据端·后台分析台）+ 共享后端**组成。
@@ -60,7 +60,7 @@
 23. **工具注册表升级为共享资产，增门户展示字段**：原仅服务数据端的注册表（#9）增加 `category`/`display_name`/`description`/`icon`/`thumbnail`/`launch_url`/`sort_weight`/`enabled`，成为使用端门户工具目录的底表，`tool_id` 仍为两端共用主键。其中 `thumbnail`（功能缩略图）用于卡片主体（见 #25）。注册表不属事件 `schema_version` 范畴，改它不升事件契约版本。
 24. **新增使用端三大功能与一处后置 AI**：① 分类卡片工具列表（读注册表 `category`）；② 排序逻辑（用户自定义偏好 > 使用频次/时间自动排 > `sort_weight` 兜底，使用数据取自共享层事件表只读聚合）；③ AI 工具推荐（按用户需求语义匹配注册表 `description`）。后台看板的「AI 数据分析」助手**待定、后置**，仅留位。排序取数窗口、偏好存储位置、AI 推荐是否计入统计、用哪家模型均**待定，需人工确认**。
 
-25. **使用端门户 UI 定稿**：布局取「**居中搜索框 + 向下分区**」（启动器风，桌面优先）；**浅 / 深双主题**，同一套布局只换配色、顶栏（吸顶）放日 / 夜切换、默认浅色。首屏先「**我的收藏** + 最近使用」再分类分区。卡片为**图片式媒体卡**——`thumbnail` 功能缩略图占主体（缺图自动生成「icon+名称+色块」占位图）+ icon + display_name + 一句 description + 收藏星标。搜索框打字即时本地过滤（零 token），AI 推荐由显式「✨ 推荐工具」按钮触发（按需调用、省 token）；收藏 ☆ 入「我的收藏」、区内可拖拽排序。门户必须登录才进。该 UI 已**纳入正式方案**，以可点视觉参考稿 [门户首页-mockup.html](platform/docs/mockups/门户首页-mockup.html) 为视觉基准（已确认；规范 SSOT 仍是 §三，参考稿不另立 SSOT）。详见 [使用端/工具门户](platform/docs/portal-工具门户.md) §三。
+25. **使用端门户 UI 定稿**：布局取「**居中搜索框 + 向下分区**」（启动器风，桌面优先）；**浅 / 深双主题**，同一套布局只换配色、顶栏（吸顶）放日 / 夜切换、默认浅色。首屏先「**我的收藏** + 最近使用」再分类分区。卡片为**图片式媒体卡**——`thumbnail` 功能缩略图占主体（缺图自动生成「icon+名称+色块」占位图）+ icon + display_name + 一句 description + 收藏星标。搜索框打字即时本地过滤（零 token），AI 推荐由显式「✨ 推荐工具」按钮触发（按需调用、省 token）；收藏 ☆ 入「我的收藏」、区内可拖拽排序。门户必须登录才进。该 UI 已**纳入正式方案**。**其中「三段式分区（收藏/最近使用/分类）」与视觉参考稿部分已被 #42 取代**（布局改 chips + 单网格、参考稿换为 stitch 中文版、原 门户首页-mockup.html 退役删除）；卡片媒体卡形态、双主题、搜索/AI 推荐交互原则仍有效。详见 [使用端/工具门户](platform/docs/portal-工具门户.md) §三。
 
 26. **产出 Phase 0 实质内容，并先 git init 建基线；`规划/` 冻结方式待人工确认**：执行交接命令的「严格 Phase 0」，在 `platform/` 落地数据契约 v0.2 的 JSON Schema（[event.schema.json](platform/shared/schema/event.schema.json)，唯一源）、落地文档（[schema-数据契约.md](platform/docs/schema-数据契约.md)/[contract-接入契约.md](platform/docs/contract-接入契约.md)）、三表建表 SQL（事件表/工具注册表/用户账号表）、`README`/`docker-compose` 骨架、机器闸门配置（ruff/mypy/vulture/import-linter/pytest + 前端 eslint/prettier/tsc/knip + pre-commit/CI + schema→模型代码生成），强度放原型档。不实现任何业务逻辑、不接真实工具、零硬编码密钥、敏感策略留占位。**原非 Git 仓库**，按 CLAUDE.md「规范须纳入版本管理」先 `git init` 提交基线。**关于冻结**：CLAUDE.md 规定建表 SQL 生成即触发 `规划/` 冻结 + SSOT 转移到 `platform/docs/`；但本轮只产出了 schema / 接入契约的 platform 对应物，**架构与原则 / 执行计划 / 代码规范 / 工具注册表 / 工具门户尚无 platform/ 等价文档**，全量转移会产生悬空指针。故冻结方式经确认**取 (a)：仅冻结已转移的数据契约 + 接入契约两份**——两份顶部加 🧊 冻结标记、SSOT 转至 `platform/docs/`，CLAUDE.md §1 SSOT 生命周期改为「部分冻结」、§2/§3 这两份的指向改到 `platform/`；其余 5 份（架构 / 执行计划 / 代码规范 / 工具注册表 / 工具门户）尚无 platform 等价物，仍活在 `规划/`。
 
@@ -93,6 +93,8 @@
 40. **后端 ruff 闸门定档「严格档」，规则集与排除项写定（消除档位表述自相矛盾）**：原 `pyproject.toml` 文件头注释写「Phase 1 严格档」，但 `[tool.ruff.lint]` 实际只开基础规则 `E/F/I/W` 且注释自称「原型档」——头身不一致，「现在到底哪档」无人能一口说清，违背「文档定方向、机器闸门执行」（决策 #14）。本轮按「往严不往松」拍定：ruff 严格档 = `E/F/I/W/B/UP/C4/ANN/RUF`（加 bugbear 正确性、pyupgrade 新语法、推导式、**强制类型注解**、RUF 杂项），与已是 `strict` 的 mypy 同档。**关键厘清**：`ignore` 的 4 条是排「误报」不是放松——`B008` 是 FastAPI `Depends()` 默认参数官方惯用法、非 bug；`RUF001/002/003` 抱怨中文全角标点，而本项目以中文为正式语言（决策 #36），全角是有意的。`SIM`（合并嵌套 `with`，11 处）留作下一档，本次不顺手改（守「一次提交一件事」）。现有代码经此严格档全绿（唯一命中的 `__all__` 排序已自动修）。闸门强度档的机器源就是 `pyproject.toml`（[代码规范 §五](platform/docs/code-standards-代码规范.md) 已言明「强度档位写进配置」），本决策不改数据契约、不升 `schema_version`，属工程内务、未触发 CHANGELOG（无能力/部署/接入变化）。
 
 41. **事件来源 IP 由平台服务端盖章进 `metadata.source_ip`（溯源用，不升契约）**：工具多起来后需要能定位「某条记录是哪台机器/哪个部署发来的」，且测试机与正式机数据现在混记、无来源可分。本轮加来源 IP 采集。**取舍**：① **服务端盖章**而非工具自报——接入层收 `/events` 时直接读连接来源 IP（同 `ingested_at` 服务端盖章的先例），可信、不可忘填、不摊派给各接入方；② **先进 `metadata`** 不进主表列（决策 #33 轻路径，**不升 `schema_version`**），将来真要按来源横向分析再晋升；③ **优先取 `X-Forwarded-For` 第一跳**，为 Phase 2D relay 预留——relay 转发时带回工具真实 IP，否则服务端只看到 relay 自己的 IP；④ **只用于溯源 / 排障，不做鉴权**（不违反决策 #7 不做写入侧鉴权；内网 + 不鉴权，XFF 可伪造无妨）。**已知弱点**（记录在案）：裸 IP 作「定位机器」的钥匙偏脆——同机为 `127.0.0.1`、随 DHCP 变、过 relay 后需靠 XFF；要稳定溯源，将来可让工具自报 `host`/`instance_id`/环境标签作补充（本轮未做，YAGNI）。实现：`backend/ingestion/app.py` 的 `client_source_ip` + `normalize_event`；约定登记在 [metadata 约定](platform/docs/metadata-conventions-metadata约定与字段治理.md) §三。
+
+42. **门户首页布局改「chips + 单网格」，以 stitch 中文版为唯一视觉基线（取代决策 #25 的布局与参考稿部分）**：原定稿的「收藏 → 最近使用 → 分类」三段式在现阶段工具数量少时会大面积显空，且收藏/最近使用功能后端尚无；改为 **单一网格 + 视图 chips**——首版仅「全部」视图，「最近使用」「按分类」「按部门」（部门数据钉钉 Phase A 已落库）等后续按需以 chips 追加，不动布局。卡片仍是 #25 的缩略图媒体卡（缺图自动「icon+名称+色块」占位），叠 `category` 标签，不放使用热度；顶栏精简为 logo + 日/夜切换 + 当前用户（导航页/提交工具/通知现阶段无对应功能，全部去掉）。搜索维持双轨：普通搜索本地即时过滤（参考稿内真实现），「✨ AI 推荐」后端未实现、前端先占位（样式完整、标「演示数据 · 功能开发中」）。视觉基线取 Stitch 生成的 Smart Tool Hub 风格中文化版 [code.html](platform/docs/mockups/stitch_smart_tool_hub/code.html)，原参考稿 门户首页-mockup.html 退役删除（参考稿只留一份，避免双轨）。门户名定「内部工具门户」。卡片/双主题/交互原则等 #25 其余部分继续有效；不涉任何契约与代码，不升事件契约版本。
 
 ---
 
