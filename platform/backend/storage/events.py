@@ -25,6 +25,8 @@ class EventRow:
     tool_id: str
     model: str | None
     user_id: str
+    # 工具自报的 metadata.chapter_type（如 aird-report 按报告章节逐次调用）；没报则为 None。
+    chapter: str | None
     input_preview: str | None
     output_preview: str | None
     status: str
@@ -137,6 +139,7 @@ class PostgresUsageEventReader:
                 cursor.execute(
                     f"""
                     SELECT record_id, tool_id, model, user_id,
+                           metadata ->> 'chapter_type' AS chapter,
                            left(input_content, 80) AS input_preview,
                            left(output_content, 80) AS output_preview,
                            status, total_tokens, duration_ms, start_time
@@ -153,6 +156,7 @@ class PostgresUsageEventReader:
                         tool_id=str(row["tool_id"]),
                         model=None if row["model"] is None else str(row["model"]),
                         user_id=str(row["user_id"]),
+                        chapter=None if row["chapter"] is None else str(row["chapter"]),
                         input_preview=row["input_preview"],
                         output_preview=row["output_preview"],
                         status=str(row["status"]),

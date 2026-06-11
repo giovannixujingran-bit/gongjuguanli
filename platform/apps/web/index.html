@@ -221,13 +221,19 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             }
         }
-        #data-view {
+        #data-view, #summary-view {
             display: none;
         }
         body[data-active-view="data"] main > section:not(#data-view) {
             display: none !important;
         }
         body[data-active-view="data"] #data-view {
+            display: block;
+        }
+        body[data-active-view="summary"] main > section:not(#summary-view) {
+            display: none !important;
+        }
+        body[data-active-view="summary"] #summary-view {
             display: block;
         }
         .data-panel {
@@ -306,7 +312,7 @@
 <a class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300" href="#">
 <span class="material-symbols-outlined">inventory_2</span>
                     资产管理
-                </a><a class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300" href="#">
+                </a><a data-view="summary" class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300 border-r-2 border-transparent" href="#">
 <span class="material-symbols-outlined">summarize</span>
                     数据汇总
                 </a>
@@ -607,6 +613,7 @@
 </button>
 </div>
 </section>
+<section id="summary-view" class="space-y-gutter"></section>
 <section id="data-view" class="space-y-gutter">
 <section class="data-panel rounded-[16px] relative overflow-hidden p-6">
 <div class="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 blur-[80px] rounded-full"></div>
@@ -787,7 +794,7 @@
         // Left navigation view switching
         const viewLinks = document.querySelectorAll('aside nav a[data-view]');
         const setActiveView = (view) => {
-            document.body.dataset.activeView = view === 'data' ? 'data' : 'tools';
+            document.body.dataset.activeView = ['data', 'summary'].includes(view) ? view : 'tools';
             viewLinks.forEach(link => {
                 const isActive = link.dataset.view === document.body.dataset.activeView;
                 link.classList.toggle('nav-active', isActive);
@@ -973,9 +980,9 @@
   }
 
   function ensureEventTable() {
-    const dataView = document.getElementById('data-view');
-    if (!dataView || document.getElementById('usage-event-table')) return;
-    dataView.insertAdjacentHTML('beforeend', `
+    const summaryView = document.getElementById('summary-view');
+    if (!summaryView || document.getElementById('usage-event-table')) return;
+    summaryView.insertAdjacentHTML('beforeend', `
       <section class="data-panel rounded-[16px] p-8">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div class="flex items-center space-x-3">
@@ -1003,6 +1010,7 @@
               <tr class="text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-100">
                 <th class="pb-4 font-semibold">请求 ID</th>
                 <th class="pb-4 font-semibold">工具名称</th>
+                <th class="pb-4 font-semibold">章节</th>
                 <th class="pb-4 font-semibold">所用模型</th>
                 <th class="pb-4 font-semibold">用户</th>
                 <th class="pb-4 font-semibold">输入预览</th>
@@ -1050,6 +1058,7 @@
             <span class="font-medium text-gray-900 whitespace-nowrap">${escapeHtml(row.tool_name)}</span>
           </div>
         </td>
+        <td class="py-4 text-gray-600 whitespace-nowrap">${escapeHtml(row.chapter || '-')}</td>
         <td class="py-4 text-gray-500 whitespace-nowrap">${escapeHtml(row.model || '-')}</td>
         <td class="py-4 text-gray-600 whitespace-nowrap">${escapeHtml(row.user_id || '-')}</td>
         <td class="py-4 text-gray-500 max-w-[220px] truncate">${escapeHtml(row.input_preview || '-')}</td>
@@ -1058,7 +1067,7 @@
         <td class="py-4 text-gray-600">${fmtNumber(row.total_tokens)}</td>
         <td class="py-4 text-gray-600 whitespace-nowrap">${fmtDuration(row.duration_ms)}</td>
       </tr>
-    `).join('') || '<tr><td class="py-8 text-center text-gray-400" colspan="9">暂无真实调用数据</td></tr>';
+    `).join('') || '<tr><td class="py-8 text-center text-gray-400" colspan="10">暂无真实调用数据</td></tr>';
   }
 
   async function loadSummary() {
@@ -1074,57 +1083,64 @@
     if (statNumbers[1]) statNumbers[1].textContent = `${fmtNumber(summary.total_events)}`;
   }
 
+  function bindLoginPanel(panel) {
+    const submit = async () => {
+      const username = panel.querySelector('.login-username').value.trim();
+      const password = panel.querySelector('.login-password').value;
+      const errorTip = panel.querySelector('.login-error');
+      if (!username || !password) return;
+      try {
+        const result = await json('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password }),
+        });
+        localStorage.setItem(tokenKey, result.access_token);
+        errorTip.classList.add('hidden');
+        document.querySelectorAll('.data-login-panel').forEach((p) => p.classList.add('hidden'));
+        await loadDataViews();
+      } catch (error) {
+        errorTip.classList.remove('hidden');
+      }
+    };
+    panel.querySelector('.login-btn').addEventListener('click', submit);
+    panel.querySelector('.login-password').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') submit();
+    });
+  }
+
   function ensureLoginPanel() {
-    const dataView = document.getElementById('data-view');
-    if (!dataView) return;
-    let panel = document.getElementById('data-login-panel');
-    if (!panel) {
-      dataView.insertAdjacentHTML('afterbegin', `
-        <section id="data-login-panel" class="data-panel rounded-[16px] p-8 mb-8">
-          <div class="flex items-center space-x-3 mb-6">
-            <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
-              <span class="material-symbols-outlined text-primary">lock</span>
+    // 数据分析与数据汇总两页都受登录态保护，各放一份登录框。
+    ['data-view', 'summary-view'].forEach((viewId) => {
+      const view = document.getElementById(viewId);
+      if (!view) return;
+      let panel = view.querySelector('.data-login-panel');
+      if (!panel) {
+        view.insertAdjacentHTML('afterbegin', `
+          <section class="data-login-panel data-panel rounded-[16px] p-8 mb-8">
+            <div class="flex items-center space-x-3 mb-6">
+              <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary">lock</span>
+              </div>
+              <div>
+                <h2 class="font-headline-md text-headline-md">登录后查看数据</h2>
+                <p class="text-label-md text-on-surface-variant/60">调用明细含使用者输入/输出预览，需平台账号（找管理员开通）</p>
+              </div>
             </div>
-            <div>
-              <h2 class="font-headline-md text-headline-md">登录后查看数据</h2>
-              <p class="text-label-md text-on-surface-variant/60">调用明细含使用者输入/输出预览，需平台账号（找管理员开通）</p>
+            <div class="flex flex-col md:flex-row gap-3 max-w-xl">
+              <input type="text" placeholder="用户名" autocomplete="username"
+                class="login-username flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
+              <input type="password" placeholder="密码" autocomplete="current-password"
+                class="login-password flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
+              <button class="login-btn bg-primary text-on-primary rounded-lg px-6 py-2 text-sm whitespace-nowrap">登录</button>
             </div>
-          </div>
-          <div class="flex flex-col md:flex-row gap-3 max-w-xl">
-            <input id="data-login-username" type="text" placeholder="用户名" autocomplete="username"
-              class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
-            <input id="data-login-password" type="password" placeholder="密码" autocomplete="current-password"
-              class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
-            <button id="data-login-btn" class="bg-primary text-on-primary rounded-lg px-6 py-2 text-sm whitespace-nowrap">登录</button>
-          </div>
-          <p id="data-login-error" class="text-label-md text-red-500 mt-3 hidden">用户名或密码不正确</p>
-        </section>
-      `);
-      panel = document.getElementById('data-login-panel');
-      const submit = async () => {
-        const username = document.getElementById('data-login-username').value.trim();
-        const password = document.getElementById('data-login-password').value;
-        const errorTip = document.getElementById('data-login-error');
-        if (!username || !password) return;
-        try {
-          const result = await json('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ username, password }),
-          });
-          localStorage.setItem(tokenKey, result.access_token);
-          errorTip.classList.add('hidden');
-          panel.classList.add('hidden');
-          await loadDataViews();
-        } catch (error) {
-          errorTip.classList.remove('hidden');
-        }
-      };
-      panel.querySelector('#data-login-btn').addEventListener('click', submit);
-      panel.querySelector('#data-login-password').addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') submit();
-      });
-    }
-    panel.classList.remove('hidden');
+            <p class="login-error text-label-md text-red-500 mt-3 hidden">用户名或密码不正确</p>
+          </section>
+        `);
+        panel = view.querySelector('.data-login-panel');
+        bindLoginPanel(panel);
+      }
+      panel.classList.remove('hidden');
+    });
   }
 
   function bindAiQuery() {

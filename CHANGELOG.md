@@ -8,7 +8,7 @@
 ### Added
 
 - **读取侧最小门禁 + 钉钉试点入口（决策 #44）**：`GET /analytics/events`、`GET /analytics/summary`、`POST /ai/query` 改为必须登录态 bearer token（匿名 401），数据页内置登录框；`/portal/tools` 保持公开。CORS 改 `PORTAL_CORS_ORIGINS` 可配。**接入方式变更**：合并版前台（门户 + 数据页）正式入口落 `platform/apps/web/`（局域网静态服务 `0.0.0.0:5174`），钉钉 PC 工作台首页直挂该地址（过渡形态，免登/部门可见性按决策 #38 设计稿后续实现）；部署事实见 [execution-plan §四](platform/docs/execution-plan-执行计划与技术栈.md)。
-- **真实工具门户/分析读取链路（aird-report 试点，决策 #43）**：新增只读 API `GET /portal/tools`、`GET /analytics/events`、`GET /analytics/summary`，门户可直接读取 `tool_registry` 展示字段与非测试 `usage_event` 聚合/明细；新增 `POST /ai/query`，按 `APIMART_API_KEY` 调用 APIMart Gemini（默认 `gemini-3.5-flash`），密钥不进代码。新增 `integrations/<tool_id>/tool.toml` + `tools/apply_registry.py` 声明式同步通道，已将真实工具 `aird-report`（AI报告生成平台，分类「趋势资产」）同步入库。数据页明细表按请求 ID / 工具 / 模型 / 用户 / 输入 / 输出状态 / 优先级 / Tokens / 用时九列展示。
+- **真实工具门户/分析读取链路（aird-report 试点，决策 #43）**：新增只读 API `GET /portal/tools`、`GET /analytics/events`、`GET /analytics/summary`，门户可直接读取 `tool_registry` 展示字段与非测试 `usage_event` 聚合/明细；新增 `POST /ai/query`，按 `APIMART_API_KEY` 调用 APIMart Gemini（默认 `gemini-3.5-flash`），密钥不进代码。新增 `integrations/<tool_id>/tool.toml` + `tools/apply_registry.py` 声明式同步通道，已将真实工具 `aird-report`（AI报告生成平台，分类「趋势资产」）同步入库。明细表落「数据汇总」页，按请求 ID / 工具 / 章节（已登记约定 `metadata.chapter_type`）/ 模型 / 用户 / 输入 / 输出状态 / 优先级 / Tokens / 用时十列展示；「数据分析」页保留实时总结与 AI 查询。
 - **事件来源 IP 溯源（决策 #41）**：接入层收 `/events` 时由平台**服务端自动盖** `metadata.source_ip`（同 `ingested_at` 的服务端盖章），用于「某条记录是哪台机器发来的」的溯源 / 排障。优先取 `X-Forwarded-For` 第一跳（为 Phase 2D relay 预留，转发时带回工具真实 IP），否则用直连对端 IP。**进 metadata、不升 `schema_version`**；只溯源、不做鉴权（不违反决策 #7）。接入方无需改动。
 
 ## v0.2.0 — 2026-06-09

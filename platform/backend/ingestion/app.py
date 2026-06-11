@@ -126,6 +126,7 @@ class EventRowPublic(BaseModel):
     tool_name: str
     model: str | None = None
     user_id: str
+    chapter: str | None = None
     input_preview: str | None = None
     output_preview: str | None = None
     status: str
@@ -219,6 +220,7 @@ def create_app() -> FastAPI:
                     tool_name=names.get(row.tool_id, row.tool_id),
                     model=row.model,
                     user_id=row.user_id,
+                    chapter=row.chapter,
                     input_preview=row.input_preview,
                     output_preview=row.output_preview,
                     status=row.status,

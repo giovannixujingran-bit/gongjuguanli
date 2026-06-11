@@ -179,6 +179,7 @@ def sample_event_row() -> EventRow:
         tool_id="aird-report",
         model="gemini-3.5-flash",
         user_id="user-001",
+        chapter="cover",
         input_preview="生成风格企划",
         output_preview="报告生成成功",
         status="success",
@@ -284,6 +285,7 @@ def test_analytics_events_resolves_tool_name_and_passes_filters() -> None:
     body = response.json()
     assert body["total"] == 1
     assert body["rows"][0]["tool_name"] == "AI报告生成平台"
+    assert body["rows"][0]["chapter"] == "cover"
     assert body["rows"][0]["total_tokens"] == 1240
     assert reader.seen_filters == {
         "tool_id": "aird-report",
