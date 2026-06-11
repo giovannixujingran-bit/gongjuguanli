@@ -90,6 +90,10 @@
 
 39. **钉钉组织同步用 httpx 直调经典通讯录接口，不用官方 SDK（取代决策 #38 内「优先官方 SDK」的细节）**：实现 Phase A 时，先按设计稿装了官方新 SDK（`alibabacloud_dingtalk`）验证，发现它面向 api.dingtalk.com 新接口，**不覆盖**本场景核心的部门树遍历经典接口（`department/listsub`、`user/listid`、`user/get` 属 oapi.dingtalk.com 的 topapi），且引入 ~30 个传递依赖（aiohttp/cryptography/APScheduler 等），与本仓库极简、强机器闸门的取向相悖（呼应 #27/#35 务实路线）。故改用仓库已有的 `httpx` 直调，钉钉调用藏在 `DingtalkClient` 抽象后（`HttpxDingtalkClient` 实现 + token 缓存），业务逻辑只依赖接口、将来可换实现。已卸载试装的 SDK 依赖。本决策只改采集钉钉数据的技术手段，不改组织同步设计本身，不升事件契约。连带改 `dingtalk-integration-钉钉集成.md` §三/§七。
 
+40. **后端 ruff 闸门定档「严格档」，规则集与排除项写定（消除档位表述自相矛盾）**：原 `pyproject.toml` 文件头注释写「Phase 1 严格档」，但 `[tool.ruff.lint]` 实际只开基础规则 `E/F/I/W` 且注释自称「原型档」——头身不一致，「现在到底哪档」无人能一口说清，违背「文档定方向、机器闸门执行」（决策 #14）。本轮按「往严不往松」拍定：ruff 严格档 = `E/F/I/W/B/UP/C4/ANN/RUF`（加 bugbear 正确性、pyupgrade 新语法、推导式、**强制类型注解**、RUF 杂项），与已是 `strict` 的 mypy 同档。**关键厘清**：`ignore` 的 4 条是排「误报」不是放松——`B008` 是 FastAPI `Depends()` 默认参数官方惯用法、非 bug；`RUF001/002/003` 抱怨中文全角标点，而本项目以中文为正式语言（决策 #36），全角是有意的。`SIM`（合并嵌套 `with`，11 处）留作下一档，本次不顺手改（守「一次提交一件事」）。现有代码经此严格档全绿（唯一命中的 `__all__` 排序已自动修）。闸门强度档的机器源就是 `pyproject.toml`（[代码规范 §五](platform/docs/code-standards-代码规范.md) 已言明「强度档位写进配置」），本决策不改数据契约、不升 `schema_version`，属工程内务、未触发 CHANGELOG（无能力/部署/接入变化）。
+
+41. **事件来源 IP 由平台服务端盖章进 `metadata.source_ip`（溯源用，不升契约）**：工具多起来后需要能定位「某条记录是哪台机器/哪个部署发来的」，且测试机与正式机数据现在混记、无来源可分。本轮加来源 IP 采集。**取舍**：① **服务端盖章**而非工具自报——接入层收 `/events` 时直接读连接来源 IP（同 `ingested_at` 服务端盖章的先例），可信、不可忘填、不摊派给各接入方；② **先进 `metadata`** 不进主表列（决策 #33 轻路径，**不升 `schema_version`**），将来真要按来源横向分析再晋升；③ **优先取 `X-Forwarded-For` 第一跳**，为 Phase 2D relay 预留——relay 转发时带回工具真实 IP，否则服务端只看到 relay 自己的 IP；④ **只用于溯源 / 排障，不做鉴权**（不违反决策 #7 不做写入侧鉴权；内网 + 不鉴权，XFF 可伪造无妨）。**已知弱点**（记录在案）：裸 IP 作「定位机器」的钥匙偏脆——同机为 `127.0.0.1`、随 DHCP 变、过 relay 后需靠 XFF；要稳定溯源，将来可让工具自报 `host`/`instance_id`/环境标签作补充（本轮未做，YAGNI）。实现：`backend/ingestion/app.py` 的 `client_source_ip` + `normalize_event`；约定登记在 [metadata 约定](platform/docs/metadata-conventions-metadata约定与字段治理.md) §三。
+
 ---
 
 ## 下一步

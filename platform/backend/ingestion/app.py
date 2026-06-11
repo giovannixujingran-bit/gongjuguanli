@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from functools import lru_cache
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from backend.auth.accounts import (
@@ -104,11 +104,14 @@ def create_app() -> FastAPI:
     )
     def ingest_event(
         event: UsageEvent,
+        request: Request,
         repository: UsageEventRepository = Depends(get_repository),
         token_claims: TokenClaims | None = Depends(optional_token_claims),
     ) -> EventIngested:
         warn_if_unsupported_schema_version(event)
-        normalized = normalize_event(event, token_claims=token_claims)
+        normalized = normalize_event(
+            event, token_claims=token_claims, source_ip=client_source_ip(request)
+        )
         ingested_at = datetime.now(UTC)
         try:
             stored = repository.insert_event(normalized, ingested_at=ingested_at)
@@ -210,17 +213,39 @@ def warn_if_unsupported_schema_version(event: UsageEvent) -> None:
         )
 
 
-def normalize_event(event: UsageEvent, *, token_claims: TokenClaims | None = None) -> UsageEvent:
+def normalize_event(
+    event: UsageEvent,
+    *,
+    token_claims: TokenClaims | None = None,
+    source_ip: str | None = None,
+) -> UsageEvent:
     user_id = token_claims.user_id if token_claims is not None else event.user_id
     team_id = token_claims.team_id if token_claims is not None else event.team_id
+    metadata = dict(event.metadata or {})
+    if source_ip is not None:
+        # 平台服务端盖章的溯源事实（同 ingested_at），覆盖自报值以保证可信。
+        metadata["source_ip"] = source_ip
     return event.model_copy(
         update={
             "user_id": user_id or "anonymous",
             "team_id": team_id,
-            "metadata": event.metadata or {},
+            "metadata": metadata,
             "ingested_at": None,
         }
     )
+
+
+def client_source_ip(request: Request) -> str | None:
+    # 溯源用，非鉴权（决策 #7）：优先取 X-Forwarded-For 第一跳——relay（Phase 2D）转发时
+    # 会带回工具真实 IP；否则用直连对端 IP。内网 + 不做写入侧鉴权，XFF 可伪造无妨。
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        first_hop = forwarded.split(",")[0].strip()
+        if first_hop:
+            return first_hop
+    if request.client is not None:
+        return request.client.host
+    return None
 
 
 def event_response(stored: StoredEvent) -> EventIngested:

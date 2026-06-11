@@ -5,6 +5,10 @@
 
 ## Unreleased
 
+### Added
+
+- **事件来源 IP 溯源（决策 #41）**：接入层收 `/events` 时由平台**服务端自动盖** `metadata.source_ip`（同 `ingested_at` 的服务端盖章），用于「某条记录是哪台机器发来的」的溯源 / 排障。优先取 `X-Forwarded-For` 第一跳（为 Phase 2D relay 预留，转发时带回工具真实 IP），否则用直连对端 IP。**进 metadata、不升 `schema_version`**；只溯源、不做鉴权（不违反决策 #7）。接入方无需改动。
+
 ## v0.2.0 — 2026-06-09
 
 ### Added

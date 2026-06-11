@@ -176,10 +176,10 @@ class HttpxDingtalkClient:
 
 
 __all__ = [
+    "_ROOT_DEPT_ID",
     "DingtalkApiError",
     "DingtalkClient",
     "DingtalkDept",
     "DingtalkUser",
     "HttpxDingtalkClient",
-    "_ROOT_DEPT_ID",
 ]

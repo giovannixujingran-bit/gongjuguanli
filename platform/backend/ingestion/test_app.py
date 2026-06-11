@@ -119,8 +119,26 @@ def test_ingest_event_accepts_simulated_payload_and_defaults_anonymous_user() ->
     assert response.json()["inserted"] is True
     stored_event = repository.events[UUID(SAMPLE_RECORD_ID)][0]
     assert stored_event.user_id == "anonymous"
-    assert stored_event.metadata == {}
+    # 平台服务端盖来源 IP（TestClient 直连对端默认为 "testclient"）
+    assert stored_event.metadata == {"source_ip": "testclient"}
     assert stored_event.ingested_at is None
+
+
+def test_ingest_event_stamps_source_ip_from_forwarded_header() -> None:
+    repository = MemoryUsageEventRepository()
+    client = client_with_repository(repository)
+
+    response = client.post(
+        "/events",
+        json=sample_payload(user_id=None),
+        headers={"X-Forwarded-For": "10.1.2.3, 192.168.0.1"},
+    )
+
+    assert response.status_code == 202
+    stored_event = repository.events[UUID(SAMPLE_RECORD_ID)][0]
+    # X-Forwarded-For 第一跳优先（relay 转发回的工具真实 IP）
+    assert stored_event.metadata is not None
+    assert stored_event.metadata["source_ip"] == "10.1.2.3"
 
 
 def test_ingest_event_is_idempotent_by_record_id() -> None:
