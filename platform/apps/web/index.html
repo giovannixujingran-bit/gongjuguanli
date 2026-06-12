@@ -124,6 +124,10 @@
         .search-container:focus-within {
             box-shadow: none;
         }
+        .search-container:hover > div:first-child {
+            border-color: rgba(107, 56, 212, 0.2);
+            box-shadow: 0 30px 60px rgba(107, 56, 212, 0.06);
+        }
         .search-container:focus-within .search-icon {
             color: #6b38d4;
             transform: scale(1.1);
@@ -154,71 +158,144 @@
             display: flex;
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        /* Scale the copied source closer to the reference proportions while
-           keeping the search and category controls visible. */
         @media (min-width: 768px) {
-            header {
-                height: 54px !important;
-            }
+            header { height: 44px !important; padding-left: 22px !important; padding-right: 22px !important; }
+            header .text-headline-md { font-size: 17px !important; line-height: 1.15 !important; }
+            header button { padding: 4px !important; }
+            header .material-symbols-outlined { font-size: 20px !important; }
+            header .w-10.h-10 { width: 28px !important; height: 28px !important; }
             aside {
-                width: 238px !important;
+                width: 205px !important;
+                height: 100vh !important;
+                padding-top: 52px !important;
+                padding-bottom: 26px !important;
             }
+            aside .px-6 { padding-left: 19px !important; padding-right: 19px !important; }
+            aside nav { padding-left: 13px !important; padding-right: 13px !important; }
+            aside nav a {
+                gap: 10px !important;
+                padding: 8px 12px !important;
+                border-radius: 10px !important;
+                font-size: 12px !important;
+                line-height: 1.1 !important;
+            }
+            aside nav a .material-symbols-outlined { font-size: 18px !important; }
+            aside .text-headline-md { font-size: 19px !important; line-height: 1.2 !important; }
             main {
-                margin-left: 238px !important;
+                margin-left: 205px !important;
                 max-width: none !important;
-                padding: 22px 42px 70px !important;
+                padding: 22px 30px 48px !important;
             }
             main > section:first-of-type {
-                margin-bottom: 22px !important;
+                margin-bottom: 16px !important;
                 padding-top: 0 !important;
             }
             .search-container > div:first-child {
-                padding-top: 12px !important;
-                padding-bottom: 12px !important;
-                border-radius: 18px !important;
+                padding: 10px 18px !important;
+                border-radius: 24px !important;
+            }
+            .search-container button {
+                width: 30px !important;
+                height: 30px !important;
             }
             section.glass-card {
-                min-height: 320px !important;
-                border-radius: 30px !important;
-                margin-bottom: 28px !important;
+                min-height: 210px !important;
+                border-radius: 24px !important;
+                margin-bottom: 22px !important;
             }
             .banner-track > div {
-                padding: 34px 42px !important;
-                gap: 40px !important;
+                padding: 20px 30px !important;
+                gap: 24px !important;
             }
             .banner-track h2 {
-                font-size: 42px !important;
+                font-size: 32px !important;
                 line-height: 1.12 !important;
-                margin-bottom: 20px !important;
+                margin-bottom: 12px !important;
                 letter-spacing: 0 !important;
             }
             .banner-track p {
-                font-size: 17px !important;
-                line-height: 1.55 !important;
-                margin-bottom: 34px !important;
+                font-size: 13px !important;
+                line-height: 1.45 !important;
+                margin-bottom: 22px !important;
             }
             .banner-track button {
-                padding: 14px 30px !important;
-                border-radius: 16px !important;
+                padding: 10px 22px !important;
+                border-radius: 12px !important;
             }
-            .banner-track .w-24 {
-                width: 88px !important;
-                height: 88px !important;
-            }
-            .banner-track .w-32 {
-                width: 120px !important;
-                height: 120px !important;
-            }
+            .banner-track .w-24 { width: 64px !important; height: 64px !important; }
+            .banner-track .w-32 { width: 86px !important; height: 86px !important; }
             main > section:nth-of-type(3) {
-                margin-bottom: 28px !important;
+                margin-bottom: 26px !important;
             }
             main > section:nth-of-type(3) button {
-                padding: 9px 28px !important;
+                padding: 8px 26px !important;
             }
-        }
-        @media (min-width: 768px) and (max-width: 1439px) {
             main > section.grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 16px !important;
+                grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            }
+            main > section.grid[data-loading="tools"] {
+                visibility: hidden;
+            }
+            main > section.grid > .glass-card {
+                min-height: 286px !important;
+                padding: 18px !important;
+                border-radius: 20px !important;
+            }
+            main > section.grid > .glass-card > div:first-child {
+                margin-bottom: 16px !important;
+            }
+            main > section.grid > .glass-card .w-12 {
+                width: 46px !important;
+                height: 46px !important;
+                border-radius: 14px !important;
+            }
+            main > section.grid > .glass-card .text-\[28px\] {
+                font-size: 27px !important;
+            }
+            main > section.grid > .glass-card > div:first-child > div:last-child {
+                position: relative;
+                width: 10px;
+                height: 10px;
+                justify-content: flex-end;
+                gap: 0 !important;
+            }
+            main > section.grid > .glass-card > div:first-child > div:last-child span {
+                width: 10px !important;
+                height: 10px !important;
+                background: #4edea3 !important;
+                box-shadow: none !important;
+            }
+            main > section.grid > .glass-card > div:first-child > div:last-child p {
+                position: absolute;
+                right: 16px;
+                top: 50%;
+                transform: translate(4px, -50%);
+                opacity: 0;
+                white-space: nowrap;
+                color: #006c49 !important;
+                transition: opacity 0.2s ease, transform 0.2s ease;
+            }
+            main > section.grid > .glass-card:hover > div:first-child > div:last-child p {
+                opacity: 1;
+                transform: translate(0, -50%);
+            }
+            main > section.grid > .glass-card h3 {
+                font-size: 17px !important;
+                font-weight: 650 !important;
+                line-height: 1.25 !important;
+                margin-bottom: 0 !important;
+            }
+            main > section.grid > .glass-card p {
+                margin-top: 10px !important;
+                font-size: 11px !important;
+                line-height: 1.45 !important;
+                margin-bottom: 16px !important;
+            }
+            main > section.grid > .glass-card a,
+            main > section.grid > .glass-card button {
+                padding: 9px 14px !important;
+                border-radius: 10px !important;
             }
         }
         #data-view, #summary-view {
@@ -235,6 +312,49 @@
         }
         body[data-active-view="summary"] #summary-view {
             display: block;
+        }
+        body[data-active-view="summary"] {
+            overflow: hidden;
+        }
+        body[data-active-view="summary"] main {
+            height: calc(100vh - 44px);
+            overflow: hidden;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            padding-top: 16px !important;
+            padding-bottom: 16px !important;
+        }
+        body[data-active-view="summary"] #summary-view {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .usage-event-panel {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .usage-event-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        .usage-event-scroll table {
+            min-width: 1180px;
+        }
+        .usage-event-pager button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .output-modal {
+            background: rgba(25, 28, 30, 0.28);
+        }
+        .output-modal-content {
+            max-height: min(72vh, 680px);
         }
         .data-panel {
             background: rgba(255, 255, 255, 0.7);
@@ -254,6 +374,8 @@
             background: rgba(132, 85, 239, 0.1) !important;
         }
     </style>
+    <!-- 钉钉 JSAPI：在钉钉容器内提供 dd.runtime.permission.requestAuthCode 做免登 -->
+    <script src="https://g.alicdn.com/dingding/dingtalk-jsapi/3.0.25/dingtalk.open.js"></script>
 </head>
 <body class="bg-surface text-on-surface min-h-screen mesh-gradient selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden">
 <!-- TopNavBar -->
@@ -295,11 +417,6 @@
 <div class="flex">
 <!-- SideNavBar -->
 <aside class="hidden md:flex h-screen w-64 fixed left-0 top-0 flex-col py-8 border-r border-white/10 bg-surface-container-lowest/80 backdrop-blur-2xl z-40">
-<div class="px-6 mb-12 flex items-center gap-3">
-<div>
-<p class="font-headline-md text-headline-md text-primary leading-none">Aether</p>
-</div>
-</div>
 <nav class="flex-1 space-y-1 px-4 overflow-y-auto custom-scrollbar">
 <a data-view="tools" class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-primary border-r-2 border-primary bg-primary-container/10 transition-all duration-300 nav-active" href="#">
 <span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">auto_awesome</span>
@@ -413,7 +530,7 @@
 </div>
 </section>
 <!-- Tool Grid -->
-<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-section-gap">
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-section-gap" data-loading="tools">
 <!-- Tool Card 1 -->
 <div class="glass-card rounded-[28px] p-6 flex flex-col group h-full">
 <div class="flex justify-between items-start mb-5">
@@ -703,7 +820,7 @@
 <circle cx="50" cy="50" fill="none" r="40" stroke="#6b38d4" stroke-dasharray="251.2" stroke-dashoffset="80.3" stroke-linecap="round" stroke-width="8"></circle>
 </svg>
 <div class="absolute inset-0 flex flex-col items-center justify-center">
-<span class="font-headline-md text-headline-md text-primary">68%</span>
+<span data-summary-stat="total-tokens" class="font-headline-md text-headline-md text-primary">68%</span>
 </div>
 </div>
 <p class="text-label-sm text-on-surface-variant/60">34万 / 50万 每月 Token</p>
@@ -720,7 +837,7 @@
 <div class="w-full bg-primary/40 rounded-t-full h-[90%]"></div>
 </div>
 <div class="flex justify-between items-center">
-<p class="text-headline-md font-headline-md">+14%</p>
+<p data-summary-stat="total-events" class="text-headline-md font-headline-md">+14%</p>
 <span class="text-label-sm text-secondary font-bold">环比上周</span>
 </div>
 </div>
@@ -805,6 +922,11 @@
                 link.classList.toggle('border-transparent', !isActive);
             });
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (document.body.dataset.activeView === 'summary') {
+                requestAnimationFrame(() => {
+                    window.dispatchEvent(new CustomEvent('summary-view-visible'));
+                });
+            }
         };
 
         viewLinks.forEach(link => {
@@ -814,6 +936,11 @@
             });
         });
         setActiveView('tools');
+        window.addEventListener('resize', () => {
+            if (document.body.dataset.activeView === 'summary') {
+                window.dispatchEvent(new CustomEvent('summary-view-visible'));
+            }
+        });
 
         // Simple Auto-sliding Banner Simulation
         const bannerTrack = document.querySelector('.banner-track');
@@ -844,9 +971,24 @@
     || `${location.protocol.startsWith('http') ? location.protocol : 'http:'}//${location.hostname || '127.0.0.1'}:8000`;
 
   const tokenKey = 'portal-token';
+  const userKey = 'portal-user';
   const authHeaders = () => {
     const token = localStorage.getItem(tokenKey);
     return token ? { 'Authorization': `Bearer ${token}` } : {};
+  };
+
+  // 是否在钉钉容器内（决定能否免登）。注意：钉钉 JSAPI 脚本在普通浏览器里也会
+  // 定义 window.dd / dd.runtime，故不能据此判断；用 UA 里的 "DingTalk" 标识最可靠。
+  const inDingtalk = /dingtalk/i.test(navigator.userAgent)
+    && typeof window.dd !== 'undefined' && !!(window.dd && window.dd.runtime);
+
+  function currentUser() {
+    try { return JSON.parse(localStorage.getItem(userKey) || 'null'); }
+    catch { return null; }
+  }
+  const canViewData = () => {
+    const u = currentUser();
+    return !!u && u.role === 'admin';
   };
 
   const json = async (path, options = {}) => {
@@ -859,6 +1001,11 @@
       localStorage.removeItem(tokenKey);
       const error = new Error(`${path} 401`);
       error.unauthorized = true;
+      throw error;
+    }
+    if (response.status === 403) {
+      const error = new Error(`${path} 403`);
+      error.forbidden = true;
       throw error;
     }
     if (!response.ok) throw new Error(`${path} ${response.status}`);
@@ -903,6 +1050,8 @@
     : 'bg-indigo-50 text-indigo-600';
 
   let portalTools = [];
+  let eventPageIndex = 0;
+  let currentEventRows = [];
 
   function iconFor(tool) {
     return tool.icon || 'auto_awesome';
@@ -916,19 +1065,22 @@
     const usage = fmtNumber(tool.usage_count);
     return `
       <div class="glass-card rounded-[28px] p-6 flex flex-col group h-full" data-category="${category}" data-name="${name}" data-desc="${desc}">
-        <div class="flex justify-between items-start mb-4">
+        <div class="flex justify-between items-start mb-5">
           <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shadow-inner">
             <span class="material-symbols-outlined text-[28px]">${escapeHtml(iconFor(tool))}</span>
           </div>
           <div class="flex gap-1 items-center"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><p class="font-label-sm text-[10px] text-secondary">在线</p></div>
         </div>
-        <div class="mb-3"><span class="px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-label-sm">${category}</span></div>
         <h3 class="font-headline-md text-[20px] text-on-surface mb-2">${name}</h3>
         <p class="font-body-md text-sm text-on-surface-variant/70 mb-6 flex-1 line-clamp-3">${desc}</p>
         <div class="flex items-center gap-4 mb-6 text-on-surface-variant/60">
           <div class="flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[16px]">bolt</span>
             <span class="font-label-md text-xs">${usage}</span>
+          </div>
+          <div class="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[16px]">menu_book</span>
+            <span class="font-label-md text-xs">使用手册</span>
           </div>
         </div>
         <a href="${launch}" target="_blank" rel="noopener noreferrer" class="px-5 py-3 rounded-xl bg-surface-container-high/50 hover:bg-primary hover:text-on-primary group-hover:shadow-lg group-hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 font-label-md text-sm w-full">
@@ -966,18 +1118,23 @@
   async function loadTools() {
     const toolGrid = document.querySelector('main > section.grid');
     if (!toolGrid) return;
-    portalTools = await json('/portal/tools');
-    if (!portalTools.length) return;
-    toolGrid.innerHTML = portalTools.map(renderToolCard).join('');
-    renderCategoryButtons(toolGrid);
+    toolGrid.innerHTML = '';
+    try {
+      portalTools = await json('/portal/tools');
+      if (!portalTools.length) return;
+      toolGrid.innerHTML = portalTools.map(renderToolCard).join('');
+      renderCategoryButtons(toolGrid);
+    } finally {
+      toolGrid.removeAttribute('data-loading');
+    }
   }
 
   function ensureEventTable() {
     const summaryView = document.getElementById('summary-view');
     if (!summaryView || document.getElementById('usage-event-table')) return;
     summaryView.insertAdjacentHTML('beforeend', `
-      <section class="data-panel rounded-[16px] p-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+      <section class="data-panel usage-event-panel rounded-[16px] p-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 shrink-0">
           <div class="flex items-center space-x-3">
             <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
               <span class="material-symbols-outlined text-primary">bar_chart</span>
@@ -997,7 +1154,7 @@
             </select>
           </div>
         </div>
-        <div class="overflow-x-auto">
+        <div id="usage-event-scroll" class="usage-event-scroll custom-scrollbar">
           <table class="w-full text-left">
             <thead>
               <tr class="text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-100">
@@ -1016,7 +1173,30 @@
             <tbody id="usage-event-table" class="text-xs"></tbody>
           </table>
         </div>
+        <div class="usage-event-pager flex items-center justify-center gap-3 pt-5 shrink-0">
+          <button id="event-page-prev" class="w-9 h-9 rounded-full border border-outline-variant/30 bg-white/60 text-on-surface-variant hover:border-primary/30 hover:text-primary hover:bg-primary-fixed/50 transition-all duration-300 flex items-center justify-center" title="上一页">
+            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+          </button>
+          <span id="event-page-label" class="min-w-[96px] text-center text-label-md text-on-surface-variant/70">第 1 页</span>
+          <button id="event-page-next" class="w-9 h-9 rounded-full border border-outline-variant/30 bg-white/60 text-on-surface-variant hover:border-primary/30 hover:text-primary hover:bg-primary-fixed/50 transition-all duration-300 flex items-center justify-center" title="下一页">
+            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+          </button>
+        </div>
       </section>
+      <div id="output-modal" class="output-modal fixed inset-0 z-[80] hidden items-center justify-center px-6 backdrop-blur-sm">
+        <div class="w-full max-w-3xl rounded-[24px] bg-white/90 border border-white/50 shadow-2xl shadow-primary/10 overflow-hidden">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20">
+            <div>
+              <p class="text-label-sm text-on-surface-variant/50 uppercase tracking-widest">输出详情</p>
+              <h3 id="output-modal-title" class="font-headline-md text-headline-md text-on-surface">生成结果</h3>
+            </div>
+            <button id="output-modal-close" class="w-9 h-9 rounded-full border border-outline-variant/30 bg-white/70 text-on-surface-variant hover:text-primary hover:border-primary/30 transition-all flex items-center justify-center" title="关闭">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+          <div id="output-modal-body" class="output-modal-content overflow-auto custom-scrollbar p-6"></div>
+        </div>
+      </div>
     `);
   }
 
@@ -1026,23 +1206,66 @@
     const count = document.getElementById('usage-event-count');
     const toolFilter = document.getElementById('event-tool-filter');
     const statusFilter = document.getElementById('event-status-filter');
-    if (!table || !toolFilter || !statusFilter) return;
+    const scroll = document.getElementById('usage-event-scroll');
+    const prev = document.getElementById('event-page-prev');
+    const next = document.getElementById('event-page-next');
+    const label = document.getElementById('event-page-label');
+    if (!table || !toolFilter || !statusFilter || !scroll || !prev || !next || !label) return;
 
     if (!toolFilter.dataset.ready) {
       toolFilter.innerHTML = '<option value="">工具类型: 全部</option>' + portalTools.map((tool) =>
         `<option value="${escapeHtml(tool.tool_id)}">${escapeHtml(tool.category || '未分类')}: ${escapeHtml(tool.display_name)}</option>`
       ).join('');
       toolFilter.dataset.ready = '1';
-      toolFilter.addEventListener('change', loadEvents);
-      statusFilter.addEventListener('change', loadEvents);
+      toolFilter.addEventListener('change', () => {
+        eventPageIndex = 0;
+        loadEvents();
+      });
+      statusFilter.addEventListener('change', () => {
+        eventPageIndex = 0;
+        loadEvents();
+      });
+      table.addEventListener('click', (event) => {
+        if (!(event.target instanceof Element)) return;
+        const button = event.target.closest('[data-output-index]');
+        if (!button) return;
+        openOutputModal(currentEventRows[Number(button.dataset.outputIndex)]);
+      });
+      bindOutputModal();
     }
 
-    const params = new URLSearchParams({ limit: '10' });
+    if (!prev.dataset.bound) {
+      prev.dataset.bound = '1';
+      next.dataset.bound = '1';
+      prev.addEventListener('click', () => {
+        eventPageIndex = Math.max(0, eventPageIndex - 1);
+        loadEvents();
+      });
+      next.addEventListener('click', () => {
+        eventPageIndex += 1;
+        loadEvents();
+      });
+    }
+
+    const limit = eventPageLimit(scroll);
+    const offset = eventPageIndex * limit;
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
     if (toolFilter.value) params.set('tool_id', toolFilter.value);
     if (statusFilter.value) params.set('status', statusFilter.value);
     const page = await json(`/analytics/events?${params.toString()}`);
-    count.textContent = `显示第 1 至 ${Math.min(page.rows.length, page.total)} 项，共 ${page.total} 项`;
-    table.innerHTML = page.rows.map((row) => `
+    const totalPages = Math.max(1, Math.ceil(page.total / limit));
+    if (eventPageIndex >= totalPages) {
+      eventPageIndex = totalPages - 1;
+      return loadEvents();
+    }
+    currentEventRows = page.rows;
+    const start = page.total === 0 ? 0 : offset + 1;
+    const end = Math.min(offset + page.rows.length, page.total);
+    count.textContent = `显示第 ${start} 至 ${end} 项，共 ${page.total} 项`;
+    label.textContent = `第 ${eventPageIndex + 1} / ${totalPages} 页`;
+    prev.disabled = eventPageIndex === 0;
+    next.disabled = eventPageIndex >= totalPages - 1;
+    table.innerHTML = page.rows.map((row, index) => `
       <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
         <td class="py-4 text-gray-500">${escapeHtml(String(row.record_id).slice(0, 8))}</td>
         <td class="py-4">
@@ -1053,14 +1276,68 @@
         </td>
         <td class="py-4 text-gray-600 whitespace-nowrap">${escapeHtml(row.chapter || '-')}</td>
         <td class="py-4 text-gray-500 whitespace-nowrap">${escapeHtml(row.model || '-')}</td>
-        <td class="py-4 text-gray-600 whitespace-nowrap">${escapeHtml(row.user_id || '-')}</td>
+        <td class="py-4 text-gray-600 whitespace-nowrap">${escapeHtml(row.user_display_name || row.user_id || '-')}</td>
         <td class="py-4 text-gray-500 max-w-[220px] truncate">${escapeHtml(row.input_preview || '-')}</td>
-        <td class="py-4 ${statusClass(row.status)} font-medium text-[11px] max-w-[220px] truncate">${escapeHtml(row.output_preview || statusText(row.status))}</td>
+        <td class="py-4 max-w-[220px]">
+          <button data-output-index="${index}" class="${statusClass(row.status)} font-medium text-[11px] max-w-[220px] truncate hover:text-primary transition-colors text-left underline decoration-transparent hover:decoration-primary/40">
+            ${escapeHtml(row.output_preview || statusText(row.status))}
+          </button>
+        </td>
         <td class="py-4"><span class="px-2 py-1 ${priorityClass(row.status)} rounded text-[10px]">${priorityText(row.status)}</span></td>
         <td class="py-4 text-gray-600">${fmtNumber(row.total_tokens)}</td>
         <td class="py-4 text-gray-600 whitespace-nowrap">${fmtDuration(row.duration_ms)}</td>
       </tr>
     `).join('') || '<tr><td class="py-8 text-center text-gray-400" colspan="10">暂无真实调用数据</td></tr>';
+  }
+
+  function eventPageLimit(scroll) {
+    const available = Math.max(180, scroll.clientHeight || 360);
+    return Math.max(3, Math.min(30, Math.floor((available - 42) / 56)));
+  }
+
+  function bindOutputModal() {
+    const modal = document.getElementById('output-modal');
+    const close = document.getElementById('output-modal-close');
+    if (!modal || !close || modal.dataset.bound) return;
+    modal.dataset.bound = '1';
+    close.addEventListener('click', closeOutputModal);
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) closeOutputModal();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeOutputModal();
+    });
+  }
+
+  function openOutputModal(row) {
+    if (!row) return;
+    const modal = document.getElementById('output-modal');
+    const title = document.getElementById('output-modal-title');
+    const body = document.getElementById('output-modal-body');
+    if (!modal || !title || !body) return;
+    title.textContent = row.tool_name || '生成结果';
+    body.innerHTML = '';
+    if (row.output_kind === 'image' && (row.output_ref || row.output_content)) {
+      const image = document.createElement('img');
+      image.src = row.output_ref || row.output_content;
+      image.alt = row.output_preview || '输出图片';
+      image.className = 'max-w-full max-h-[62vh] mx-auto rounded-[16px] border border-outline-variant/20 bg-white';
+      body.appendChild(image);
+    } else {
+      const text = document.createElement('pre');
+      text.className = 'whitespace-pre-wrap break-words font-body-md text-sm leading-relaxed text-on-surface-variant bg-surface-container-lowest/70 rounded-[16px] p-5 border border-outline-variant/10';
+      text.textContent = row.output_content || row.output_preview || '暂无输出内容';
+      body.appendChild(text);
+    }
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  function closeOutputModal() {
+    const modal = document.getElementById('output-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
   }
 
   async function loadSummary() {
@@ -1071,67 +1348,55 @@
     if (summaryText) {
       summaryText.innerHTML = `当前已接入 <span class="text-primary font-semibold">${fmtNumber(summary.total_events)}</span> 次真实调用，成功 <span class="text-primary font-semibold">${fmtNumber(summary.success_events)}</span> 次，累计 Token <span class="text-primary font-semibold">${fmtNumber(summary.total_tokens)}</span>。`;
     }
-    const statNumbers = dataView.querySelectorAll('.text-headline-md.font-headline-md, .font-headline-md.text-headline-md');
-    if (statNumbers[0]) statNumbers[0].textContent = `${fmtNumber(summary.total_tokens)}`;
-    if (statNumbers[1]) statNumbers[1].textContent = `${fmtNumber(summary.total_events)}`;
+    const totalTokens = dataView.querySelector('[data-summary-stat="total-tokens"]');
+    const totalEvents = dataView.querySelector('[data-summary-stat="total-events"]');
+    if (totalTokens) totalTokens.textContent = `${fmtNumber(summary.total_tokens)}`;
+    if (totalEvents) totalEvents.textContent = `${fmtNumber(summary.total_events)}`;
   }
 
-  function bindLoginPanel(panel) {
-    const submit = async () => {
-      const username = panel.querySelector('.login-username').value.trim();
-      const password = panel.querySelector('.login-password').value;
-      const errorTip = panel.querySelector('.login-error');
-      if (!username || !password) return;
-      try {
-        const result = await json('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ username, password }),
-        });
-        localStorage.setItem(tokenKey, result.access_token);
-        errorTip.classList.add('hidden');
-        document.querySelectorAll('.data-login-panel').forEach((p) => p.classList.add('hidden'));
-        await loadDataViews();
-      } catch (error) {
-        errorTip.classList.remove('hidden');
-      }
-    };
-    panel.querySelector('.login-btn').addEventListener('click', submit);
-    panel.querySelector('.login-password').addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') submit();
+  // 钉钉免登：拉 corpId → 拿免登 code → 换 token，存 token + 用户身份。
+  async function dingtalkLogin() {
+    const cfg = await json('/auth/config');           // { corp_id }
+    if (!cfg.corp_id) throw new Error('corp_id 未配置');
+    const code = await new Promise((resolve, reject) => {
+      window.dd.runtime.permission.requestAuthCode({
+        corpId: cfg.corp_id,
+        onSuccess: (res) => resolve(res.code),
+        onFail: reject,
+      });
     });
+    const result = await json('/auth/dingtalk', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+    localStorage.setItem(tokenKey, result.access_token);
+    localStorage.setItem(userKey, JSON.stringify(result.user));
+    return result.user;
   }
 
-  function ensureLoginPanel() {
-    // 数据分析与数据汇总两页都受登录态保护，各放一份登录框。
+  // 数据端门禁提示（替代原密码登录框）：非钉钉环境 / 非管理员都走这里。
+  function renderDataGate(message) {
     ['data-view', 'summary-view'].forEach((viewId) => {
       const view = document.getElementById(viewId);
       if (!view) return;
-      let panel = view.querySelector('.data-login-panel');
+      let panel = view.querySelector('.data-gate-panel');
       if (!panel) {
         view.insertAdjacentHTML('afterbegin', `
-          <section class="data-login-panel data-panel rounded-[16px] p-8 mb-8">
-            <div class="flex items-center space-x-3 mb-6">
+          <section class="data-gate-panel data-panel rounded-[16px] p-8 mb-8">
+            <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
                 <span class="material-symbols-outlined text-primary">lock</span>
               </div>
               <div>
-                <h2 class="font-headline-md text-headline-md">登录后查看数据</h2>
-                <p class="text-label-md text-on-surface-variant/60">调用明细含使用者输入/输出预览，需平台账号（找管理员开通）</p>
+                <h2 class="font-headline-md text-headline-md">无法查看数据</h2>
+                <p class="data-gate-msg text-label-md text-on-surface-variant/60"></p>
               </div>
             </div>
-            <div class="flex flex-col md:flex-row gap-3 max-w-xl">
-              <input type="text" placeholder="用户名" autocomplete="username"
-                class="login-username flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
-              <input type="password" placeholder="密码" autocomplete="current-password"
-                class="login-password flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
-              <button class="login-btn bg-primary text-on-primary rounded-lg px-6 py-2 text-sm whitespace-nowrap">登录</button>
-            </div>
-            <p class="login-error text-label-md text-red-500 mt-3 hidden">用户名或密码不正确</p>
           </section>
         `);
-        panel = view.querySelector('.data-login-panel');
-        bindLoginPanel(panel);
+        panel = view.querySelector('.data-gate-panel');
       }
+      panel.querySelector('.data-gate-msg').textContent = message;
       panel.classList.remove('hidden');
     });
   }
@@ -1158,9 +1423,9 @@
         });
         output.textContent = result.answer;
       } catch (error) {
-        if (error.unauthorized) {
-          ensureLoginPanel();
-          output.textContent = '登录已过期，请在上方重新登录后再试。';
+        if (error.unauthorized || error.forbidden) {
+          renderDataGate('你不是管理员，无权使用数据分析，请联系超管开通');
+          output.textContent = '无权使用数据分析。';
         } else {
           output.textContent = 'AI 查询暂未可用，请确认服务端已填写 APIMART_API_KEY。';
         }
@@ -1176,25 +1441,89 @@
       await Promise.all([loadSummary(), loadEvents()]);
       bindAiQuery();
     } catch (error) {
-      if (error.unauthorized) {
-        ensureLoginPanel();
+      if (error.unauthorized || error.forbidden) {
+        renderDataGate('你不是管理员，无权查看统计与明细，请联系超管开通');
       } else {
         console.warn('Analytics binding skipped:', error);
       }
     }
   }
 
+  // 超管「成员权限管理」面板：列员工、一键设/撤 admin（仅超管渲染）。
+  async function renderAdminPanelIfSuperadmin() {
+    const u = currentUser();
+    if (!u || !u.is_superadmin) return;
+    const view = document.getElementById('summary-view');
+    if (!view || view.querySelector('.admin-manage-panel')) return;
+    let admins;
+    try { admins = await json('/auth/admins'); } catch (error) { return; }
+    const rows = admins.map((a) => `
+      <tr class="border-b border-outline-variant/10">
+        <td class="py-2">${escapeHtml(a.display_name || a.dingtalk_userid || a.user_id)}</td>
+        <td class="py-2">${a.role === 'admin' ? '管理员' : '员工'}</td>
+        <td class="py-2 text-right">
+          <button data-uid="${escapeHtml(a.user_id)}" data-next="${a.role === 'admin' ? 'user' : 'admin'}"
+            class="admin-toggle bg-primary text-on-primary rounded-lg px-3 py-1 text-xs">
+            ${a.role === 'admin' ? '取消管理员' : '设为管理员'}</button>
+        </td>
+      </tr>`).join('');
+    view.insertAdjacentHTML('afterbegin', `
+      <section class="admin-manage-panel data-panel rounded-[16px] p-6 mb-8">
+        <h2 class="font-headline-md text-headline-md mb-4">成员权限管理</h2>
+        <table class="w-full text-sm"><tbody>${rows}</tbody></table>
+      </section>`);
+    view.querySelectorAll('.admin-toggle').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        try {
+          await json(`/auth/admins/${btn.dataset.uid}`, {
+            method: 'POST', body: JSON.stringify({ role: btn.dataset.next }),
+          });
+        } catch (error) { console.warn('设置角色失败', error); return; }
+        view.querySelector('.admin-manage-panel').remove();
+        renderAdminPanelIfSuperadmin();
+      });
+    });
+  }
+
   let booted = false;
   async function bootRealData() {
     if (booted) return;
     booted = true;
-    try {
-      await loadTools();
-    } catch (error) {
-      console.warn('Portal real-data binding skipped:', error);
+    // 非钉钉环境：不免登、不显示密码框，直接提示在钉钉内打开；工具门户仍可看。
+    if (!inDingtalk) {
+      renderDataGate('请在钉钉客户端内打开本页面以查看数据');
+      try { await loadTools(); } catch (error) { console.warn(error); }
+      return;
     }
-    await loadDataViews();
+    try {
+      await dingtalkLogin();
+    } catch (error) {
+      console.warn('钉钉免登失败', error);
+      renderDataGate('钉钉免登失败，请重新打开页面');
+    }
+    try { await loadTools(); } catch (error) { console.warn(error); }
+    if (canViewData()) {
+      await loadDataViews();
+      renderAdminPanelIfSuperadmin();
+    } else {
+      renderDataGate('你不是管理员，无权查看统计与明细，请联系超管开通');
+    }
   }
+
+  async function refreshSummaryEvents() {
+    eventPageIndex = 0;
+    try {
+      await loadEvents();
+    } catch (error) {
+      if (error.unauthorized || error.forbidden) {
+        renderDataGate('你不是管理员，无权查看统计与明细，请联系超管开通');
+      } else {
+        console.warn('Summary events refresh skipped:', error);
+      }
+    }
+  }
+
+  window.addEventListener('summary-view-visible', refreshSummaryEvents);
 
   document.addEventListener('DOMContentLoaded', bootRealData);
   if (document.readyState !== 'loading') bootRealData();
