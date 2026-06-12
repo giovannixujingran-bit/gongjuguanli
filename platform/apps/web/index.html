@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="light" lang="zh-CN" style=""><head>
+<!DOCTYPE html><html class="light icons-loading" lang="zh-CN" style=""><head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>AI 工具中心 | Aether Analytics</title>
@@ -97,10 +97,31 @@
           },
         }
     </script>
+<script>
+        (() => {
+            const root = document.documentElement;
+            const revealIcons = () => {
+                root.classList.remove('icons-loading');
+                root.classList.add('icons-ready');
+            };
+            if (document.fonts && document.fonts.load) {
+                document.fonts.load('24px "Material Symbols Outlined"').then(revealIcons, () => {});
+            } else {
+                revealIcons();
+            }
+        })();
+    </script>
 <style>
         body { font-family: 'Geist', sans-serif; }
         .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icons-loading .material-symbols-outlined {
+            visibility: hidden;
+        }
+        .icons-ready .material-symbols-outlined {
+            visibility: visible;
         }
         .mesh-gradient {
             background: 
@@ -298,7 +319,7 @@
                 border-radius: 10px !important;
             }
         }
-        #data-view, #summary-view {
+        #data-view, #summary-view, #asset-view, #settings-view {
             display: none;
         }
         body[data-active-view="data"] main > section:not(#data-view) {
@@ -311,6 +332,18 @@
             display: none !important;
         }
         body[data-active-view="summary"] #summary-view {
+            display: block;
+        }
+        body[data-active-view="assets"] main > section:not(#asset-view) {
+            display: none !important;
+        }
+        body[data-active-view="assets"] #asset-view {
+            display: block;
+        }
+        body[data-active-view="settings"] main > section:not(#settings-view) {
+            display: none !important;
+        }
+        body[data-active-view="settings"] #settings-view {
             display: block;
         }
         body[data-active-view="summary"] {
@@ -426,14 +459,14 @@
 <span class="material-symbols-outlined">analytics</span>
                     数据分析
                 </a>
-<a class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300" href="#">
+<a data-view="assets" class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300 border-r-2 border-transparent" href="#">
 <span class="material-symbols-outlined">inventory_2</span>
                     资产管理
                 </a><a data-view="summary" class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300 border-r-2 border-transparent" href="#">
 <span class="material-symbols-outlined">summarize</span>
                     数据汇总
                 </a>
-<a class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300" href="#">
+<a data-view="settings" class="flex items-center gap-4 px-4 py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary-container/5 transition-all duration-300 border-r-2 border-transparent" href="#">
 <span class="material-symbols-outlined">settings</span>
                     系统设置
                 </a>
@@ -731,27 +764,97 @@
 </div>
 </section>
 <section id="summary-view" class="space-y-gutter"></section>
+<section id="asset-view" class="space-y-gutter">
+  <section class="data-panel rounded-[16px] p-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary">inventory_2</span>
+        </div>
+        <div>
+          <h2 class="font-headline-md text-headline-md">报告资产</h2>
+          <p class="text-label-md text-on-surface-variant/60">AI 生成报告会沉淀在这里，支持预览和下载</p>
+        </div>
+      </div>
+      <button id="asset-refresh" class="h-10 px-4 rounded-xl border border-outline-variant/30 text-label-md text-on-surface-variant hover:bg-surface-variant/50 transition-colors flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
+        <span>刷新</span>
+      </button>
+    </div>
+  </section>
+  <section class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+    <div class="data-panel rounded-[16px] p-6">
+      <p class="text-label-md text-on-surface-variant/60 mb-3">资产类型</p>
+      <div class="flex items-center justify-between">
+        <span class="font-headline-md text-headline-md">HTML 报告</span>
+        <span class="material-symbols-outlined text-primary">article</span>
+      </div>
+    </div>
+    <div class="data-panel rounded-[16px] p-6">
+      <p class="text-label-md text-on-surface-variant/60 mb-3">报告数量</p>
+      <div class="flex items-center justify-between">
+        <span id="asset-count" class="font-headline-md text-headline-md">0</span>
+        <span class="material-symbols-outlined text-secondary">folder_open</span>
+      </div>
+    </div>
+    <div class="data-panel rounded-[16px] p-6">
+      <p class="text-label-md text-on-surface-variant/60 mb-3">最新生成</p>
+      <div class="flex items-center justify-between">
+        <span id="asset-latest" class="font-headline-md text-headline-md">-</span>
+        <span class="material-symbols-outlined text-tertiary">schedule</span>
+      </div>
+    </div>
+  </section>
+  <section class="data-panel rounded-[16px] p-6">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h3 class="font-headline-md text-headline-md">报告列表</h3>
+        <p class="text-label-md text-on-surface-variant/60">按生成时间倒序排列</p>
+      </div>
+    </div>
+    <div id="report-asset-list" class="space-y-3"></div>
+  </section>
+</section>
+<section id="settings-view" class="space-y-gutter">
+  <section class="data-panel rounded-[16px] p-8">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary">settings</span>
+      </div>
+      <div>
+        <h2 class="font-headline-md text-headline-md">系统设置</h2>
+        <p class="text-label-md text-on-surface-variant/60">平台权限与系统级配置</p>
+      </div>
+    </div>
+  </section>
+</section>
 <section id="data-view" class="space-y-gutter">
 <section class="data-panel rounded-[16px] relative overflow-hidden p-6">
 <div class="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 blur-[80px] rounded-full"></div>
 <div class="flex flex-col relative z-10 space-y-4">
-<div class="flex items-center justify-between">
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
 <div class="flex items-center space-x-3">
 <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center">
 <span class="material-symbols-outlined text-primary">auto_awesome</span>
 </div>
 <h2 class="font-headline-md text-headline-md">AI 查询</h2>
 </div>
+<div class="flex flex-wrap items-center justify-end gap-2">
+<select id="ai-report-tool" class="h-9 bg-white/70 border border-outline-variant/30 rounded-xl px-3 text-label-md text-on-surface outline-none"></select>
+<input id="ai-report-start" class="h-9 bg-white/70 border border-outline-variant/30 rounded-xl px-3 text-label-md text-on-surface outline-none" type="date">
+<input id="ai-report-end" class="h-9 bg-white/70 border border-outline-variant/30 rounded-xl px-3 text-label-md text-on-surface outline-none" type="date">
 <span class="text-label-sm text-on-surface-variant/40 tracking-widest uppercase">系统 v2.4.0</span>
 </div>
+</div>
 <div class="w-full relative">
-<textarea class="data-input w-full bg-transparent border-0 border-b border-outline-variant/30 py-4 text-headline-md font-headline-md placeholder:text-on-surface-variant/30 resize-none pb-12" placeholder="询问 AI 关于数据的任何问题..." rows="2"></textarea>
+<textarea class="data-input w-full bg-transparent border-0 border-b border-outline-variant/30 py-4 text-headline-md font-headline-md placeholder:text-on-surface-variant/30 resize-none pb-12" placeholder="输入报告提示词，例如：生成10月份 AI报告生成平台的周期报告..." rows="2"></textarea>
 <div class="absolute right-0 bottom-2">
-<button class="bg-primary-container text-white px-6 py-2 rounded-full font-label-md shadow-sm hover:scale-105 transition-transform duration-300 flex items-center space-x-2">
-<span>生成报告</span>
+<button id="ai-report-generate" class="bg-primary-container text-white px-6 py-2 rounded-full font-label-md shadow-sm hover:scale-105 transition-transform duration-300 flex items-center space-x-2">
+<span>生成并保存报告</span>
 </button>
 </div>
 </div>
+<p id="ai-report-status" class="hidden text-label-md text-on-surface-variant/60"></p>
 </div>
 </section>
 <section class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
@@ -874,6 +977,26 @@
 <div class="fixed -top-32 -right-32 w-96 h-96 bg-secondary/5 blur-[120px] rounded-full pointer-events-none"></div>
 </main>
 </div>
+<div id="report-preview-modal" class="fixed inset-0 z-[90] hidden items-center justify-center px-6 py-8 bg-scrim/30 backdrop-blur-sm">
+  <div class="w-full max-w-6xl h-full rounded-[24px] bg-white border border-white/60 shadow-2xl shadow-primary/10 overflow-hidden flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20">
+      <div>
+        <p class="text-label-sm text-on-surface-variant/50 uppercase tracking-widest">报告预览</p>
+        <h3 id="report-preview-title" class="font-headline-md text-headline-md text-on-surface">AI 报告</h3>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="report-preview-download" class="h-9 px-4 rounded-xl bg-primary text-on-primary text-label-md flex items-center gap-2 hover:scale-105 transition-transform">
+          <span class="material-symbols-outlined text-[18px]">download</span>
+          <span>下载</span>
+        </button>
+        <button id="report-preview-close" class="w-9 h-9 rounded-full border border-outline-variant/30 bg-white/70 text-on-surface-variant hover:text-primary hover:border-primary/30 transition-all flex items-center justify-center" title="关闭">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+    </div>
+    <iframe id="report-preview-frame" class="w-full flex-1 bg-white" sandbox="allow-scripts"></iframe>
+  </div>
+</div>
 <!-- Scripts for Interactions -->
 <script>
         document.addEventListener('keydown', (e) => {
@@ -911,7 +1034,7 @@
         // Left navigation view switching
         const viewLinks = document.querySelectorAll('aside nav a[data-view]');
         const setActiveView = (view) => {
-            document.body.dataset.activeView = ['data', 'summary'].includes(view) ? view : 'tools';
+            document.body.dataset.activeView = ['data', 'summary', 'assets', 'settings'].includes(view) ? view : 'tools';
             viewLinks.forEach(link => {
                 const isActive = link.dataset.view === document.body.dataset.activeView;
                 link.classList.toggle('nav-active', isActive);
@@ -927,7 +1050,13 @@
                     window.dispatchEvent(new CustomEvent('summary-view-visible'));
                 });
             }
+            if (document.body.dataset.activeView === 'assets') {
+                requestAnimationFrame(() => {
+                    window.dispatchEvent(new CustomEvent('asset-view-visible'));
+                });
+            }
         };
+        window.setPortalView = setActiveView;
 
         viewLinks.forEach(link => {
             link.addEventListener('click', (event) => {
@@ -988,7 +1117,7 @@
   }
   const canViewData = () => {
     const u = currentUser();
-    return !!u && u.role === 'admin';
+    return !!u && (u.role === 'admin' || u.is_superadmin);
   };
 
   const json = async (path, options = {}) => {
@@ -1044,14 +1173,12 @@
     failed: 'text-red-500',
     timeout: 'text-amber-600',
   }[status] || 'text-gray-500');
-  const priorityText = (status) => status === 'failed' || status === 'timeout' ? '高' : '中';
-  const priorityClass = (status) => status === 'failed' || status === 'timeout'
-    ? 'bg-red-50 text-red-600'
-    : 'bg-indigo-50 text-indigo-600';
 
   let portalTools = [];
   let eventPageIndex = 0;
   let currentEventRows = [];
+  let reportAssets = [];
+  let currentPreviewAsset = null;
 
   function iconFor(tool) {
     return tool.icon || 'auto_awesome';
@@ -1124,8 +1251,140 @@
       if (!portalTools.length) return;
       toolGrid.innerHTML = portalTools.map(renderToolCard).join('');
       renderCategoryButtons(toolGrid);
+      renderReportToolOptions();
     } finally {
       toolGrid.removeAttribute('data-loading');
+    }
+  }
+
+  function renderReportToolOptions() {
+    const select = document.getElementById('ai-report-tool');
+    if (!select || select.dataset.ready) return;
+    select.innerHTML = portalTools.map((tool) =>
+      `<option value="${escapeHtml(tool.tool_id)}">${escapeHtml(tool.display_name)}</option>`
+    ).join('');
+    select.dataset.ready = '1';
+  }
+
+  function renderReportAssets(assets) {
+    reportAssets = assets || [];
+    const list = document.getElementById('report-asset-list');
+    const count = document.getElementById('asset-count');
+    const latest = document.getElementById('asset-latest');
+    if (!list) return;
+    if (count) count.textContent = fmtNumber(reportAssets.length);
+    if (latest) latest.textContent = reportAssets[0] ? fmtTime(reportAssets[0].created_at) : '-';
+    if (!reportAssets.length) {
+      list.innerHTML = `
+        <div class="rounded-[16px] border border-dashed border-outline-variant/40 p-8 text-center">
+          <span class="material-symbols-outlined text-primary text-[32px] mb-3">draft</span>
+          <p class="font-headline-md text-headline-md mb-2">暂无报告资产</p>
+          <p class="text-label-md text-on-surface-variant/60">在数据分析页生成报告后，会自动保存到这里。</p>
+        </div>
+      `;
+      return;
+    }
+    list.innerHTML = reportAssets.map((asset) => `
+      <div class="rounded-[16px] border border-outline-variant/20 bg-white/70 p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="flex items-start gap-3 min-w-0">
+          <div class="w-11 h-11 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-primary">article</span>
+          </div>
+          <div class="min-w-0">
+            <h4 class="font-headline-md text-[18px] text-on-surface truncate">${escapeHtml(asset.title)}</h4>
+            <p class="text-label-md text-on-surface-variant/60 mt-1">
+              ${escapeHtml(asset.tool_name)} · ${escapeHtml(asset.period_start)} 至 ${escapeHtml(asset.period_end)}
+            </p>
+            <p class="text-label-sm text-on-surface-variant/40 mt-1">${escapeHtml(asset.filename)} · ${escapeHtml(fmtTime(asset.created_at))}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button data-asset-action="preview" data-asset-id="${escapeHtml(asset.asset_id)}" class="h-9 px-4 rounded-xl border border-outline-variant/30 text-label-md text-on-surface hover:border-primary/40 hover:text-primary transition-colors flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">visibility</span>
+            <span>预览</span>
+          </button>
+          <button data-asset-action="download" data-asset-id="${escapeHtml(asset.asset_id)}" class="h-9 px-4 rounded-xl bg-primary text-on-primary text-label-md hover:scale-105 transition-transform flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">download</span>
+            <span>下载</span>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function loadReportAssets() {
+    const assets = await json('/assets/reports');
+    renderReportAssets(assets);
+  }
+
+  async function getReportAsset(assetId) {
+    return json(`/assets/reports/${encodeURIComponent(assetId)}`);
+  }
+
+  async function previewReportAsset(assetId) {
+    const asset = await getReportAsset(assetId);
+    currentPreviewAsset = asset;
+    const modal = document.getElementById('report-preview-modal');
+    const title = document.getElementById('report-preview-title');
+    const frame = document.getElementById('report-preview-frame');
+    if (!modal || !title || !frame) return;
+    title.textContent = asset.title || asset.filename;
+    frame.srcdoc = asset.html;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  function closeReportPreview() {
+    const modal = document.getElementById('report-preview-modal');
+    const frame = document.getElementById('report-preview-frame');
+    if (frame) frame.srcdoc = '';
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    currentPreviewAsset = null;
+  }
+
+  async function downloadReportAsset(assetId) {
+    const asset = await getReportAsset(assetId);
+    downloadHtml(asset.filename, asset.html);
+  }
+
+  function bindReportAssetUi() {
+    const list = document.getElementById('report-asset-list');
+    const refresh = document.getElementById('asset-refresh');
+    const close = document.getElementById('report-preview-close');
+    const modalDownload = document.getElementById('report-preview-download');
+    if (list && !list.dataset.bound) {
+      list.dataset.bound = '1';
+      list.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-asset-action]');
+        if (!button) return;
+        const assetId = button.dataset.assetId;
+        if (!assetId) return;
+        try {
+          if (button.dataset.assetAction === 'preview') await previewReportAsset(assetId);
+          if (button.dataset.assetAction === 'download') await downloadReportAsset(assetId);
+        } catch (error) {
+          console.warn('Report asset action failed:', error);
+        }
+      });
+    }
+    if (refresh && !refresh.dataset.bound) {
+      refresh.dataset.bound = '1';
+      refresh.addEventListener('click', () => loadReportAssets().catch((error) => {
+        console.warn('Report asset refresh failed:', error);
+      }));
+    }
+    if (close && !close.dataset.bound) {
+      close.dataset.bound = '1';
+      close.addEventListener('click', closeReportPreview);
+    }
+    if (modalDownload && !modalDownload.dataset.bound) {
+      modalDownload.dataset.bound = '1';
+      modalDownload.addEventListener('click', () => {
+        if (currentPreviewAsset) downloadHtml(currentPreviewAsset.filename, currentPreviewAsset.html);
+      });
     }
   }
 
@@ -1158,6 +1417,7 @@
           <table class="w-full text-left">
             <thead>
               <tr class="text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-100">
+                <th class="pb-4 font-semibold">日期时间</th>
                 <th class="pb-4 font-semibold">请求 ID</th>
                 <th class="pb-4 font-semibold">工具名称</th>
                 <th class="pb-4 font-semibold">章节</th>
@@ -1165,7 +1425,6 @@
                 <th class="pb-4 font-semibold">用户</th>
                 <th class="pb-4 font-semibold">输入预览</th>
                 <th class="pb-4 font-semibold">输出 / 状态</th>
-                <th class="pb-4 font-semibold">优先级</th>
                 <th class="pb-4 font-semibold">TOKENS</th>
                 <th class="pb-4 font-semibold">用时</th>
               </tr>
@@ -1267,6 +1526,7 @@
     next.disabled = eventPageIndex >= totalPages - 1;
     table.innerHTML = page.rows.map((row, index) => `
       <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+        <td class="py-4 text-gray-500 whitespace-nowrap">${escapeHtml(fmtTime(row.start_time))}</td>
         <td class="py-4 text-gray-500">${escapeHtml(String(row.record_id).slice(0, 8))}</td>
         <td class="py-4">
           <div class="flex items-center space-x-2">
@@ -1283,7 +1543,6 @@
             ${escapeHtml(row.output_preview || statusText(row.status))}
           </button>
         </td>
-        <td class="py-4"><span class="px-2 py-1 ${priorityClass(row.status)} rounded text-[10px]">${priorityText(row.status)}</span></td>
         <td class="py-4 text-gray-600">${fmtNumber(row.total_tokens)}</td>
         <td class="py-4 text-gray-600 whitespace-nowrap">${fmtDuration(row.duration_ms)}</td>
       </tr>
@@ -1376,7 +1635,7 @@
 
   // 数据端门禁提示（替代原密码登录框）：非钉钉环境 / 非管理员都走这里。
   function renderDataGate(message) {
-    ['data-view', 'summary-view'].forEach((viewId) => {
+    ['data-view', 'summary-view', 'asset-view'].forEach((viewId) => {
       const view = document.getElementById(viewId);
       if (!view) return;
       let panel = view.querySelector('.data-gate-panel');
@@ -1401,33 +1660,66 @@
     });
   }
 
-  function bindAiQuery() {
+  function bindAiReport() {
     const dataView = document.getElementById('data-view');
     if (!dataView) return;
+    const tool = document.getElementById('ai-report-tool');
+    const start = document.getElementById('ai-report-start');
+    const end = document.getElementById('ai-report-end');
+    const button = document.getElementById('ai-report-generate');
+    const statusText = document.getElementById('ai-report-status');
     const textarea = dataView.querySelector('textarea');
-    const button = dataView.querySelector('textarea + div button, .data-input + div button');
     const output = dataView.querySelector('.lg\\:col-span-1 p');
-    if (!textarea || !button || !output) return;
-    if (button.dataset.aiBound) return;
-    button.dataset.aiBound = '1';
+    if (!tool || !start || !end || !button || !textarea || !output || !statusText) return;
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const fmtDateInput = (date) => date.toISOString().slice(0, 10);
+    if (!start.value) start.value = fmtDateInput(firstDay);
+    if (!end.value) end.value = fmtDateInput(today);
+    renderReportToolOptions();
+    const setReportStatus = (message) => {
+      statusText.textContent = message;
+      statusText.classList.toggle('hidden', !message);
+    };
+    if (button.dataset.reportBound) return;
+    button.dataset.reportBound = '1';
     button.addEventListener('click', async () => {
-      const question = textarea.value.trim();
-      if (!question) return;
+      if (!tool.value || !start.value || !end.value) {
+        setReportStatus('请选择功能和统计周期。');
+        return;
+      }
+      const prompt = textarea.value.trim();
+      if (!prompt) {
+        setReportStatus('请先输入报告提示词。');
+        return;
+      }
       const old = button.textContent;
       button.textContent = '生成中...';
       button.disabled = true;
+      setReportStatus('正在取数并生成 HTML 报告...');
       try {
-        const result = await json('/ai/query', {
+        const result = await json('/ai/report', {
           method: 'POST',
-          body: JSON.stringify({ question }),
+          body: JSON.stringify({
+            tool_id: tool.value,
+            start_date: start.value,
+            end_date: end.value,
+            prompt,
+          }),
         });
-        output.textContent = result.answer;
+        output.textContent = '报告已生成并保存到资产管理。';
+        setReportStatus(`已保存：${result.filename}`);
+        window.setPortalView?.('assets');
+        loadReportAssets().catch((error) => {
+          console.warn('Report assets refresh after generation skipped:', error);
+        });
       } catch (error) {
         if (error.unauthorized || error.forbidden) {
           renderDataGate('你不是管理员，无权使用数据分析，请联系超管开通');
           output.textContent = '无权使用数据分析。';
         } else {
-          output.textContent = 'AI 查询暂未可用，请确认服务端已填写 APIMART_API_KEY。';
+          output.textContent = 'AI 报告暂未可用，请确认服务端已填写 APIMART_API_KEY。';
+          setReportStatus('生成失败，请检查 APIMart 配置或稍后重试。');
         }
       } finally {
         button.textContent = old;
@@ -1436,15 +1728,37 @@
     });
   }
 
+  function downloadHtml(filename, html) {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || 'AI工具数据报告.html';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   async function loadDataViews() {
+    bindReportAssetUi();
+    bindAiReport();
     try {
       await Promise.all([loadSummary(), loadEvents()]);
-      bindAiQuery();
     } catch (error) {
       if (error.unauthorized || error.forbidden) {
         renderDataGate('你不是管理员，无权查看统计与明细，请联系超管开通');
       } else {
         console.warn('Analytics binding skipped:', error);
+      }
+    }
+    try {
+      await loadReportAssets();
+    } catch (error) {
+      if (error.unauthorized || error.forbidden) {
+        renderDataGate('你不是管理员，无权查看报告资产，请联系超管开通');
+      } else {
+        console.warn('Report assets initial load skipped:', error);
       }
     }
   }
@@ -1453,7 +1767,7 @@
   async function renderAdminPanelIfSuperadmin() {
     const u = currentUser();
     if (!u || !u.is_superadmin) return;
-    const view = document.getElementById('summary-view');
+    const view = document.getElementById('settings-view');
     if (!view || view.querySelector('.admin-manage-panel')) return;
     let admins;
     try { admins = await json('/auth/admins'); } catch (error) { return; }
@@ -1499,7 +1813,11 @@
       await dingtalkLogin();
     } catch (error) {
       console.warn('钉钉免登失败', error);
+      localStorage.removeItem(tokenKey);
+      localStorage.removeItem(userKey);
       renderDataGate('钉钉免登失败，请重新打开页面');
+      try { await loadTools(); } catch (error) { console.warn(error); }
+      return;
     }
     try { await loadTools(); } catch (error) { console.warn(error); }
     if (canViewData()) {
@@ -1524,6 +1842,16 @@
   }
 
   window.addEventListener('summary-view-visible', refreshSummaryEvents);
+  window.addEventListener('asset-view-visible', () => {
+    bindReportAssetUi();
+    loadReportAssets().catch((error) => {
+      if (error.unauthorized || error.forbidden) {
+        renderDataGate('你不是管理员，无权查看统计与资产，请联系超管开通');
+      } else {
+        console.warn('Report assets refresh skipped:', error);
+      }
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', bootRealData);
   if (document.readyState !== 'loading') bootRealData();

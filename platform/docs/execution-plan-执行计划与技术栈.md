@@ -13,14 +13,14 @@
   产出 [数据契约](schema-数据契约.md) 与 [接入契约](contract-接入契约.md) 的字段表、JSON Schema 校验定义、字段文档。这是后续一切的依据。
 
 - **Phase 1 — 存储层（共享）**
-  建 PostgreSQL 库与统一事件表（metadata 用 JSONB）、[工具注册表](registry-工具注册表.md)（**含门户展示字段**：category / display_name / description / icon / thumbnail / launch_url / sort_weight / enabled）、**用户账号表**（账号 / 密码哈希 / user_id / team_id / 角色）；建接入 API（接收一条流水 → 校验契约 → 落库）。三张表是两个前端共用的共享数据。
+  建 PostgreSQL 库与统一事件表（metadata 用 JSONB）、[工具注册表](registry-工具注册表.md)（**含门户展示字段**：category / display_name / description / icon / thumbnail / launch_url / sort_weight / enabled）、**用户账号表**（账号 / user_id / team_id / 角色；后续由钉钉组织同步补 `dingtalk_userid` 与部门关系，密码登录已由 #47 退役）；建接入 API（接收一条流水 → 校验契约 → 落库）。三张表是两个前端共用的共享数据。
 
 - **Phase 1.5 — 真实数据库冒烟**
   在不接真实工具的前提下，用真实 PostgreSQL 验证 `模拟 JSON → FastAPI /events → usage_event` 的落库链路。它只验证平台自身：建表 SQL、DB 连接、幂等、`ingested_at`、metadata JSONB。若本地无 Docker，可在具备 Docker 的机器上执行；未通过前不进入真实工具试点。
 
 - **Phase 2 — 采集层 + 统一身份**
   a) **Phase 2A：参考 SDK + demo 工具**。SDK 是工具自报的便捷封装：自动生成 `record_id` / `conversation_id`，填 `schema_version`，支持异步上报、本地缓冲、重试队列、失败 / 超时也上报、token 归一化。demo 工具先验证 `demo_tool → SDK → /events → DB`，不接真实工具。
-  b) **Phase 2B：统一 Auth API 最小版**。提供创建用户、登录、校验 token、`/auth/me`。入口来源分 `portal` / `direct` / `unknown`：从门户进入用短期 `launch_token`；直接打开工具时，工具可通过 SDK / Auth API 让用户使用同一账号登录；识别不了就 `anonymous`。本阶段先把 `entry_source` / `auth_method` 放进 `metadata`，暂不升 schema。
+  b) **Phase 2B：统一 Auth API 最小版**。最初提供创建用户、登录、校验 token、`/auth/me`；后续读取侧登录已由 #47 更正为钉钉免登（`/auth/dingtalk` + `/auth/config`，`/auth/login` 删除）。入口来源分 `portal` / `direct` / `unknown`：识别不了就 `anonymous`。本阶段先把 `entry_source` / `auth_method` 放进 `metadata`，暂不升 schema。
   c) **Phase 2C：真实工具低风险试点**。只选一个可改代码、低使用量、不影响生产的工具；记圈一 + token + status + duration + metadata 入口来源，`input_content` / `output_content` 原文可按需记录（已放开，决策 #34），跑一段时间看数据质量。
   d) **Phase 2D：本地转发服务**。转发请求给中转站 + 旁路记一条流水，供 OpenClaw / 黑盒工具改指向；它是兜底，不是所有流量必经总闸。形态取「透明代理为主 + 旁路记录兜底」两者都要。**设计稿见 [collection/relay/README.md](../collection/relay/README.md)（待确认后实现）**。
 
@@ -156,6 +156,10 @@ platform/
 
 ```powershell
 cd platform
+.\scripts\start-platform.cmd  # 一键启动：PG + API + 前台静态服务，并打印状态/访问地址
+.\scripts\start-platform.cmd stop      # 停 API + 前台静态服务（PG 保持运行）
+.\scripts\start-platform.cmd status    # 打印一次 PG / API / 前台状态
+.\scripts\start-platform.cmd restart   # 重启 API + 前台静态服务，并进入常驻状态面板
 .\scripts\serve.ps1 start     # 一条命令：自动起 PG（若没起）+ 探活 DB + 起接入 API
 .\scripts\serve.ps1 status    # 看 API 状态
 .\scripts\pg.ps1   status     # 单看 PostgreSQL 状态
@@ -163,6 +167,7 @@ cd platform
 .\scripts\pg.ps1   stop       # 停 PG
 ```
 
+- `start-platform.cmd` 是当前开发机的推荐启动入口：内部优先调用 PowerShell 7（`pwsh.exe`），再执行 `serve.ps1 start` 启动 PG + API，并把 `platform/apps/web/` 起到 `0.0.0.0:5174`；默认启动后进入常驻状态面板，每 5 秒刷新 PG / API / 前台状态、本机地址和局域网入口。停止 / 状态 / 重启 / 只看状态分别用 `.\scripts\stop-platform.cmd`、`.\scripts\status-platform.cmd`、`.\scripts\restart-platform.cmd`、`.\scripts\watch-platform.cmd`。
 - `serve.ps1 start` 会先调 `pg.ps1` 把 PG 带起来，再**真实探活 DB**（连不上当场报错、不假装起好），最后起 API 并探活 `/health`。
 - **开机不会自动恢复**：免安装 PG 不是常驻服务。要开机自启，跑一次 `.\scripts\autostart.ps1 install`（登录时自动 `serve start`）；撤销用 `.\scripts\autostart.ps1 remove`。
 - 验证整条链：`GET http://127.0.0.1:8000/health` 返回 `{"status":"ok"}`；`POST /events` 一条事件应 `202 inserted:true`。
@@ -175,8 +180,9 @@ cd platform
 |---|---|
 | 前台静态服务 | `platform/apps/web/` 起在 `0.0.0.0:5174`（任意静态文件服务器即可） |
 | 后端 API | `0.0.0.0:8000`（上文 `serve.ps1`）；前台默认按 `location.hostname:8000` 推导，可用 localStorage `portal-api-base` 覆盖 |
-| 钉钉入口 | 钉钉 PC 端工作台首页直挂 `http://<本机局域网IP>:5174/`（当前 `192.168.0.102`）。**过渡形态**：免登 + 部门可见性按钉钉设计稿（决策 #38，待实现）后续替换 |
-| 读取侧门禁 | 门户卡片 `/portal/tools` 公开；`/analytics/*` 与 `/ai/query` 需登录态 bearer token（决策 #44），数据页内置登录框，账号由管理员经 `/auth/users` 发放 |
+| 钉钉入口 | 钉钉 PC 端工作台首页直挂 `http://<本机局域网IP>:5174/`（最近一次本机观测为 `192.168.50.27`；以 `scripts/start-platform.cmd status` 打印为准）。免登门禁已落地待真机验证；部门可见性仍按钉钉设计稿 Phase B 待实现 |
+| 读取侧门禁 | 门户卡片 `/portal/tools` 公开；`/analytics/*`、`/ai/query` 与 `/ai/report` 需钉钉免登后的 admin / 超管 token（决策 #47/#48）。非钉钉环境不显示密码框，提示在钉钉客户端内打开 |
+| AI 周期报告 | 数据分析页保留原提示词输入框与按钮排版，额外选择功能 + 日期范围后调用 `/ai/report`；后端按本期/上一周期读取真实汇总，追加到用户输入的报告提示词后经 APIMart Gemini 生成 HTML，前端自动下载。`/ai/query` 后端暂留但前台不再使用。报告模板骨架文件尚未接入，需后续把 `报告模板-通用版含目录.html` 纳入仓库或配置路径 |
 | CORS | 默认 `*`（鉴权走 Authorization 头、无 cookie）；正式部署在 `.env` 的 `PORTAL_CORS_ORIGINS` 填门户来源收紧 |
 
 ---
@@ -193,6 +199,6 @@ cd platform
 | 凭据/脚本散落 | `admin-cred.txt`、smoke 脚本在 `D:\pg-portable` | 凭据走密钥管理；脚本归仓库 | 低 |
 | ~~迁移执行~~ | ✅ **已落地**：`tools/migrate.py` 幂等执行器 + `schema_migrations` 跟踪表（决策 #35）。逻辑在 `backend/storage/migrate.py`，用法见 [migrations/README](../backend/storage/migrations/README.md) | —— | 完成 |
 | 连接池 | 每请求新开连接（已加连接超时兜底） | 放量前接 `psycopg_pool` | 放量前 |
-| 钉钉入口地址 | 直挂开发机 DHCP 地址 `192.168.0.102`（会漂，漂了入口即断） | 给开发机固定 IP 或用主机名/内网域名，再写回钉钉配置 | 中 |
+| 钉钉入口地址 | 直挂开发机 DHCP 地址（最近一次本机观测为 `192.168.50.27`，会漂，漂了入口即断） | 给开发机固定 IP 或用主机名/内网域名，再写回钉钉配置；变更后同步钉钉工作台首页地址 | 中 |
 
 > 这些原先只记在 AI 记忆里，现搬入仓库成为可追踪事实（呼应 CLAUDE.md「占位明确」）。

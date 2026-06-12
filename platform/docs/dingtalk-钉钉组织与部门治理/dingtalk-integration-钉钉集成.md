@@ -1,8 +1,8 @@
-# 钉钉集成（Phase A · 设计稿 · 待实现）
+# 钉钉集成（Phase A · 已实现，免登待真机验证）
 
 > 本分册定义**钉钉打通**：一个企业内部应用，支撑「组织同步」+「免登认人」两件事。
-> 总览见 [README](README-总览与索引.md)；数据结构见 [数据模型](data-model-数据模型.md)；关联决策 **#38**。
-> **可行性已核实**：组织同步走钉钉通讯录 API、免登走 H5 微应用 `requestAuthCode`，均为钉钉标准能力（核实记录见 [开发日志](../../../开发日志.md) 本轮条目）。
+> 总览见 [README](README-总览与索引.md)；数据结构见 [数据模型](data-model-数据模型.md)；关联决策 **#38/#47**。
+> **当前状态**：组织同步已通过 `backend/org_sync` + `tools/sync_dingtalk.py` 落地；免登数据门禁已通过决策 #47 落地到 `/auth/dingtalk`、`/auth/config` 与前台钉钉 JSAPI，真实钉钉客户端登录仍待用户验证。
 
 ---
 
@@ -68,10 +68,10 @@
 门户做成 H5 微应用，在 **PC 钉钉**内打开（本轮约束）。
 
 1. **前端拿 `authCode`**：门户页引 `dingtalk-jsapi`，调 `dd.runtime.permission.requestAuthCode({ corpId })` → `authCode`（**5 分钟有效、一次性**）。
-2. **前端提交**：`POST /auth/dingtalk/login { authCode }`（新增端点）。
+2. **前端提交**：`POST /auth/dingtalk { code }`（已实现端点）。
 3. **后端换 `userid`**：用缓存的 `access_token` + `authCode` 调钉钉「根据 code 获取用户信息」→ 得 `userid`。
 4. **映射到平台账号**：按 `userid` 查 `user_account.dingtalk_userid` → 得 `user_id` → 签发平台会话 / token。
-5. **找不到账号**（同步尚未覆盖的新员工）：**即时拉一次**该 `userid` 的用户详情 + 主部门，当场 upsert 建账号再登入（决策 #38 / P3）。正常情况下组织同步已覆盖全员，这是补漏路径。
+5. **找不到账号**（同步尚未覆盖的新员工）：设计目标是即时拉一次该 `userid` 的用户详情 + 主部门，当场 upsert 建账号再登入（决策 #38 / P3）。当前已实现链路先返回「账号未同步，请联系超管」，即时补拉仍待实现。
 
 ### 与现有入口 / 身份模型的衔接（决策 #29）
 
@@ -85,17 +85,17 @@
 
 免登世界里「谁是 admin」：
 
-- 复用现有用户账号表的 **admin 角色标记**（决策 #31/#17），通过 `dingtalk_userid` 关联到具体钉钉人——即「一张挂 `dingtalk_userid` 的 admin 名单」。
-- 免登登入后按该标记判定 admin，衔接现有 admin 门禁（`/auth/users`、`/registry/tools` 同一门禁，决策 #31/#32）。
-- **首个 admin 引导**：密码登录已退役（P2），`seed_admin` 脚本改为离线把某个钉钉 `userid` 标记为 admin（不再写密码），运维用 DB 凭据跑一次即可；之后该人免登进来就是 admin。
+- **超管**：钉钉 `userid` 命中配置 `BOOTSTRAP_ADMIN_DINGTALK_USERID` 即为超管；超管可看数据端，也可增减普通 admin（决策 #47）。
+- **admin**：复用现有用户账号表的 `role='admin'` 标记，通过 `dingtalk_userid` 关联到具体钉钉人；admin 可看数据端，不能增减 admin。
+- **首个超管引导**：密码登录已退役（P2），首个超管由环境变量配置认定，取代旧 `tools/seed_admin.py` 离线引导。`seed_admin.py` 若保留，只能视作遗留/普通 admin 辅助，不再作为超管来源。
 
 ---
 
 ## 六、密码体系的去留
 
-- 钉钉免登成为**唯一登录**，现有「管理员发密码 + 哈希存储」（决策 #17/#31）登录路径**完全退役**（决策 #38 / P2）：不再保留密码登录端点。
-- 受影响项：① 首个 admin 引导改为 seed 脚本绑定钉钉 `userid`（见 §五），不再发密码；② 账号表的密码哈希列在实现时随之移除或废弃（实现阶段按迁移处理）。
-- 决策 #17/#31 的密码登录部分由本决策取代；实现时回改 [架构 §五](../architecture-架构与原则.md) 并在 PROJECT_PLAN 决策记录注明。
+- 钉钉免登成为**唯一登录**，现有「管理员发密码 + 哈希存储」（决策 #17/#31）登录路径**完全退役**（决策 #38 / P2 / #47）：`/auth/login` 与前台密码框已删除。
+- 受影响项：① 首个超管由 `BOOTSTRAP_ADMIN_DINGTALK_USERID` 配置认定；② `user_account.password_hash` 列暂留可空，是否删列后置；③ `/auth/users` 仍作为 admin 门禁下的账号维护接口保留。
+- 决策 #17/#31 的密码登录部分由 #47 取代；当前正文以 [架构 §五](../architecture-架构与原则.md) 为准。
 
 ---
 
@@ -120,8 +120,8 @@
 
 1. 钉钉应用申请 + 凭据配置 + 部署前置确认（出网、门户内网可达）。
 2. `backend/org_sync` 同步服务（token 缓存 → 递归拉树 → 拉人员 → upsert）+ 部门 / 账号仓库扩展 + 迁移（见 [数据模型](data-model-数据模型.md) §六）。
-3. `POST /auth/dingtalk/login` 免登端点 + 门户前端 `requestAuthCode` 接入。
-4. admin 认定衔接 + `auth_method=dingtalk_sso` 进 metadata。
+3. `POST /auth/dingtalk` 免登端点 + 门户前端 `requestAuthCode` 接入。
+4. 超管 / admin 认定衔接 + `auth_method=dingtalk_sso` 进 metadata。
 5. 机器闸门全绿（[代码规范](../code-standards-代码规范.md)），开发日志追加。
 
 Phase A 通后再做 [Phase B 可见性治理](visibility-governance-部门化可见性治理.md)。

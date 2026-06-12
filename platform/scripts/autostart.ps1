@@ -7,7 +7,7 @@
     .\scripts\autostart.ps1 remove    # 卸载
     .\scripts\autostart.ps1 status    # 查看是否已注册
 
-  原理：建一个「用户登录触发」的计划任务，隐藏窗口跑 serve.ps1 start。
+  原理：建一个「用户登录触发」的计划任务，隐藏窗口跑 serve.ps1 start（优先用 PowerShell 7 / pwsh）。
   免安装 PG 不是 Windows 服务，登录后由 serve.ps1 顺带把 PG 带起来。
   仅当前用户、登录后生效（机器重启到登录界面前不会起，够本机 dev 用）。
   要让 PG 在登录前就常驻，得把 PostgreSQL 注册成 Windows 服务（需管理员），另行处理。
@@ -25,14 +25,16 @@ $User = "$env:USERDOMAIN\$env:USERNAME"
 
 switch ($Action) {
   'install' {
-    $taskAction = New-ScheduledTaskAction -Execute 'powershell.exe' `
+    $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+    $shell = if ($pwsh) { $pwsh.Source } else { 'powershell.exe' }
+    $taskAction = New-ScheduledTaskAction -Execute $shell `
       -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ServePs1`" start"
     $trigger = New-ScheduledTaskTrigger -AtLogOn -User $User
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries `
       -DontStopIfGoingOnBatteries -StartWhenAvailable
     Register-ScheduledTask -TaskName $TaskName -Action $taskAction -Trigger $trigger `
       -Settings $settings -RunLevel Limited -Force | Out-Null
-    Write-Host "已注册登录自启：$TaskName（用户 $User）"
+    Write-Host "已注册登录自启：$TaskName（用户 $User，Shell $shell）"
   }
   'remove' {
     Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue

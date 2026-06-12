@@ -53,10 +53,11 @@ metadata **位置自由，但形状有规范**，否则将来无法分析、无�
 | **错误详情** | `error = { "code": "TIMEOUT", "message": "…" }` | `status` 为 `failed` / `timeout` 时补充；`message` 注意脱敏 |
 | **测试 / 非生产流量** | `test = true`（连接测试 / 冒烟 / 手工诊断 POST 等**非真实使用**的流量） | boolean；**分析层默认排除**；真实使用不带此键或为 `false`。开发 / 接入期往 `/events` 发的验证事件一律打此标，避免污染指标 |
 | **来源 IP（平台盖章）** | `source_ip = "192.168.1.23"` | string；**平台服务端在接入层自动盖**（同 `ingested_at`），溯源 / 排障用，**接入方不用填**（填了也会被平台观测值覆盖）。优先取 `X-Forwarded-For` 第一跳（relay 转发时带回工具真实 IP），否则为直连对端 IP。**只用于溯源、不做鉴权**（决策 #7） |
+| **身份方式** | `auth_method = "dingtalk_sso"` | string；从钉钉客户端免登识别到平台账号时使用。该值先留在 metadata，暂不升事件 schema（决策 #29/#47） |
 
 > 整体耗时不进 metadata——用主表现成的 `duration_ms`（圈一）。别重造已有字段。
 >
-> **生效日期**：`chapter_type` 约定 2026-06-04 起生效（首个登记方 aird-report）；`test` / `source_ip` 约定 2026-06-10 起生效（`test` 隔离测试流量、分析层默认过滤；`source_ip` 由平台服务端盖章，用于溯源）。其余为初始约定。
+> **生效日期**：`chapter_type` 约定 2026-06-04 起生效（首个登记方 aird-report）；`test` / `source_ip` 约定 2026-06-10 起生效（`test` 隔离测试流量、分析层默认过滤；`source_ip` 由平台服务端盖章，用于溯源）；`auth_method=dingtalk_sso` 约定 2026-06-12 起生效（钉钉免登数据门禁）。其余为初始约定。
 
 ---
 

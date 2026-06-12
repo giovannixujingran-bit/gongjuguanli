@@ -61,7 +61,7 @@
 | 项 | 说明 |
 |---|---|
 | 端点 | `POST /registry/tools` |
-| 鉴权 | 需 **admin token**（非 admin 403、无 token 401）。首个 admin 由 `tools/seed_admin.py` 离线引导（见 [架构-账号体系](architecture-架构与原则.md)） |
+| 鉴权 | 需 **admin token**（非 admin 403、无 token 401）。首个超管由 `BOOTSTRAP_ADMIN_DINGTALK_USERID` 配置认定；超管可在前台成员权限面板增减普通 admin（见 [架构-账号体系](architecture-架构与原则.md)） |
 | 请求体 | `tool_id`（必填，按上方命名规则校验）、`name`（必填）、`team_id` / `data_level` / `collect_method` / `model_default`（选填，缺省走建表默认 `minimal` / `report`） |
 | 成功 | `201`，返回登记后的接入字段 |
 | 重复登记 | `409`（`tool_id` 是主键，重复显式报错，不静默） |

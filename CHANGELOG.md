@@ -5,9 +5,12 @@
 
 ## Unreleased
 
+## v0.3.0 — 2026-06-12
+
 ### Added
 
 - **钉钉免登 + 数据端三层角色门禁（决策 #47，更正 #44）**：身份认证改为**钉钉免登**——前台在钉钉容器内 `dd.runtime.permission.requestAuthCode` 拿 code，后端 `POST /auth/dingtalk` 用 `user/getuserinfo` 换 `dingtalk_userid` 并签发带 `role`+`is_superadmin` 的 token；新增 `GET /auth/config`（下发 corpId）、`GET /auth/admins` 与 `POST /auth/admins/{user_id}`（仅超管，列员工/设撤 admin）。读取侧三层角色：超管（配置 `BOOTSTRAP_ADMIN_DINGTALK_USERID` 认定，看数据端 + 增减 admin）/ admin（看数据端）/ 普通员工（只用工具 + 看自己历史）；`/analytics/*`、`/ai/query` 收紧为 admin 或超管。前台删除密码登录框，非钉钉环境提示「在钉钉客户端内打开」，超管多一个「成员权限管理」面板。新增配置 `DINGTALK_CORP_ID` + `BOOTSTRAP_ADMIN_DINGTALK_USERID`（复用组织同步的 `DINGTALK_CLIENT_ID/SECRET`）。
+- **AI 周期报告生成与报告资产管理（决策 #48）**：数据分析页保留原提示词输入框与按钮排版，新增功能选择 + 统计周期控件，新增 `POST /ai/report`。后端按工具和日期范围读取本期/上一周期真实汇总（总请求、成功数、耗时、token、按日、状态、用户、章节/功能维度），把数据追加到用户输入的报告提示词后调用 APIMart Gemini，生成完整 HTML 后保存为报告资产；新增 `report_asset` 表与 `GET /assets/reports` / `GET /assets/reports/{asset_id}`，资产管理页可预览、下载历史报告。`/ai/query` 后端暂留但前台不再使用；报告模板骨架文件尚未接入，当前提示词会标注模板缺失。
 - **读取侧最小门禁 + 钉钉试点入口（决策 #44）**：`GET /analytics/events`、`GET /analytics/summary`、`POST /ai/query` 改为必须登录态 bearer token（匿名 401），数据页内置登录框；`/portal/tools` 保持公开。CORS 改 `PORTAL_CORS_ORIGINS` 可配。**接入方式变更**：合并版前台（门户 + 数据页）正式入口落 `platform/apps/web/`（局域网静态服务 `0.0.0.0:5174`），钉钉 PC 工作台首页直挂该地址（过渡形态，免登/部门可见性按决策 #38 设计稿后续实现）；部署事实见 [execution-plan §四](platform/docs/execution-plan-执行计划与技术栈.md)。
 - **真实工具门户/分析读取链路（aird-report 试点，决策 #43）**：新增只读 API `GET /portal/tools`、`GET /analytics/events`、`GET /analytics/summary`，门户可直接读取 `tool_registry` 展示字段与非测试 `usage_event` 聚合/明细；新增 `POST /ai/query`，按 `APIMART_API_KEY` 调用 APIMart Gemini（默认 `gemini-3.5-flash`），密钥不进代码。新增 `integrations/<tool_id>/tool.toml` + `tools/apply_registry.py` 声明式同步通道，已将真实工具 `aird-report`（AI报告生成平台，分类「趋势资产」）同步入库。明细表落「数据汇总」页，按请求 ID / 工具 / 章节（已登记约定 `metadata.chapter_type`）/ 模型 / 用户 / 输入 / 输出状态 / 优先级 / Tokens / 用时十列展示；「数据分析」页保留实时总结与 AI 查询。
 - **事件来源 IP 溯源（决策 #41）**：接入层收 `/events` 时由平台**服务端自动盖** `metadata.source_ip`（同 `ingested_at` 的服务端盖章），用于「某条记录是哪台机器发来的」的溯源 / 排障。优先取 `X-Forwarded-For` 第一跳（为 Phase 2D relay 预留，转发时带回工具真实 IP），否则用直连对端 IP。**进 metadata、不升 `schema_version`**；只溯源、不做鉴权（不违反决策 #7）。接入方无需改动。

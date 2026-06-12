@@ -1,8 +1,8 @@
-# 钉钉组织同步与部门化工具治理（设计稿 · 待实现）
+# 钉钉组织同步与部门化工具治理
 
-> **状态：设计稿 / 待实现。** 本文件夹是一套**前瞻设计**，描述「将要怎样」，不是当前已实现的能力。
-> 实现时要按文末「实现时文档传播清单」回改各 SSOT 正文（architecture / registry / portal / execution-plan 等），届时这套设计稿的内容会落到对应正文，本文件夹转为历史归档或删除。
-> 维护守则见 [CLAUDE.md](../../../CLAUDE.md)；总纲见 [PROJECT_PLAN.md](../../../PROJECT_PLAN.md)。关联决策 **#38**。
+> **当前状态**：组织同步 Phase A 已实现；钉钉免登 + 数据端三层角色门禁已实现，待钉钉真机验证（决策 #47）；部门化工具可见性治理仍是设计稿，待实现。
+> 本文件夹保留完整方案脉络：已落地部分按当前事实维护，未落地部分继续标为设计稿，避免把组织同步、免登门禁、部门可见性混成同一状态。
+> 维护守则见 [CLAUDE.md](../../../CLAUDE.md)；总纲见 [PROJECT_PLAN.md](../../../PROJECT_PLAN.md)。关联决策 **#38/#47**。
 
 ---
 
@@ -29,8 +29,8 @@
 
 | 步 | 名称 | 做什么 | 分册 |
 |---|---|---|---|
-| **A** | 钉钉打通 | 一个企业内部应用：免登入口 + 组织同步。平台从此知道「谁、哪个部门」。 | [钉钉集成](dingtalk-integration-钉钉集成.md) |
-| **B** | 部门化工具治理 | 在 A 的组织数据上，给注册表加白名单字段 + 门户按部门过滤。 | [可见性治理](visibility-governance-部门化可见性治理.md) |
+| **A** | 钉钉打通 | 一个企业内部应用：免登入口 + 组织同步。平台从此知道「谁、哪个部门」。**组织同步已实现；免登门禁已落地待真机验证。** | [钉钉集成](dingtalk-integration-钉钉集成.md) |
+| **B** | 部门化工具治理 | 在 A 的组织数据上，给注册表加白名单字段 + 门户按部门过滤。**仍为设计稿，待实现。** | [可见性治理](visibility-governance-部门化可见性治理.md) |
 
 两步共用的数据结构（部门表 / 账号扩展 / 注册表扩展）集中在 [数据模型](data-model-数据模型.md)。
 
@@ -51,7 +51,7 @@
 | # | 参数 | 决定 | 落点分册 |
 |---|---|---|---|
 | P1 | 组织同步频率 | **每小时一次定时 + 管理员手动触发端点** | 钉钉集成 §3.2 |
-| P2 | 密码体系 | **完全退役**，钉钉免登为唯一登录；首个 admin 由 seed 脚本绑定钉钉 `userid` 引导 | 钉钉集成 §五/§六 |
+| P2 | 密码体系 | **完全退役**，钉钉免登为唯一登录；首个超管由 `BOOTSTRAP_ADMIN_DINGTALK_USERID` 配置认定（决策 #47），`seed_admin.py` 不再作为超管引导 | 钉钉集成 §五/§六 |
 | P3 | 同步未覆盖的新员工 | **即时拉一次**该员工详情，建账号后登入 | 钉钉集成 §四 |
 | P4 | 白名单存法 | **单独关联表** `tool_visible_department`（不用 JSONB 数组，利于 join） | 数据模型 §4 |
 | P5 | 门户可达性 | **只在公司网络内用 PC 钉钉**（手机 / 外网后续再评估穿透/反代） | 钉钉集成 §二 |
@@ -59,14 +59,14 @@
 
 ---
 
-## 六、实现时文档传播清单（本设计阶段**不**改这些正文，实现时再改）
+## 六、文档传播清单
 
-按 [CLAUDE.md §3](../../../CLAUDE.md) 改动传播规则，实现时需同步：
+按 [CLAUDE.md §3](../../../CLAUDE.md) 改动传播规则，当前传播状态如下：
 
-- [architecture-架构与原则.md](../architecture-架构与原则.md) §五：登录从「管理员发密码」改写为「钉钉免登」；账号体系新增部门维度。
-- [registry-工具注册表.md](../registry-工具注册表.md)：新增治理字段（`owner_dept_id` / 白名单 / `visible_to_all`）说明。
-- [portal-工具门户.md](../portal-工具门户.md)：新增「按部门可见性过滤」+「钉钉免登入口」。
-- [execution-plan-执行计划与技术栈.md](../execution-plan-执行计划与技术栈.md)：新增 `backend/org_sync` 目录、迁移文件、部署前置（服务器出网 + 钉钉凭据配置）。
-- [metadata-conventions-metadata约定与字段治理.md](../metadata-conventions-metadata约定与字段治理.md)：`auth_method` 新增 `dingtalk_sso` 约定值（放 metadata，暂不升 schema，呼应决策 #29）。
-- [PROJECT_PLAN.md](../../../PROJECT_PLAN.md) 决策记录：已追加 #38；实现各阶段如有新取舍再追加。
-- [开发日志.md](../../../开发日志.md) / [CHANGELOG.md](../../../CHANGELOG.md)：实现时按铁律追加。
+- [architecture-架构与原则.md](../architecture-架构与原则.md) §五：已落钉钉免登 + 三层角色；部门级细分仍待定。
+- [registry-工具注册表.md](../registry-工具注册表.md)：部门化工具可见性实现时再新增 / 落实工具 owner 部门、全员可见、部门白名单字段。
+- [portal-工具门户.md](../portal-工具门户.md)：已切钉钉免登入口；部门可见性过滤待 Phase B 实现。
+- [execution-plan-执行计划与技术栈.md](../execution-plan-执行计划与技术栈.md)：已补 `backend/org_sync`、迁移文件、钉钉凭据与局域网入口；Phase B 实现时继续更新部门可见性部署项。
+- [metadata-conventions-metadata约定与字段治理.md](../metadata-conventions-metadata约定与字段治理.md)：`auth_method=dingtalk_sso` 仍按 metadata 约定管理，暂不升 schema。
+- [PROJECT_PLAN.md](../../../PROJECT_PLAN.md)：已追加 #38/#47；后续 Phase B 如有新取舍再追加。
+- [开发日志.md](../../../开发日志.md) / [CHANGELOG.md](../../../CHANGELOG.md)：按铁律追加；纯状态校准只记开发日志。

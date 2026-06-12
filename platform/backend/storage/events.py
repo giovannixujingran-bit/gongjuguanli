@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Protocol
+from datetime import date, datetime, timedelta
+from typing import Any, Protocol, cast
 from uuid import UUID
 
+from psycopg import Cursor
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
@@ -25,10 +26,14 @@ class EventRow:
     tool_id: str
     model: str | None
     user_id: str
+    user_display_name: str | None
     # 工具自报的 metadata.chapter_type（如 aird-report 按报告章节逐次调用）；没报则为 None。
     chapter: str | None
     input_preview: str | None
     output_preview: str | None
+    output_content: str | None
+    output_kind: str
+    output_ref: str | None
     status: str
     total_tokens: int | None
     duration_ms: int
@@ -58,6 +63,35 @@ class UsageSummary:
     events_by_tool: dict[str, int]
 
 
+@dataclass(frozen=True)
+class ReportMetricBreakdown:
+    name: str
+    events: int
+    tokens: int
+    avg_duration_ms: float | None = None
+
+
+@dataclass(frozen=True)
+class ReportPeriod:
+    start_date: date
+    end_date: date
+    total_events: int
+    success_events: int
+    avg_duration_ms: float | None
+    total_tokens: int
+    daily: list[DailyUsage]
+    status: list[ReportMetricBreakdown]
+    users: list[ReportMetricBreakdown]
+    chapters: list[ReportMetricBreakdown]
+
+
+@dataclass(frozen=True)
+class ToolReportData:
+    tool_id: str
+    current: ReportPeriod
+    previous: ReportPeriod
+
+
 class UsageEventRepository(Protocol):
     def insert_event(self, event: UsageEvent, *, ingested_at: datetime) -> StoredEvent:
         """Store one event idempotently by record_id."""
@@ -77,6 +111,15 @@ class UsageEventReader(Protocol):
 
     def summarize(self) -> UsageSummary:
         """Raw aggregates for non-test traffic. Formula-heavy metrics stay out for now."""
+
+    def tool_report_data(
+        self,
+        *,
+        tool_id: str,
+        start_date: date,
+        end_date: date,
+    ) -> ToolReportData:
+        """Current and previous-period aggregates for one tool report."""
 
 
 class PostgresUsageEventRepository:
@@ -129,6 +172,7 @@ class PostgresUsageEventReader:
         offset: int = 0,
     ) -> EventPage:
         where, params = build_event_filters(tool_id=tool_id, status=status, since_hours=since_hours)
+        aliased_where = aliased_event_where(where)
         params["limit"] = limit
         params["offset"] = offset
         with db_connect(self._database_url) as connection:
@@ -138,34 +182,26 @@ class PostgresUsageEventReader:
                 total = 0 if counted is None else int(counted["total"])
                 cursor.execute(
                     f"""
-                    SELECT record_id, tool_id, model, user_id,
-                           metadata ->> 'chapter_type' AS chapter,
-                           left(input_content, 80) AS input_preview,
-                           left(output_content, 80) AS output_preview,
-                           status, total_tokens, duration_ms, start_time
-                    FROM usage_event
-                    WHERE {where}
-                    ORDER BY start_time DESC
+                    SELECT e.record_id, e.tool_id, e.model, e.user_id,
+                           coalesce(
+                               nullif(ua.display_name, ''),
+                               nullif(ua.username, '')
+                           ) AS user_display_name,
+                           e.metadata ->> 'chapter_type' AS chapter,
+                           left(e.input_content, 80) AS input_preview,
+                           left(e.output_content, 80) AS output_preview,
+                           e.output_content,
+                           e.metadata,
+                           e.status, e.total_tokens, e.duration_ms, e.start_time
+                    FROM usage_event e
+                    LEFT JOIN user_account ua ON ua.user_id = e.user_id
+                    WHERE {aliased_where}
+                    ORDER BY e.start_time DESC
                     LIMIT %(limit)s OFFSET %(offset)s
                     """,
                     params,
                 )
-                rows = [
-                    EventRow(
-                        record_id=row["record_id"],
-                        tool_id=str(row["tool_id"]),
-                        model=None if row["model"] is None else str(row["model"]),
-                        user_id=str(row["user_id"]),
-                        chapter=None if row["chapter"] is None else str(row["chapter"]),
-                        input_preview=row["input_preview"],
-                        output_preview=row["output_preview"],
-                        status=str(row["status"]),
-                        total_tokens=row["total_tokens"],
-                        duration_ms=int(row["duration_ms"]),
-                        start_time=row["start_time"],
-                    )
-                    for row in cursor.fetchall()
-                ]
+                rows = [row_to_event_row(row) for row in cursor.fetchall()]
         return EventPage(rows=rows, total=total)
 
     def summarize(self) -> UsageSummary:
@@ -223,6 +259,159 @@ class PostgresUsageEventReader:
             events_by_tool=by_tool,
         )
 
+    def tool_report_data(
+        self,
+        *,
+        tool_id: str,
+        start_date: date,
+        end_date: date,
+    ) -> ToolReportData:
+        days = (end_date - start_date).days + 1
+        previous_end = start_date - timedelta(days=1)
+        previous_start = previous_end - timedelta(days=days - 1)
+        return ToolReportData(
+            tool_id=tool_id,
+            current=self._report_period(
+                tool_id=tool_id,
+                start_date=start_date,
+                end_date=end_date,
+            ),
+            previous=self._report_period(
+                tool_id=tool_id,
+                start_date=previous_start,
+                end_date=previous_end,
+            ),
+        )
+
+    def _report_period(
+        self,
+        *,
+        tool_id: str,
+        start_date: date,
+        end_date: date,
+    ) -> ReportPeriod:
+        params: dict[str, object] = {
+            "tool_id": tool_id,
+            "start_date": start_date,
+            "end_exclusive": end_date + timedelta(days=1),
+        }
+        where = (
+            f"{EXCLUDE_TEST_SQL} "
+            "AND tool_id = %(tool_id)s "
+            "AND start_time >= %(start_date)s "
+            "AND start_time < %(end_exclusive)s"
+        )
+        with db_connect(self._database_url) as connection:
+            with connection.cursor(row_factory=dict_row) as cursor:
+                cursor.execute(
+                    f"""
+                    SELECT count(*) AS total_events,
+                           count(*) FILTER (WHERE status = 'success') AS success_events,
+                           avg(duration_ms) AS avg_duration_ms,
+                           coalesce(sum(total_tokens), 0) AS total_tokens
+                    FROM usage_event
+                    WHERE {where}
+                    """,
+                    params,
+                )
+                totals = cursor.fetchone()
+                cursor.execute(
+                    f"""
+                    SELECT start_time::date AS day,
+                           count(*) AS events,
+                           coalesce(sum(total_tokens), 0) AS tokens
+                    FROM usage_event
+                    WHERE {where}
+                    GROUP BY 1
+                    ORDER BY 1
+                    """,
+                    params,
+                )
+                daily = [
+                    DailyUsage(
+                        day=row["day"].isoformat(),
+                        events=int(row["events"]),
+                        tokens=int(row["tokens"]),
+                    )
+                    for row in cursor.fetchall()
+                ]
+                status_rows = self._breakdown(
+                    cursor,
+                    where=where,
+                    params=params,
+                    expression="status",
+                    fallback="unknown",
+                    limit=10,
+                )
+                user_rows = self._breakdown(
+                    cursor,
+                    where=where,
+                    params=params,
+                    expression="coalesce(nullif(user_id, ''), 'anonymous')",
+                    fallback="anonymous",
+                    limit=10,
+                )
+                chapter_rows = self._breakdown(
+                    cursor,
+                    where=where,
+                    params=params,
+                    expression="coalesce(nullif(metadata ->> 'chapter_type', ''), '未标注章节')",
+                    fallback="未标注章节",
+                    limit=10,
+                )
+        if totals is None:
+            raise RuntimeError("usage report query returned no row")
+        avg_duration = totals["avg_duration_ms"]
+        return ReportPeriod(
+            start_date=start_date,
+            end_date=end_date,
+            total_events=int(totals["total_events"]),
+            success_events=int(totals["success_events"]),
+            avg_duration_ms=None if avg_duration is None else float(avg_duration),
+            total_tokens=int(totals["total_tokens"]),
+            daily=daily,
+            status=status_rows,
+            users=user_rows,
+            chapters=chapter_rows,
+        )
+
+    def _breakdown(
+        self,
+        cursor: Cursor[dict[str, object]],
+        *,
+        where: str,
+        params: dict[str, object],
+        expression: str,
+        fallback: str,
+        limit: int,
+    ) -> list[ReportMetricBreakdown]:
+        cursor.execute(
+            f"""
+            SELECT {expression} AS name,
+                   count(*) AS events,
+                   coalesce(sum(total_tokens), 0) AS tokens,
+                   avg(duration_ms) AS avg_duration_ms
+            FROM usage_event
+            WHERE {where}
+            GROUP BY 1
+            ORDER BY events DESC, name ASC
+            LIMIT %(breakdown_limit)s
+            """,
+            {**params, "breakdown_limit": limit},
+        )
+        rows = cursor.fetchall()
+        return [
+            ReportMetricBreakdown(
+                name=fallback if row["name"] is None else str(row["name"]),
+                events=int(cast(int, row["events"])),
+                tokens=int(cast(int, row["tokens"])),
+                avg_duration_ms=None
+                if row["avg_duration_ms"] is None
+                else float(cast(float, row["avg_duration_ms"])),
+            )
+            for row in rows
+        ]
+
 
 EXCLUDE_TEST_SQL = "NOT coalesce((metadata ->> 'test')::boolean, false)"
 
@@ -278,6 +467,64 @@ def numeric_quality(value: float | str | None) -> float | None:
     if value is None or isinstance(value, str):
         return None
     return float(value)
+
+
+def aliased_event_where(where: str) -> str:
+    return (
+        where.replace(EXCLUDE_TEST_SQL, "NOT coalesce((e.metadata ->> 'test')::boolean, false)")
+        .replace("tool_id = %(tool_id)s", "e.tool_id = %(tool_id)s")
+        .replace("status = %(status)s", "e.status = %(status)s")
+        .replace(
+            "start_time >= now() - make_interval(hours => %(since_hours)s)",
+            "e.start_time >= now() - make_interval(hours => %(since_hours)s)",
+        )
+    )
+
+
+def row_to_event_row(row: dict[str, Any]) -> EventRow:
+    output_content = None if row["output_content"] is None else str(row["output_content"])
+    output_kind, output_ref = output_details(row["metadata"], output_content)
+    return EventRow(
+        record_id=row["record_id"],
+        tool_id=str(row["tool_id"]),
+        model=None if row["model"] is None else str(row["model"]),
+        user_id=str(row["user_id"]),
+        user_display_name=None
+        if row["user_display_name"] is None
+        else str(row["user_display_name"]),
+        chapter=None if row["chapter"] is None else str(row["chapter"]),
+        input_preview=row["input_preview"],
+        output_preview=row["output_preview"],
+        output_content=output_content,
+        output_kind=output_kind,
+        output_ref=output_ref,
+        status=str(row["status"]),
+        total_tokens=row["total_tokens"],
+        duration_ms=int(row["duration_ms"]),
+        start_time=row["start_time"],
+    )
+
+
+def output_details(metadata: object, output_content: str | None) -> tuple[str, str | None]:
+    if isinstance(metadata, dict):
+        outputs = metadata.get("outputs")
+        if isinstance(outputs, list):
+            for item in outputs:
+                if not isinstance(item, dict):
+                    continue
+                if item.get("type") == "image":
+                    ref = item.get("ref") or item.get("url") or item.get("src")
+                    return "image", None if ref is None else str(ref)
+    if output_content and looks_like_image_ref(output_content):
+        return "image", output_content
+    return "text", None
+
+
+def looks_like_image_ref(value: str) -> bool:
+    lowered = value.strip().lower()
+    return lowered.startswith("data:image/") or lowered.endswith(
+        (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")
+    )
 
 
 INSERT_EVENT_SQL = """

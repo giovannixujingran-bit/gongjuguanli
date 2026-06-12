@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
-from uuid import UUID
+from datetime import UTC, date, datetime
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 
@@ -16,13 +16,24 @@ from backend.ingestion.app import (
     get_auth_token_secret,
     get_dingtalk_auth_client,
     get_event_reader,
+    get_report_asset_repository,
     get_repository,
     get_superadmin_userids,
     get_tool_directory,
     get_tool_registry_repository,
     get_user_repository,
 )
-from backend.storage.events import DailyUsage, EventPage, EventRow, StoredEvent, UsageSummary
+from backend.storage.assets import ReportAsset, ReportAssetRepository
+from backend.storage.events import (
+    DailyUsage,
+    EventPage,
+    EventRow,
+    ReportMetricBreakdown,
+    ReportPeriod,
+    StoredEvent,
+    ToolReportData,
+    UsageSummary,
+)
 from backend.storage.registry import (
     CollectMethod,
     DataLevel,
@@ -194,7 +205,9 @@ SAMPLE_TOOL = ToolConfig(
 class MemoryUsageEventReader:
     page: EventPage
     summary: UsageSummary
+    report_data: ToolReportData | None = None
     seen_filters: dict[str, object] = field(default_factory=dict)
+    seen_report: dict[str, object] = field(default_factory=dict)
 
     def list_events(
         self,
@@ -216,6 +229,84 @@ class MemoryUsageEventReader:
 
     def summarize(self) -> UsageSummary:
         return self.summary
+
+    def tool_report_data(
+        self,
+        *,
+        tool_id: str,
+        start_date: date,
+        end_date: date,
+    ) -> ToolReportData:
+        self.seen_report = {
+            "tool_id": tool_id,
+            "start_date": start_date,
+            "end_date": end_date,
+        }
+        if self.report_data is not None:
+            return self.report_data
+        current = ReportPeriod(
+            start_date=start_date,
+            end_date=end_date,
+            total_events=8,
+            success_events=6,
+            avg_duration_ms=2100.0,
+            total_tokens=12345,
+            daily=[DailyUsage(day=start_date.isoformat(), events=8, tokens=12345)],
+            status=[ReportMetricBreakdown(name="success", events=6, tokens=10000)],
+            users=[ReportMetricBreakdown(name="张三", events=8, tokens=12345)],
+            chapters=[ReportMetricBreakdown(name="cover", events=8, tokens=12345)],
+        )
+        previous = ReportPeriod(
+            start_date=date(2026, 5, 1),
+            end_date=date(2026, 5, 31),
+            total_events=4,
+            success_events=4,
+            avg_duration_ms=1800.0,
+            total_tokens=6000,
+            daily=[DailyUsage(day="2026-05-01", events=4, tokens=6000)],
+            status=[ReportMetricBreakdown(name="success", events=4, tokens=6000)],
+            users=[ReportMetricBreakdown(name="张三", events=4, tokens=6000)],
+            chapters=[ReportMetricBreakdown(name="cover", events=4, tokens=6000)],
+        )
+        return ToolReportData(tool_id=tool_id, current=current, previous=previous)
+
+
+@dataclass
+class MemoryReportAssetRepository:
+    assets: dict[UUID, ReportAsset] = field(default_factory=dict)
+
+    def create_report_asset(
+        self,
+        *,
+        filename: str,
+        title: str,
+        tool_id: str,
+        tool_name: str,
+        period_start: date,
+        period_end: date,
+        html: str,
+        created_by: str,
+    ) -> ReportAsset:
+        asset = ReportAsset(
+            asset_id=uuid4(),
+            filename=filename,
+            title=title,
+            tool_id=tool_id,
+            tool_name=tool_name,
+            period_start=period_start,
+            period_end=period_end,
+            html=html,
+            created_by=created_by,
+            created_at=datetime(2026, 6, 12, 8, 0, tzinfo=UTC),
+        )
+        self.assets[asset.asset_id] = asset
+        return asset
+
+    def list_report_assets(self, *, limit: int = 50) -> list[ReportAsset]:
+        return list(self.assets.values())[:limit]
+
+    def get_report_asset(self, asset_id: UUID) -> ReportAsset | None:
+        return self.assets.get(asset_id)
 
 
 @dataclass
@@ -409,6 +500,94 @@ def test_ai_query_maps_upstream_failure_to_502() -> None:
     assert response.status_code == 502
 
 
+def test_ai_report_feeds_selected_tool_and_period_into_prompt_and_saves_asset() -> None:
+    prompts: list[str] = []
+
+    def fake_ask(prompt: str) -> str:
+        prompts.append(prompt)
+        return "<!doctype html><html><body>报告</body></html>"
+
+    asset_repository = MemoryReportAssetRepository()
+    client, reader, auth = read_client(ai_answerer=fake_ask, asset_repository=asset_repository)
+
+    response = client.post(
+        "/ai/report",
+        headers=auth,
+        json={
+            "tool_id": "aird-report",
+            "start_date": "2026-06-01",
+            "end_date": "2026-06-30",
+            "prompt": "请按固定模板生成 HTML 报告。",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["html"].startswith("<!doctype html>")
+    assert body["filename"].endswith("-2026-06-01-2026-06-30-AI报告.html")
+    asset_id = UUID(body["asset_id"])
+    saved = asset_repository.assets[asset_id]
+    assert saved.filename == body["filename"]
+    assert saved.tool_id == "aird-report"
+    assert saved.period_start == date(2026, 6, 1)
+    assert saved.period_end == date(2026, 6, 30)
+    assert saved.html == body["html"]
+    assert saved.created_by == "user-009"
+    assert reader.seen_report == {
+        "tool_id": "aird-report",
+        "start_date": date(2026, 6, 1),
+        "end_date": date(2026, 6, 30),
+    }
+    [prompt] = prompts
+    assert "工具名称:AI报告生成平台" in prompt
+    assert prompt.startswith("请按固定模板生成 HTML 报告。")
+    assert "统计周期:2026-06-01 至 2026-06-30" in prompt
+    assert "总请求数: 8" in prompt
+
+
+def test_report_assets_can_be_listed_and_opened() -> None:
+    asset_repository = MemoryReportAssetRepository()
+    asset = asset_repository.create_report_asset(
+        filename="report.html",
+        title="AI 报告生成平台 2026-06 报告",
+        tool_id="aird-report",
+        tool_name="AI报告生成平台",
+        period_start=date(2026, 6, 1),
+        period_end=date(2026, 6, 30),
+        html="<!doctype html><html><body>报告</body></html>",
+        created_by="user-009",
+    )
+    client, _, auth = read_client(asset_repository=asset_repository)
+
+    list_response = client.get("/assets/reports", headers=auth)
+    detail_response = client.get(f"/assets/reports/{asset.asset_id}", headers=auth)
+
+    assert list_response.status_code == 200
+    [row] = list_response.json()
+    assert row["asset_id"] == str(asset.asset_id)
+    assert row["filename"] == "report.html"
+    assert "html" not in row
+    assert detail_response.status_code == 200
+    assert detail_response.json()["html"].startswith("<!doctype html>")
+
+
+def test_ai_report_rejects_unknown_tool() -> None:
+    client, _, auth = read_client(ai_answerer=lambda prompt: "unused")
+
+    response = client.post(
+        "/ai/report",
+        headers=auth,
+        json={
+            "tool_id": "missing-tool",
+            "start_date": "2026-06-01",
+            "end_date": "2026-06-30",
+            "prompt": "请生成报告。",
+        },
+    )
+
+    assert response.status_code == 404
+
+
 def test_dingtalk_login_then_me() -> None:
     user_repository = MemoryUserAccountRepository()
     user_repository.create_user(
@@ -585,6 +764,7 @@ def read_client(
     *,
     summary: UsageSummary = SAMPLE_SUMMARY,
     ai_answerer: Callable[[str], str] | None = None,
+    asset_repository: ReportAssetRepository | None = None,
 ) -> tuple[TestClient, MemoryUsageEventReader, dict[str, str]]:
     """Client + reader + 一个普通登录用户的 Authorization 头（读取侧门禁用）。"""
     reader = MemoryUsageEventReader(
@@ -606,6 +786,9 @@ def read_client(
     app.dependency_overrides[get_auth_token_secret] = lambda: "test-secret"
     app.dependency_overrides[get_event_reader] = lambda: reader
     app.dependency_overrides[get_tool_directory] = lambda: MemoryToolDirectory()
+    app.dependency_overrides[get_report_asset_repository] = (
+        lambda: asset_repository or MemoryReportAssetRepository()
+    )
     app.dependency_overrides[get_ai_answerer] = lambda: ai_answerer
     app.dependency_overrides[get_dingtalk_auth_client] = lambda: FakeDingtalkAuthClient(
         {"viewer-code": "dd-viewer"}
