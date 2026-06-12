@@ -23,6 +23,7 @@
 | 数据端 | [contract-接入契约.md](platform/docs/contract-接入契约.md) | 接入义务、边角情况、兜底通道 | 工具方（接入方） | 偶尔 |
 | 使用端 | [portal-工具门户.md](platform/docs/portal-工具门户.md) | 分类卡片、排序逻辑、AI 工具推荐 | 建使用端的团队 | 跟门户演进 |
 | 设计稿 | [dingtalk-钉钉组织与部门治理/](platform/docs/dingtalk-钉钉组织与部门治理/README-总览与索引.md) | **设计稿·待实现**：钉钉组织同步 + 部门化工具治理（钉钉免登 + 部门可见性白名单），决策 #38 | 建平台的团队 | 实现后落正文、本稿归档 |
+| 设计稿 | [specs/](platform/docs/specs/) | **在研设计稿目录**（brainstorming 产出，按 `YYYY-MM-DD-主题-design.md` 命名）：单个功能的实现前设计；非 SSOT 正式规范，落地后结论回写对应 `platform/docs/` 正文并保留设计稿备查 | 写代码的人/AI | 每开一个功能设计 |
 | —— | [开发日志](开发日志.md) | 按时间的过程流水（做了什么、动了哪些文件） | 全员 | 每次改动 |
 | —— | [CHANGELOG](CHANGELOG.md) | 面向阶段 / 发布的能力变更摘要 | 全员 / 交接者 | 阶段完成或发布时 |
 
