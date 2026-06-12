@@ -105,6 +105,8 @@
 
 46. **工具卡片去掉顶部缩略图块**：#45 的卡片带「缩略图（缺图渐变占位）」顶块，实际上线后占位图与下方图标块信息重复、卡片过高，用户拍板全部卡片去掉该块——图标块即视觉主体，其余结构（图标块+在线点+分类胶囊+标题+三行简介+usage_count+通栏按钮）不变。注册表 `thumbnail` 字段**保留不删**（契约/注册表不动），只是门户卡片暂不消费；将来若需图片再恢复。线上 `apps/web/index.html` 与模板 `mockups/stitch_merged_portal/code.html` 同步修改，维持逐字一致。纯 UI，不涉契约与后端。
 
+47. **读取侧门禁由「平台账号密码登录」更正为「钉钉免登 + 三层角色」（取代 #44 的登录方式，落实 #38 的 P2 密码退役）**：#44 的过渡形态是门户里再弹一个平台账号密码框（`/auth/login`），与钉钉身份两套、体验割裂，且 P2 早已定密码登录退役。本轮把这条链路补齐并更正：① **身份**＝钉钉免登——前台在钉钉容器内用 `dd.runtime.permission.requestAuthCode` 拿 code，后端 `POST /auth/dingtalk` 用 `user/getuserinfo` 换 `dingtalk_userid`、查组织同步建好的账号、签发带 `role`+`is_superadmin` 的 token；非钉钉环境不再给密码框、直接提示「在钉钉内打开」。② **三层角色**：超管（钉钉 userid ∈ 配置 `BOOTSTRAP_ADMIN_DINGTALK_USERID`，UI 不可改）看数据端 + 增减 admin；admin（超管在面板里设、DB `role='admin'`）看数据端、不能增减；普通员工只用工具 + 看自己历史，统计/明细不可见。判定：`can_view_data = role=='admin' 或 is_superadmin`，`can_manage_admins = is_superadmin`。③ **首个 admin（超管）由配置认定**，取代旧 `tools/seed_admin.py` 离线引导（后者只能标普通 admin、无法区分超管）。④ **删除** `/auth/login` + `authenticate` + 前台密码框（P2 密码登录正式退役；`user_account.password_hash` 列暂留可空、不写入，是否删列后置）。复用组织同步已有的 `DINGTALK_CLIENT_ID/SECRET`，新增 `DINGTALK_CORP_ID`（经 `GET /auth/config` 下发前台）。**部门级细分、预览脱敏仍待定**（#44 遗留，本轮不做）。不涉事件契约，不升 `schema_version`。设计稿/计划见 `platform/docs/specs/2026-06-12-钉钉免登数据门禁-*.md`。
+
 ## 下一步
 
 **Phase 1.5 真实数据库冒烟已通过、`tool_id` 发放通道已实现**：在 Phase 2A/2B 闭环上，已在本机用免安装 PostgreSQL 16 真实跑通 `模拟 JSON → /events → usage_event` 落库 + 幂等（详见开发日志），并新增管理员发放通道 `POST /registry/tools`（决策 #32）。全套机器闸门在本机真实跑绿（决策 #32 实现 + 此前修复的 mypy 生成器红灯）。
