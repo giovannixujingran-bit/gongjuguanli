@@ -19,6 +19,7 @@ class TokenClaims:
     username: str
     role: str
     team_id: str | None
+    is_superadmin: bool
     expires_at: int
 
 
@@ -26,6 +27,7 @@ def issue_token(
     account: UserAccount,
     *,
     secret: str,
+    is_superadmin: bool = False,
     ttl_seconds: int = DEFAULT_TOKEN_TTL_SECONDS,
 ) -> tuple[str, int]:
     expires_at = int(time.time()) + ttl_seconds
@@ -34,6 +36,7 @@ def issue_token(
         username=account.username,
         role=account.role,
         team_id=account.team_id,
+        is_superadmin=is_superadmin,
         expires_at=expires_at,
     )
     payload = encode_json(claims.__dict__)
@@ -59,6 +62,7 @@ def verify_token(token: str, *, secret: str) -> TokenClaims | None:
         username=str(data["username"]),
         role=str(data["role"]),
         team_id=None if data.get("team_id") is None else str(data["team_id"]),
+        is_superadmin=bool(data.get("is_superadmin", False)),
         expires_at=int(data["expires_at"]),
     )
 

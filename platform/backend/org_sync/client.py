@@ -58,6 +58,9 @@ class DingtalkClient(Protocol):
     def get_user(self, userid: str) -> DingtalkUser:
         """取某员工的详情（姓名 + 归属部门）。"""
 
+    def get_userinfo_by_code(self, code: str) -> str:
+        """用免登 code 换 dingtalk userid。"""
+
 
 def _require_dict(endpoint: str, value: object) -> dict[str, object]:
     if not isinstance(value, dict):
@@ -173,6 +176,21 @@ class HttpxDingtalkClient:
             name=str(name) if name is not None else userid,
             dept_ids=dept_ids,
         )
+
+    def get_userinfo_by_code(self, code: str) -> str:
+        # 免登：前台用 dd.runtime.permission.requestAuthCode 拿到 code，
+        # 这里用经典接口换成员工 userid。复用 _access_token 缓存。
+        endpoint = "/user/getuserinfo"
+        response = self._http.get(
+            f"{self._base_url}{endpoint}",
+            params={"access_token": self._access_token(), "code": code},
+        )
+        response.raise_for_status()
+        payload = _require_ok(endpoint, _require_dict(endpoint, response.json()))
+        userid = payload.get("userid")
+        if not isinstance(userid, str) or not userid:
+            raise DingtalkApiError(endpoint, -1, "missing userid")
+        return userid
 
 
 __all__ = [

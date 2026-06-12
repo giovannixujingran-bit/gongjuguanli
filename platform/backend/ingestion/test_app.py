@@ -7,15 +7,17 @@ from uuid import UUID
 
 from fastapi.testclient import TestClient
 
-from backend.auth.accounts import Role, UserAccount, UserAccountRepository
+from backend.auth.accounts import AccountSummary, Role, UserAccount, UserAccountRepository
 from backend.auth.passwords import hash_password
 from backend.ingestion.ai_query import AiQueryError
 from backend.ingestion.app import (
     create_app,
     get_ai_answerer,
     get_auth_token_secret,
+    get_dingtalk_auth_client,
     get_event_reader,
     get_repository,
+    get_superadmin_userids,
     get_tool_directory,
     get_tool_registry_repository,
     get_user_repository,
@@ -55,6 +57,9 @@ class MemoryUsageEventRepository:
 class MemoryUserAccountRepository:
     users_by_username: dict[str, UserAccount] = field(default_factory=dict)
     users_by_id: dict[str, UserAccount] = field(default_factory=dict)
+    users_by_dingtalk: dict[str, UserAccount] = field(default_factory=dict)
+    display_names: dict[str, str] = field(default_factory=dict)
+    dingtalk_ids: dict[str, str] = field(default_factory=dict)
 
     def create_user(
         self,
@@ -64,16 +69,23 @@ class MemoryUserAccountRepository:
         user_id: str | None = None,
         team_id: str | None = None,
         role: Role = "user",
+        dingtalk_userid: str | None = None,
+        display_name: str | None = None,
     ) -> UserAccount:
         account = UserAccount(
             user_id=user_id or f"user-{len(self.users_by_id) + 1}",
             username=username,
-            password_hash=hash_password(password),
+            password_hash=hash_password(password) if password else None,
             team_id=team_id,
             role=role,
         )
         self.users_by_username[username] = account
         self.users_by_id[account.user_id] = account
+        if dingtalk_userid is not None:
+            self.users_by_dingtalk[dingtalk_userid] = account
+            self.dingtalk_ids[account.user_id] = dingtalk_userid
+        if display_name is not None:
+            self.display_names[account.user_id] = display_name
         return account
 
     def get_by_username(self, username: str) -> UserAccount | None:
@@ -81,6 +93,47 @@ class MemoryUserAccountRepository:
 
     def get_by_user_id(self, user_id: str) -> UserAccount | None:
         return self.users_by_id.get(user_id)
+
+    def get_by_dingtalk_userid(self, dingtalk_userid: str) -> UserAccount | None:
+        return self.users_by_dingtalk.get(dingtalk_userid)
+
+    def list_accounts(self) -> list[AccountSummary]:
+        return [
+            AccountSummary(
+                user_id=a.user_id,
+                dingtalk_userid=self.dingtalk_ids.get(a.user_id),
+                display_name=self.display_names.get(a.user_id),
+                role=a.role,
+            )
+            for a in self.users_by_id.values()
+        ]
+
+    def set_role(self, user_id: str, role: Role) -> None:
+        old = self.users_by_id[user_id]
+        updated = UserAccount(
+            user_id=old.user_id,
+            username=old.username,
+            password_hash=old.password_hash,
+            team_id=old.team_id,
+            role=role,
+        )
+        self.users_by_id[user_id] = updated
+        self.users_by_username[old.username] = updated
+        dd = self.dingtalk_ids.get(user_id)
+        if dd is not None:
+            self.users_by_dingtalk[dd] = updated
+
+
+@dataclass
+class FakeDingtalkAuthClient:
+    """免登假实现：把 code 映射成 dingtalk userid（测试铸 token 用）。"""
+
+    code_to_userid: dict[str, str] = field(default_factory=dict)
+
+    def get_userinfo_by_code(self, code: str) -> str:
+        if code not in self.code_to_userid:
+            raise KeyError(code)
+        return self.code_to_userid[code]
 
 
 @dataclass
@@ -179,9 +232,13 @@ def sample_event_row() -> EventRow:
         tool_id="aird-report",
         model="gemini-3.5-flash",
         user_id="user-001",
+        user_display_name="张三",
         chapter="cover",
         input_preview="生成风格企划",
         output_preview="报告生成成功",
+        output_content="报告生成成功，已输出封面章节。",
+        output_kind="text",
+        output_ref=None,
         status="success",
         total_tokens=1240,
         duration_ms=1200,
@@ -285,7 +342,10 @@ def test_analytics_events_resolves_tool_name_and_passes_filters() -> None:
     body = response.json()
     assert body["total"] == 1
     assert body["rows"][0]["tool_name"] == "AI报告生成平台"
+    assert body["rows"][0]["user_display_name"] == "张三"
     assert body["rows"][0]["chapter"] == "cover"
+    assert body["rows"][0]["output_content"] == "报告生成成功，已输出封面章节。"
+    assert body["rows"][0]["output_kind"] == "text"
     assert body["rows"][0]["total_tokens"] == 1240
     assert reader.seen_filters == {
         "tool_id": "aird-report",
@@ -349,42 +409,25 @@ def test_ai_query_maps_upstream_failure_to_502() -> None:
     assert response.status_code == 502
 
 
-def test_admin_creates_user_then_login_and_me() -> None:
+def test_dingtalk_login_then_me() -> None:
     user_repository = MemoryUserAccountRepository()
     user_repository.create_user(
-        username="root",
-        password="root-secret",
-        user_id="admin-001",
-        role="admin",
+        username="dd-alice",
+        password="",
+        user_id="user-001",
+        team_id="team-a",
+        dingtalk_userid="dd-alice",
+        display_name="爱丽丝",
     )
     client = client_with_repositories(
         MemoryUsageEventRepository(),
         user_repository=user_repository,
-    )
-    admin_token = client.post(
-        "/auth/login",
-        json={"username": "root", "password": "root-secret"},
-    ).json()["access_token"]
-
-    create_response = client.post(
-        "/auth/users",
-        headers={"Authorization": f"Bearer {admin_token}"},
-        json={
-            "username": "alice",
-            "password": "secret",
-            "user_id": "user-001",
-            "team_id": "team-a",
-        },
-    )
-    login_response = client.post(
-        "/auth/login",
-        json={"username": "alice", "password": "secret"},
+        auth_codes={"alice-code": "dd-alice"},
     )
 
-    assert create_response.status_code == 201
-    assert login_response.status_code == 200
-    token = login_response.json()["access_token"]
+    token = mint_token(client, "alice-code")
     me_response = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+
     assert me_response.status_code == 200
     assert me_response.json()["user_id"] == "user-001"
 
@@ -392,22 +435,21 @@ def test_admin_creates_user_then_login_and_me() -> None:
 def test_create_user_requires_admin() -> None:
     user_repository = MemoryUserAccountRepository()
     user_repository.create_user(
-        username="bob",
-        password="secret",
+        username="dd-bob",
+        password="",
         user_id="user-002",
         role="user",
+        dingtalk_userid="dd-bob",
     )
     client = client_with_repositories(
         MemoryUsageEventRepository(),
         user_repository=user_repository,
+        auth_codes={"bob-code": "dd-bob"},
     )
     payload = {"username": "mallory", "password": "secret", "role": "admin"}
 
     no_token = client.post("/auth/users", json=payload)
-    user_token = client.post(
-        "/auth/login",
-        json={"username": "bob", "password": "secret"},
-    ).json()["access_token"]
+    user_token = mint_token(client, "bob-code")
     non_admin = client.post(
         "/auth/users",
         headers={"Authorization": f"Bearer {user_token}"},
@@ -423,16 +465,18 @@ def test_ingest_event_uses_verified_token_identity_over_payload_user_id() -> Non
     event_repository = MemoryUsageEventRepository()
     user_repository = MemoryUserAccountRepository()
     user_repository.create_user(
-        username="alice",
-        password="secret",
+        username="dd-alice",
+        password="",
         user_id="user-001",
         team_id="team-a",
+        dingtalk_userid="dd-alice",
     )
-    client = client_with_repositories(event_repository, user_repository=user_repository)
-    token = client.post(
-        "/auth/login",
-        json={"username": "alice", "password": "secret"},
-    ).json()["access_token"]
+    client = client_with_repositories(
+        event_repository,
+        user_repository=user_repository,
+        auth_codes={"alice-code": "dd-alice"},
+    )
+    token = mint_token(client, "alice-code")
     payload = sample_payload(user_id="spoofed-user")
 
     response = client.post("/events", json=payload, headers={"Authorization": f"Bearer {token}"})
@@ -467,23 +511,22 @@ def test_register_tool_requires_admin() -> None:
     registry = MemoryToolRegistryRepository()
     user_repository = MemoryUserAccountRepository()
     user_repository.create_user(
-        username="bob",
-        password="secret",
+        username="dd-bob",
+        password="",
         user_id="user-002",
         role="user",
+        dingtalk_userid="dd-bob",
     )
     client = client_with_repositories(
         MemoryUsageEventRepository(),
         user_repository=user_repository,
         tool_registry_repository=registry,
+        auth_codes={"bob-code": "dd-bob"},
     )
     payload = {"tool_id": "infra-log-exporter", "name": "日志导出器"}
 
     no_token = client.post("/registry/tools", json=payload)
-    user_token = client.post(
-        "/auth/login",
-        json={"username": "bob", "password": "secret"},
-    ).json()["access_token"]
+    user_token = mint_token(client, "bob-code")
     non_admin = client.post(
         "/registry/tools",
         headers={"Authorization": f"Bearer {user_token}"},
@@ -549,7 +592,14 @@ def read_client(
         summary=summary,
     )
     user_repository = MemoryUserAccountRepository()
-    user_repository.create_user(username="viewer", password="secret", user_id="user-009")
+    # 数据端现仅 admin/超管可见（决策 #44 更正）：数据读取用例的账号给 admin。
+    user_repository.create_user(
+        username="viewer",
+        password="",
+        user_id="user-009",
+        role="admin",
+        dingtalk_userid="dd-viewer",
+    )
     app = create_app()
     app.dependency_overrides[get_repository] = lambda: MemoryUsageEventRepository()
     app.dependency_overrides[get_user_repository] = lambda: user_repository
@@ -557,11 +607,12 @@ def read_client(
     app.dependency_overrides[get_event_reader] = lambda: reader
     app.dependency_overrides[get_tool_directory] = lambda: MemoryToolDirectory()
     app.dependency_overrides[get_ai_answerer] = lambda: ai_answerer
+    app.dependency_overrides[get_dingtalk_auth_client] = lambda: FakeDingtalkAuthClient(
+        {"viewer-code": "dd-viewer"}
+    )
+    app.dependency_overrides[get_superadmin_userids] = lambda: set()
     client = TestClient(app)
-    token = client.post(
-        "/auth/login",
-        json={"username": "viewer", "password": "secret"},
-    ).json()["access_token"]
+    token = client.post("/auth/dingtalk", json={"code": "viewer-code"}).json()["access_token"]
     return client, reader, {"Authorization": f"Bearer {token}"}
 
 
@@ -570,6 +621,8 @@ def client_with_repositories(
     *,
     user_repository: UserAccountRepository | None = None,
     tool_registry_repository: ToolRegistryRepository | None = None,
+    auth_codes: dict[str, str] | None = None,
+    superadmins: set[str] | None = None,
 ) -> TestClient:
     app = create_app()
     app.dependency_overrides[get_repository] = lambda: repository
@@ -578,31 +631,40 @@ def client_with_repositories(
     if tool_registry_repository is not None:
         app.dependency_overrides[get_tool_registry_repository] = lambda: tool_registry_repository
     app.dependency_overrides[get_auth_token_secret] = lambda: "test-secret"
+    app.dependency_overrides[get_dingtalk_auth_client] = lambda: FakeDingtalkAuthClient(
+        auth_codes or {}
+    )
+    app.dependency_overrides[get_superadmin_userids] = lambda: superadmins or set()
     return TestClient(app)
+
+
+def mint_token(client: TestClient, code: str) -> str:
+    token = client.post("/auth/dingtalk", json={"code": code}).json()["access_token"]
+    assert isinstance(token, str)
+    return token
 
 
 def admin_client(
     *,
     tool_registry_repository: ToolRegistryRepository | None = None,
 ) -> tuple[TestClient, str]:
-    """Build a client plus an admin bearer token (root/root-secret)."""
+    """Build a client plus an admin bearer token (钉钉免登铸造)。"""
     user_repository = MemoryUserAccountRepository()
     user_repository.create_user(
-        username="root",
-        password="root-secret",
+        username="dd-root",
+        password="",
         user_id="admin-001",
         role="admin",
+        dingtalk_userid="dd-root",
+        display_name="管理员",
     )
     client = client_with_repositories(
         MemoryUsageEventRepository(),
         user_repository=user_repository,
         tool_registry_repository=tool_registry_repository,
+        auth_codes={"root-code": "dd-root"},
     )
-    token = client.post(
-        "/auth/login",
-        json={"username": "root", "password": "root-secret"},
-    ).json()["access_token"]
-    return client, token
+    return client, mint_token(client, "root-code")
 
 
 def sample_payload(*, user_id: str | None = "user-001") -> dict[str, object]:

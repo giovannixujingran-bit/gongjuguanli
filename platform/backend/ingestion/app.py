@@ -5,7 +5,7 @@ import os
 from collections.abc import Callable
 from datetime import UTC, datetime
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Protocol
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
@@ -17,8 +17,8 @@ from backend.auth.accounts import (
     Role,
     UserAccount,
     UserAccountRepository,
-    authenticate,
 )
+from backend.auth.superadmin import parse_superadmin_userids
 from backend.auth.tokens import TokenClaims, bearer_token, issue_token, verify_token
 from backend.ingestion.ai_query import (
     DEFAULT_BASE_URL,
@@ -26,6 +26,7 @@ from backend.ingestion.ai_query import (
     AiQueryError,
     ApimartGeminiClient,
 )
+from backend.org_sync.client import HttpxDingtalkClient
 from backend.storage.events import (
     PostgresUsageEventReader,
     PostgresUsageEventRepository,
@@ -65,11 +66,26 @@ class UserPublic(BaseModel):
     username: str
     team_id: str | None = None
     role: str
+    is_superadmin: bool = False
 
 
-class LoginRequest(BaseModel):
-    username: str
-    password: str
+class DingtalkLoginRequest(BaseModel):
+    code: str = Field(min_length=1)
+
+
+class AdminSummaryPublic(BaseModel):
+    user_id: str
+    dingtalk_userid: str | None = None
+    display_name: str | None = None
+    role: str
+
+
+class SetRoleRequest(BaseModel):
+    role: Role
+
+
+class AuthConfigPublic(BaseModel):
+    corp_id: str
 
 
 class TokenResponse(BaseModel):
@@ -126,9 +142,13 @@ class EventRowPublic(BaseModel):
     tool_name: str
     model: str | None = None
     user_id: str
+    user_display_name: str | None = None
     chapter: str | None = None
     input_preview: str | None = None
     output_preview: str | None = None
+    output_content: str | None = None
+    output_kind: str = "text"
+    output_ref: str | None = None
     status: str
     total_tokens: int | None = None
     duration_ms: int
@@ -200,7 +220,7 @@ def create_app() -> FastAPI:
         offset: int = Query(default=0, ge=0),
         reader: UsageEventReader = Depends(get_event_reader),
         directory: ToolDirectory = Depends(get_tool_directory),
-        _viewer: TokenClaims = Depends(required_token_claims),
+        _viewer: TokenClaims = Depends(require_data_viewer),
     ) -> EventPagePublic:
         page = reader.list_events(
             tool_id=tool_id,
@@ -220,9 +240,13 @@ def create_app() -> FastAPI:
                     tool_name=names.get(row.tool_id, row.tool_id),
                     model=row.model,
                     user_id=row.user_id,
+                    user_display_name=row.user_display_name,
                     chapter=row.chapter,
                     input_preview=row.input_preview,
                     output_preview=row.output_preview,
+                    output_content=row.output_content,
+                    output_kind=row.output_kind,
+                    output_ref=row.output_ref,
                     status=row.status,
                     total_tokens=row.total_tokens,
                     duration_ms=row.duration_ms,
@@ -238,7 +262,7 @@ def create_app() -> FastAPI:
     @application.get("/analytics/summary", response_model=SummaryPublic)
     def analytics_summary(
         reader: UsageEventReader = Depends(get_event_reader),
-        _viewer: TokenClaims = Depends(required_token_claims),
+        _viewer: TokenClaims = Depends(require_data_viewer),
     ) -> SummaryPublic:
         summary = reader.summarize()
         return SummaryPublic(
@@ -257,7 +281,7 @@ def create_app() -> FastAPI:
         request: AiQueryRequest,
         reader: UsageEventReader = Depends(get_event_reader),
         ask: AskAi | None = Depends(get_ai_answerer),
-        _viewer: TokenClaims = Depends(required_token_claims),
+        _viewer: TokenClaims = Depends(require_data_viewer),
     ) -> AiQueryResponse:
         if ask is None:
             raise HTTPException(
@@ -338,24 +362,78 @@ def create_app() -> FastAPI:
             ) from exc
         return public_tool(tool)
 
-    @application.post("/auth/login", response_model=TokenResponse)
-    def login(
-        request: LoginRequest,
+    @application.post("/auth/dingtalk", response_model=TokenResponse)
+    def dingtalk_login(
+        request: DingtalkLoginRequest,
         repository: UserAccountRepository = Depends(get_user_repository),
+        auth_client: DingtalkAuthClient = Depends(get_dingtalk_auth_client),
         secret: str = Depends(get_auth_token_secret),
+        superadmins: set[str] = Depends(get_superadmin_userids),
     ) -> TokenResponse:
-        account = authenticate(repository, username=request.username, password=request.password)
-        if account is None:
+        # 钉钉免登：前台拿到的 code 换 dingtalk userid → 查已同步账号 → 判定身份 → 签发 token。
+        try:
+            dingtalk_userid = auth_client.get_userinfo_by_code(request.code)
+        except Exception as exc:  # 免登 code 无效/过期/钉钉不可达
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="invalid username or password",
+                detail="钉钉免登失败，请重试或重新打开页面",
+            ) from exc
+        account = repository.get_by_dingtalk_userid(dingtalk_userid)
+        if account is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="账号未同步，请联系超管在后台同步组织",
             )
-        token, expires_at = issue_token(account, secret=secret)
+        is_superadmin = dingtalk_userid in superadmins
+        if is_superadmin and account.role != "admin":
+            # 超管隐含 admin 待遇：签发的 token 直接给 admin 角色。
+            account = UserAccount(
+                user_id=account.user_id,
+                username=account.username,
+                password_hash=account.password_hash,
+                team_id=account.team_id,
+                role="admin",
+            )
+        token, expires_at = issue_token(account, secret=secret, is_superadmin=is_superadmin)
         return TokenResponse(
             access_token=token,
             expires_at=expires_at,
-            user=public_user(account),
+            user=public_user(account).model_copy(update={"is_superadmin": is_superadmin}),
         )
+
+    @application.get("/auth/config", response_model=AuthConfigPublic)
+    def auth_config(corp_id: str = Depends(get_dingtalk_corp_id)) -> AuthConfigPublic:
+        return AuthConfigPublic(corp_id=corp_id)
+
+    @application.get("/auth/admins", response_model=list[AdminSummaryPublic])
+    def list_admins(
+        repository: UserAccountRepository = Depends(get_user_repository),
+        _su: TokenClaims = Depends(require_superadmin),
+    ) -> list[AdminSummaryPublic]:
+        return [
+            AdminSummaryPublic(
+                user_id=a.user_id,
+                dingtalk_userid=a.dingtalk_userid,
+                display_name=a.display_name,
+                role=a.role,
+            )
+            for a in repository.list_accounts()
+        ]
+
+    @application.post("/auth/admins/{user_id}", response_model=UserPublic)
+    def set_admin_role(
+        user_id: str,
+        request: SetRoleRequest,
+        repository: UserAccountRepository = Depends(get_user_repository),
+        _su: TokenClaims = Depends(require_superadmin),
+    ) -> UserPublic:
+        account = repository.get_by_user_id(user_id)
+        if account is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="账号不存在")
+        repository.set_role(user_id, request.role)
+        updated = repository.get_by_user_id(user_id)
+        assert updated is not None
+        return public_user(updated)
 
     @application.post("/auth/verify", response_model=UserPublic)
     def verify(
@@ -528,14 +606,58 @@ def required_token_claims(
 
 def require_admin(claims: TokenClaims = Depends(required_token_claims)) -> TokenClaims:
     # 创建账号是管理员动作：内网威胁模型下不做写入侧鉴权（事件上报），但账号体系是
-    # 读取侧权限的挂靠点，必须挡住「任何人给自己开 admin」。首个 admin 由 tools/seed_admin.py
-    # 用 DB 凭据离线引导，不经此端点。
+    # 读取侧权限的挂靠点，必须挡住「任何人给自己开 admin」。
     if claims.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="admin role required",
         )
     return claims
+
+
+def require_data_viewer(claims: TokenClaims = Depends(required_token_claims)) -> TokenClaims:
+    # 数据端（统计/明细/AI 查询）仅 admin 或超管可见（决策 #44 更正：免登 + 角色门禁）。
+    if claims.role != "admin" and not claims.is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权查看数据，请联系超管开通",
+        )
+    return claims
+
+
+def require_superadmin(claims: TokenClaims = Depends(required_token_claims)) -> TokenClaims:
+    # 增减 admin 只认超管（BOOTSTRAP_ADMIN_DINGTALK_USERID 配置认定，UI 不可改）。
+    if not claims.is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="仅超管可操作",
+        )
+    return claims
+
+
+class DingtalkAuthClient(Protocol):
+    """免登换身份的最小能力（抽象，便于测试覆盖）。"""
+
+    def get_userinfo_by_code(self, code: str) -> str: ...
+
+
+@lru_cache(maxsize=1)
+def get_superadmin_userids() -> set[str]:
+    return parse_superadmin_userids(os.environ.get("BOOTSTRAP_ADMIN_DINGTALK_USERID"))
+
+
+@lru_cache(maxsize=1)
+def get_dingtalk_corp_id() -> str:
+    return os.environ.get("DINGTALK_CORP_ID", "")
+
+
+@lru_cache(maxsize=1)
+def get_dingtalk_auth_client() -> DingtalkAuthClient:
+    client_id = os.environ.get("DINGTALK_CLIENT_ID")
+    client_secret = os.environ.get("DINGTALK_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        raise RuntimeError("DINGTALK_CLIENT_ID / DINGTALK_CLIENT_SECRET are required for 免登")
+    return HttpxDingtalkClient(client_id=client_id, client_secret=client_secret)
 
 
 @lru_cache(maxsize=1)

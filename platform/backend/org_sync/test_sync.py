@@ -26,6 +26,9 @@ class FakeClient:
     def get_user(self, userid: str) -> DingtalkUser:
         return self._users[userid]
 
+    def get_userinfo_by_code(self, code: str) -> str:
+        raise NotImplementedError
+
 
 class FakeDeptWriter:
     def __init__(self) -> None:

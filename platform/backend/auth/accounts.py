@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from psycopg.rows import dict_row
 
-from backend.auth.passwords import hash_password, verify_password
+from backend.auth.passwords import hash_password
 from backend.storage.db import connect as db_connect
 
 Role = Literal["admin", "user"]
@@ -18,6 +18,16 @@ class UserAccount:
     username: str
     password_hash: str | None  # 钉钉免登账号无密码（决策 #38/P2，密码登录退役）
     team_id: str | None
+    role: Role
+
+
+@dataclass(frozen=True)
+class AccountSummary:
+    """成员权限管理面板用的只读账号汇总（含展示名 + 钉钉 userid）。"""
+
+    user_id: str
+    dingtalk_userid: str | None
+    display_name: str | None
     role: Role
 
 
@@ -38,6 +48,15 @@ class UserAccountRepository(Protocol):
 
     def get_by_user_id(self, user_id: str) -> UserAccount | None:
         """Find one user account by user_id."""
+
+    def get_by_dingtalk_userid(self, dingtalk_userid: str) -> UserAccount | None:
+        """Find one account by its synced DingTalk userid."""
+
+    def list_accounts(self) -> list[AccountSummary]:
+        """List all accounts for the admin-management panel."""
+
+    def set_role(self, user_id: str, role: Role) -> None:
+        """Set an account's role (admin management)."""
 
 
 class PostgresUserAccountRepository:
@@ -95,6 +114,41 @@ class PostgresUserAccountRepository:
     def get_by_user_id(self, user_id: str) -> UserAccount | None:
         return self._fetch_one("user_id", user_id)
 
+    def get_by_dingtalk_userid(self, dingtalk_userid: str) -> UserAccount | None:
+        return self._fetch_one("dingtalk_userid", dingtalk_userid)
+
+    def list_accounts(self) -> list[AccountSummary]:
+        with db_connect(self._database_url) as connection:
+            with connection.cursor(row_factory=dict_row) as cursor:
+                cursor.execute(
+                    """
+                    SELECT user_id, dingtalk_userid, display_name, role
+                    FROM user_account
+                    ORDER BY display_name NULLS LAST, username
+                    """
+                )
+                rows = cursor.fetchall()
+        return [
+            AccountSummary(
+                user_id=str(r["user_id"]),
+                dingtalk_userid=(
+                    None if r["dingtalk_userid"] is None else str(r["dingtalk_userid"])
+                ),
+                display_name=None if r["display_name"] is None else str(r["display_name"]),
+                role="admin" if r["role"] == "admin" else "user",
+            )
+            for r in rows
+        ]
+
+    def set_role(self, user_id: str, role: Role) -> None:
+        with db_connect(self._database_url) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE user_account SET role = %(role)s, updated_at = now() "
+                    "WHERE user_id = %(user_id)s",
+                    {"role": role, "user_id": user_id},
+                )
+
     def _fetch_one(self, column: str, value: str) -> UserAccount | None:
         with db_connect(self._database_url) as connection:
             with connection.cursor(row_factory=dict_row) as cursor:
@@ -111,23 +165,6 @@ class PostgresUserAccountRepository:
         if row is None:
             return None
         return row_to_account(row)
-
-
-def authenticate(
-    repository: UserAccountRepository,
-    *,
-    username: str,
-    password: str,
-) -> UserAccount | None:
-    account = repository.get_by_username(username)
-    if account is None:
-        return None
-    if account.password_hash is None:
-        # 无密码账号（钉钉免登建的）不允许走密码登录（决策 #38/P2）。
-        return None
-    if not verify_password(password, account.password_hash):
-        return None
-    return account
 
 
 def row_to_account(row: object) -> UserAccount:
